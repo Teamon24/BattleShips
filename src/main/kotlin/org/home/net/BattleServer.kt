@@ -1,6 +1,9 @@
 package org.home.net
 
+import org.home.ApplicationProperties
+import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
+import org.home.mvc.model.BattleModel
 import org.home.net.socket.ex.receiveSign
 import org.home.net.socket.ex.sendSign
 import java.io.InputStream
@@ -9,40 +12,58 @@ import org.home.utils.MessageIO.read
 import org.home.utils.MessageIO.write
 import org.home.utils.threadPrintln
 
-class BattleServer(private val gameController: GameTypeController) : MultiServer() {
+class BattleServer: BattleController() {
 
-    override suspend fun receive(`in`: InputStream, out: OutputStream) {
-        while (true) {
+    private val gameController: GameTypeController by di()
+    private val model: BattleModel by di()
+    private val applicationProperties: ApplicationProperties by di()
 
-            val message = receive(`in`)
+    private val multiServer = object: MultiServer() {
+        override suspend fun listen(`in`: InputStream, out: OutputStream) {
+            while (true) {
+                val message = receive(`in`)
 
-            val response: Message = when (message) {
-                is ShotMessage -> gameController.onShot(message)
-                is HitMessage -> gameController.onHit(message)
-                is EmptyMessage -> gameController.onEmpty(message)
-                is DefeatMessage -> gameController.onDefeat(message)
+                when (message) {
+                    is ShotMessage -> gameController.onShot(message)
+                    is HitMessage -> gameController.onHit(message)
+                    is EmptyMessage -> gameController.onEmpty(message)
+                    is DefeatMessage -> gameController.onDefeat(message)
 
-                is DisconnectMessage -> {
-                    gameController.onDisconnect(message)
-                    break
+                    is DisconnectMessage -> {
+                        gameController.onDisconnect(message)
+                        clients.forEach {
+                            it.getOutputStream().send(message)
+                        }
+                    }
+
+                    is EndGameMessage -> {
+                        gameController.onEndGame(message)
+                        clients.forEach {
+                            it.getOutputStream().send(message)
+                        }
+                        break
+                    }
+
+                    is MissMessage -> gameController.onMiss(message)
+                    is ConnectMessage -> {
+                        gameController.onConnect(message)
+                        out.send(FleetSettingsMessage(model))
+                        out.send(PlayersMessage(model.playersNames))
+                        clients.forEach { it.getOutputStream().send(message) }
+                    }
+                    else -> gameController.onMessage(message)
                 }
-
-                is EndGameMessage -> {
-                    gameController.onEndGame(message)
-                    break
-                }
-
-                is MissMessage -> gameController.onMiss(message)
-                is ConnectMessage -> gameController.onConnect(message)
-                else -> gameController.onMessage(message)
             }
-
-            out.send(response)
         }
     }
 
-    override suspend fun send(msg: Message, out: OutputStream) {
-        TODO("server sending logic is not implemented")
+
+    suspend fun listen(`in`: InputStream, out: OutputStream) {
+        multiServer.listen(`in`, out)
+    }
+
+    fun start(port: Int) {
+        multiServer.start(port)
     }
 
     fun receive(`in`: InputStream): Message {

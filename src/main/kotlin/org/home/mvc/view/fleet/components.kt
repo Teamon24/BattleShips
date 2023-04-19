@@ -7,10 +7,10 @@ import tornadofx.add
 import tornadofx.addClass
 
 
-internal fun EventTarget.fleetCell(row: Int, col: Int, text: String = "") =
+fun EventTarget.fleetCell(row: Int, col: Int, text: String = "") =
     cell(row, col, text)
 
-internal fun EventTarget.titleCell(row: Int, col: Int, text: String) =
+fun EventTarget.titleCell(row: Int, col: Int, text: String) =
     cell(row, col, text, AppStyles.titleCell)
 
 private fun EventTarget.cell(row: Int, col: Int, text: String, cssClass: CssRule) =

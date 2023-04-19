@@ -1,9 +1,11 @@
 package org.home.net
 
 import kotlinx.coroutines.launch
-import org.home.mvc.contoller.BattleController
-import org.home.utils.fixedThreadPool
+import org.home.mvc.view.openErrorWindow
+import org.home.utils.ioScope
+import org.home.utils.singleThread
 import org.home.utils.threadPrintln
+import tornadofx.Controller
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -11,33 +13,51 @@ import java.net.ServerSocket
 import java.net.Socket
 
 
-abstract class MultiServer: BattleController() {
+abstract class MultiServer {
     private lateinit var serverSocket: ServerSocket
-    private val clients: MutableList<Socket> = mutableListOf()
-    private val ioScope = fixedThreadPool(10, "SERVER")
+    protected val clients: MutableList<Socket> = mutableListOf()
 
-    abstract suspend fun receive(`in`: InputStream, out: OutputStream)
-    abstract suspend fun send(msg: Message, out: OutputStream)
+    abstract suspend fun listen(`in`: InputStream, out: OutputStream)
+
+    fun getFreePort(): Int {
+        try {
+            return ServerSocket(0).run {
+                use {
+                    assert(it.localPort > 0)
+                    return@run it.localPort
+                }
+            }
+
+        } catch (e: IOException) {
+            openErrorWindow {
+                "Нет свободного порта"
+            }
+        }
+        return 0
+    }
+
+    @Throws(IOException::class)
+    fun start() {
+        start(getFreePort())
+    }
 
     @Throws(IOException::class)
     fun start(port: Int) {
         serverSocket = ServerSocket(port)
 
         threadPrintln("server socket is created")
+        singleThread {
+            while (true) {
+                val client = serverSocket.accept()
+                threadPrintln("client has been connected")
 
-        while (true) {
-            val client = serverSocket.accept()
-            threadPrintln("client has been connected")
+                clients.add(client)
 
-            clients.add(client)
-
-            val input = client.getInputStream()
-            val output = client.getOutputStream()
-
-            ioScope.launch {
-                receive(input, output)
-                if (client.isClosed) {
-                    clients.remove(client)
+                ioScope.launch {
+                    listen(
+                        client.getInputStream(),
+                        client.getOutputStream()
+                    )
                 }
             }
         }

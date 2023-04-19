@@ -14,4 +14,7 @@ abstract class GameTypeController: Controller() {
     abstract fun onMiss(msg: MissMessage): ActionMessage
     abstract fun onConnect(msg: ConnectMessage): ActionMessage
     abstract fun onMessage(msg: Message): Message
+    abstract fun onTurn(msg: TurnMessage)
+    abstract fun onFleetSettings(msg: FleetSettingsMessage)
+    abstract fun onPlayers(msg: PlayersMessage)
 }

@@ -1,4 +1,4 @@
-package org.home.view
+package org.home.mvc.view.components
 
 import tornadofx.ViewTransition
 import tornadofx.seconds

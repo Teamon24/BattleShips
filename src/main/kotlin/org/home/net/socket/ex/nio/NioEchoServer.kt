@@ -1,12 +1,11 @@
 package org.home.net.socket.ex.nio
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.home.net.socket.ex.receiveSign
 import org.home.net.socket.ex.sendSign
-import org.home.utils.fixedThreadPool
+import org.home.utils.ioScope
+import org.home.utils.threadsScope
 import org.home.utils.threadPrintln
 import java.io.File
 import java.io.IOException
@@ -18,10 +17,10 @@ import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.CountDownLatch
 
+
 object NioEchoServer {
     const val POISON_PILL = "POISON_PILL"
-    val scope = fixedThreadPool(10, "server-pool")
-    val ioScope = CoroutineScope(Dispatchers.IO)
+    val scope = threadsScope(10, "server-pool")
 
     @Throws(IOException::class)
     fun start(latch: CountDownLatch) {

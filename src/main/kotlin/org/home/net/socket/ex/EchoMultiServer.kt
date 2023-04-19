@@ -2,13 +2,14 @@ package org.home.net.socket.ex
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.net.ActionMessage
+import org.home.net.BattleClient
 import org.home.net.Message
 import org.home.net.MultiServer
-import org.home.utils.fixedThreadPool
+import org.home.utils.threadsScope
 import org.home.utils.singleThreadScope
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.Socket
 
 const val receiveSign = "<-"
 const val sendSign = "->"
@@ -26,7 +27,7 @@ fun main() {
     Thread.sleep(100)
 
     val threads = 7
-    val threadPoolScope = fixedThreadPool(threads, "client-pool")
+    val threadPoolScope = threadsScope(threads, "client-pool")
 
     (1..threads).map {
         threadPoolScope.launch { GreetClient().send(it, host, port) }
@@ -41,9 +42,7 @@ fun main() {
 }
 
 private fun echoMultiServer() = object : MultiServer() {
-    override suspend fun receive(`in`: InputStream, out: OutputStream) { EchoServer().handle(`in`, out) }
-    override suspend fun send(msg: Message, out: OutputStream) { todo() }
-    private fun todo() { TODO("Not implemented") }
+    override suspend fun listen(`in`: InputStream, out: OutputStream) { EchoServer().handle(`in`, out) }
 }
 
 private fun GreetClient.send(number: Int, host: String, port: Int) {

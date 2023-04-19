@@ -1,41 +1,94 @@
 package org.home.mvc.view.battle
 
-import org.home.app.ApplicationProperties
-import org.home.app.ApplicationProperties.Companion.ipFieldLabel
-import org.home.app.injecting
+import javafx.beans.property.SimpleStringProperty
+import org.home.ApplicationProperties
+import org.home.ApplicationProperties.Companion.connectionButtonText
+import org.home.ApplicationProperties.Companion.ipAddressFieldLabel
+import org.home.mvc.contoller.events.FleetSettingsAccepted
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.AppView
 import org.home.mvc.view.components.backTransit
 import org.home.mvc.view.components.cell
+import org.home.mvc.view.components.centerGrid
 import org.home.mvc.view.components.col
 import org.home.mvc.view.components.row
-import org.home.mvc.view.components.transit
-import org.home.mvc.view.fleet.FleetCreationView
+import org.home.mvc.view.components.slide
+import org.home.mvc.view.fleet.FleetGridCreationView
+import org.home.mvc.view.openErrorWindow
+import org.home.net.BattleClient
+import org.home.net.ConnectMessage
 import org.home.style.AppStyles
+import org.home.utils.log
 import tornadofx.View
+import tornadofx.action
 import tornadofx.addClass
+import tornadofx.button
 import tornadofx.gridpane
 import tornadofx.label
 import tornadofx.textfield
 
 class BattleJoinView : View("Присоединиться к битве") {
 
-    private val applicationProperties: ApplicationProperties by injecting()
+    private val applicationProperties: ApplicationProperties by di()
+    private val model: BattleModel by di()
+    private val battleClient: BattleClient by di()
+    private val ipAddress = SimpleStringProperty().apply {
+        value = "${applicationProperties.ip}:${applicationProperties.port}"
+    }
 
-    override val root = gridpane {
+    private val fleetGridCreationView = FleetGridCreationView::class
+
+    private val currentView = this@BattleJoinView
+
+    init {
+        subscribe<FleetSettingsAccepted> {
+            model.put(it.msg)
+        }
+    }
+
+    override val root = centerGrid {
         addClass(AppStyles.form)
         row(0) {
-            col(0) { label(ipFieldLabel).apply { addClass(AppStyles.fieldSize) } }
-            col(1) { textfield() }
+            col(0) { label(ipAddressFieldLabel).apply { addClass(AppStyles.fieldSize) } }
+            col(1) { textfield(ipAddress) }
         }
 
         cell(1, 1) {
-            transit(this@BattleJoinView, FleetCreationView::class, "Подключиться") {
-                applicationProperties["isServer"] = false
+            button(connectionButtonText) {
+                action {
+                    try {
+                        applicationProperties.isServer = false
+                        val (ip, port) = extract()
+
+
+
+                        battleClient.connect(ip, port)
+
+                        log { "connected to $ip:$port" }
+
+                        battleClient.send(connectMessage())
+                        battleClient.listen()
+                        currentView.replaceWith(fleetGridCreationView, slide)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        openErrorWindow {
+                            "Не удалось подключиться к хосту ${ipAddress.value}"
+                        }
+                    }
+                }
             }
         }
 
         cell(2, 1) {
-            backTransit(this@BattleJoinView, AppView::class)
+            backTransit(currentView, AppView::class)
         }
     }
+
+    private fun connectMessage() = ConnectMessage(applicationProperties.currentPlayer)
+
+    private fun extract(): Pair<String, Int> {
+        val split = ipAddress.value.split(":")
+        return split[0] to split[1].toInt()
+    }
 }
+

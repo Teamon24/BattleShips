@@ -19,11 +19,13 @@ import tornadofx.loadFont
 import tornadofx.mixin
 import tornadofx.px
 
+typealias LinearUnits = Dimension<Dimension.LinearUnits>
+
 class AppStyles : Stylesheet() {
 
     companion object {
 
-        const val fontName = "JetBrainsMono-Light.ttf"
+        private const val fontName = "JetBrainsMono-Light.ttf"
 
         init {
             loadFont("/fonts/static/$fontName", 12)!!
@@ -71,9 +73,12 @@ class AppStyles : Stylesheet() {
         val shipsTypesInfoPane by cssclass()
         val playerCell by cssclass()
         val enemyCell by cssclass()
+        val errorLabel by cssclass()
     }
 
     init {
+
+        errorLabel + padding(20.px)
 
         odd {
             margin(1.px)
@@ -139,7 +144,6 @@ class AppStyles : Stylesheet() {
             backgroundColor += LIGHTSLATEGRAY
         }
 
-
         (debugClass + gridMargin(10.px)) {
             borderColor += box(BLACK)
             borderWidth += box(fleetBorderWidth.px)
@@ -171,9 +175,9 @@ class AppStyles : Stylesheet() {
 
     private val AppStyles.border: CssSelectionBlock.() -> Unit
         get() { return {
-            borderColor += box(BLACK)
-            borderWidth += box(fleetBorderWidth.px)
-        }
+                borderColor += box(BLACK)
+                borderWidth += box(fleetBorderWidth.px)
+            }
         }
 
     private val AppStyles.jetBrainFont: CssSelectionBlock.() -> Unit
@@ -183,16 +187,18 @@ class AppStyles : Stylesheet() {
             }
         }
 
-    private fun gridMargin(dimension: Dimension<Dimension.LinearUnits>): CssSelectionBlock.() -> Unit {
-        return {
-                hgap = dimension
-                vgap = hgap
-            }
+    private fun gridMargin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
+        return { hgap = dimension
+                 vgap = hgap }
         }
 
-    private fun margin(dimension: Dimension<Dimension.LinearUnits>): CssSelectionBlock.() -> Unit {
+    private fun margin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
+        return { margin(dimension) }
+    }
+
+    private fun padding(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
         return {
-            margin(dimension)
+            padding = box(dimension)
         }
     }
 
@@ -206,16 +212,13 @@ class AppStyles : Stylesheet() {
             }
         }
 
-    private fun CssSelectionBlock.size(
-        dimension: Dimension<Dimension.LinearUnits>,
-    ): CssSelectionBlock
-    {
+    private fun CssSelectionBlock.size(dimension: LinearUnits): CssSelectionBlock {
         minWidth = dimension
         minHeight = minWidth
         return this
     }
 
-    private fun CssSelectionBlock.margin(px: Dimension<Dimension.LinearUnits>) {
+    private fun CssSelectionBlock.margin(px: LinearUnits) {
         padding = box(px)
         backgroundInsets = MultiValue(arrayOf(box(px / 2)))
     }

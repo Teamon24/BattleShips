@@ -3,3 +3,5 @@
 /build
 /out
 /gradle
+pids.txt
+/src/main/resources/player-*.properties

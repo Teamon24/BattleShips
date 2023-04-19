@@ -1,3 +1,18 @@
+import org.apache.commons.lang3.ArrayUtils
+import org.apache.commons.lang3.StringUtils
+
+import java.util.concurrent.Executors
+import java.util.function.BiConsumer
+import java.util.function.Consumer
+import java.util.stream.Collectors
+
+buildscript {
+    dependencies {
+        classpath 'org.codehaus.gpars:gpars:1.2.1'
+        classpath 'org.apache.commons:commons-lang3:3.12.0'
+    }
+}
+
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
@@ -15,9 +30,14 @@ application {
     mainClassName = 'org.home.MainKt'
 }
 
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation 'no.tornado:tornadofx:1.7.20'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta'
     implementation 'io.insert-koin:koin-core:3.3.3'
@@ -34,7 +54,7 @@ compileTestKotlin {
 
 javafx {
     version = '19'
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+    modules = ['javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics']
     configuration = 'implementation'
 }
 
@@ -47,17 +67,161 @@ task fatJar(type: Jar) {
     with jar
 }
 
-task runServer(type: Exec) {
-    dependsOn build
-    group = "Execution"
-    description = "Run the main class with ExecTask"
-    commandLine "java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath(), mainClassName, "server"
+
+ext {
+    sl = File.separator
+    close = false
+}
+def pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
+def sl = rootProject.ext.sl
+
+def application = "application"
+def additionalPlayersNumber = 12
+
+def propsList = concatArgs(application, toString(createProperties(additionalPlayersNumber)))
+
+
+String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
+
+def javaCp = [java, "-classpath",
+              sourceSets.main.runtimeClasspath.getAsPath(),
+              mainClassName]
+
+def javaJar = [java, "-jar",
+               "${project.path}\\build\\libs\\${project.name}-${project.version}.jar",
+               mainClassName]
+
+def pidsFile = createFile("$projectDir${sl}pids.txt")
+
+task runPlayers {
+    doLast {
+        def propsNumber = propsList.size()
+        def processes = new ArrayList<Process>()
+
+        for (int player = 0; player < propsList.size(); player++) {
+            def props = propsList.get(player)
+            def process = process(javaCp, props, player, propsNumber)
+            processes.add(process)
+        }
+
+        def writer = new PrintWriter(pidsFile)
+        processes.forEach {
+            writer.println(it.pid())
+        }
+        writer.flush()
+        writer.close()
+    }
 }
 
+task killPlayers {
+    doLast {
+        def processes = new ArrayList<Integer>()
+        readFile(pidsFile, (pid) -> processes.add(Integer.valueOf(pid)))
 
-task runClient(type: Exec) {
-    dependsOn build
-    group = "Execution"
-    description = "Run the main class with ExecTask"
-    commandLine "java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath(), mainClassName, "client"
+        processes.forEach {
+            ProcessHandle.of(it).ifPresent(ProcessHandle::destroy)
+            println "process ${it} was killed"
+        }
+    }
+}
+
+task server  { doLast { runApp(javaCp, application, 0, 6) }}
+task player0 { doLast { runApp(javaCp, player(0), 1, 6) } }
+task player1 { doLast { runApp(javaCp, player(1), 2, 6) } }
+task player2 { doLast { runApp(javaCp, player(2), 3, 6) } }
+task player3 { doLast { runApp(javaCp, player(3), 4, 6) } }
+task player4 { doLast { runApp(javaCp, player(4), 5, 6) } }
+
+
+tasks.server.dependsOn(build)
+
+def runApp(javaCp, Object... args) {
+    exec { commandLine concatArgs(javaCp, toString(args)) }
+}
+
+static def process(javaCp, Object... args) {
+    def process = new ProcessBuilder(concatArgs(javaCp, toString(args))).start()
+    println "process ${process.pid()} was started"
+    return process
+}
+
+static def toString(Object... args) {
+    return Arrays.stream(args).map(Object::toString).collect(Collectors.toList())
+}
+
+static def toString(List<?> args) {
+    return args.stream().map(Object::toString).collect(Collectors.toList())
+}
+
+static def concatArgs(ArrayList<String> list1, List<String> list2) {
+    def all = new ArrayList<String>(list1)
+    all.addAll(list2)
+    return all
+}
+
+static def concatArgs(String string, List<String> list2) {
+    def all = new ArrayList<String>(list2)
+    all.add(string)
+    return all
+}
+
+static def createFile(String path) {
+    def file = new File(path)
+    file.createNewFile()
+    return file
+}
+
+def createProperties(Integer playersNumber) {
+    def properties = new ArrayList<String>(playersNumber)
+    StringBuilder stringBuilder = new StringBuilder()
+
+    def applicationProps = new File(propFile("application"))
+    readFile(applicationProps, (line) -> stringBuilder.append(line).append("\n"))
+    for (i in 0..<playersNumber) {
+        String playerName = player(i)
+        properties.add(playerName)
+        def filePath = propFile(playerName)
+        toFile(
+                (writer, content) -> writer.write(content),
+                filePath,
+                content(stringBuilder, playerName)
+        )
+    }
+    return properties
+}
+
+private static void toFile(BiConsumer<PrintWriter, String> op, String filepath, String content) {
+    def propertiesFile = createFile(filepath)
+    def writer = new PrintWriter(propertiesFile)
+    op.accept(writer, content)
+    writer.flush()
+    writer.close()
+}
+
+private static String player(i) {
+    return "player-${i}"
+}
+
+private static String content(StringBuilder stringBuilder, String playerName) {
+    def strings = ArrayUtils.remove(stringBuilder.toString().split("\n"), 0)
+    String currentPlayerProp = "currentPlayer=$playerName"
+    def propsContent = ArrayUtils.addFirst(strings, currentPlayerProp)
+    return StringUtils.join(propsContent, "\n")
+}
+
+private String propFile(String prop) {
+    def sl = rootProject.ext.sl
+    return "${projectDir.path}${sl}src${sl}main${sl}resources${sl}${prop}.properties"
+}
+
+static def readFile(File file, Consumer<String> body) {
+    def reader = new BufferedReader(new FileReader(file))
+    String line = reader.readLine()
+
+    while(line != null) {
+        line.trim()
+        body.accept(line)
+        line = reader.readLine()
+    }
 }

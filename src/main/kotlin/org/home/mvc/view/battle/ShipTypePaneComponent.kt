@@ -4,7 +4,7 @@ import javafx.scene.control.Button
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
-import org.home.app.injecting
+
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.components.getCell
 import org.home.mvc.view.components.removeColumn
@@ -18,7 +18,7 @@ import tornadofx.runLater
 
 class ShipTypePaneComponent: Controller() {
 
-    private val model: BattleModel by injecting()
+    private val model: BattleModel by di()
 
     private fun lastShipType() = model.battleShipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
@@ -67,7 +67,7 @@ class ShipTypePaneComponent: Controller() {
 
     }
 
-    internal fun shipTypeLabel(gridPane: GridPane, column: Int) =
+    fun shipTypeLabel(gridPane: GridPane, column: Int) =
         FleetCellLabel(RomansDigits.arabicToRoman(column))
             .addClass(
                 AppStyles.shipTypeLabel,
@@ -77,7 +77,7 @@ class ShipTypePaneComponent: Controller() {
                 gridPane.add(it, column, 0)
             }
 
-    internal fun shipsNumberLabel(gridPane: GridPane, column: Int, value: Int) =
+    fun shipsNumberLabel(gridPane: GridPane, column: Int, value: Int) =
         FleetCellLabel("$value").also {
                 gridPane.add(it, column, 1)
                 gridPane.minWidth = Region.USE_PREF_SIZE

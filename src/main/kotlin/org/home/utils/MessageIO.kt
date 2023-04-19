@@ -19,7 +19,7 @@ object MessageIO {
     fun <T> InputStream.read(): T {
         val `in` = DataInputStream(BufferedInputStream(this))
         val size = `in`.readInt()
-        val messageBytes = `in`.readNBytes(size);
+        val messageBytes = `in`.readNBytes(size)
         val message = SerializationUtils.deserialize<T>(messageBytes)
         return message
     }

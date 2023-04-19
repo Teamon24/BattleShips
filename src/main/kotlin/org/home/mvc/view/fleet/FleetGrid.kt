@@ -4,7 +4,7 @@ import javafx.scene.layout.GridPane
 import org.home.mvc.model.Ships
 import org.home.mvc.view.components.getCell
 import org.home.mvc.view.components.getIndices
-import org.home.mvc.view.fleet.FleetBoxStyleComponent.addSelectionColor
+import org.home.mvc.view.fleet.FleetGridStyleComponent.addSelectionColor
 import tornadofx.CssRule
 import tornadofx.addClass
 

@@ -6,7 +6,9 @@ import javafx.beans.property.SimpleMapProperty
 import javafx.collections.FXCollections
 import javafx.collections.MapChangeListener
 import javafx.collections.ObservableMap
+import org.home.net.FleetSettingsMessage
 import tornadofx.ViewModel
+import tornadofx.onChange
 import tornadofx.toObservable
 
 
@@ -18,7 +20,7 @@ class BattleModel : ViewModel() {
     }
 
     fun equalizeSizes() {
-        fleetGridHeight.value = fleetGridWidth.value
+        height.value = width.value
     }
 
     private fun <K, V> emptySimpleMapProperty() =
@@ -34,20 +36,22 @@ class BattleModel : ViewModel() {
 
     private val shipsTypesProp = emptySimpleMapProperty<Int, Int>().apply(::putInitials)
 
-    val fleetGridWidth = bind { widthProp }
-    val fleetGridHeight = bind { heightProp }
+    val width = bind { widthProp }.apply {
+        onChange {
+            println("new width: $it")
+        }
+    }
+    val height = bind { heightProp }.apply {
+        onChange {
+            println("new height: $it")
+        }
+    }
     val playersNumber = bind { playersNumberProp }
 
     val playersAndShips = bind { shipsProp }.apply(::playersNamesListener)
     val playersNames = bind { playersNamesProp }
 
     val battleShipsTypes = bind { shipsTypesProp }
-
-    init {
-        playersAndShips["Astra-1"] = mutableListOf(Ship(1 to 1), Ship(3 to 3))
-        playersAndShips["Astra-2"] = mutableListOf(Ship(1 to 1, 1 to 2, 1 to 3))
-        playersAndShips["Astra-3"] = mutableListOf(Ship(3 to 1, 3 to 2, 3 to 3, 3 to 4))
-    }
 
     private fun putInitials(map: SimpleMapProperty<Int, Int>) {
         (0 until shipsTypes).forEach { map[it + 1] = shipsTypes - it }
@@ -60,6 +64,12 @@ class BattleModel : ViewModel() {
                 change.wasRemoved() -> playersNames.remove(change.key)
             }
         })
+    }
+
+    fun put(receive: FleetSettingsMessage) {
+        width.value = receive.width
+        height.value = receive.height
+        battleShipsTypes.putAll(receive.shipsTypes)
     }
 }
 

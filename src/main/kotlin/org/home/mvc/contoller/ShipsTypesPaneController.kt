@@ -3,21 +3,22 @@ package org.home.mvc.contoller
 import javafx.beans.property.SimpleMapProperty
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
-import org.home.app.injecting
+import org.home.mvc.contoller.events.ShipCountEvent
+import org.home.mvc.contoller.events.ShipDiscountEvent
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.battle.ShipTypePaneComponent
 import org.home.mvc.view.components.getCell
 import org.home.mvc.view.components.marginGrid
 import org.home.mvc.view.components.transpose
-import org.home.mvc.view.fleet.FleetBoxStyleComponent.removeAnyColor
+import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.style.AppStyles
 import tornadofx.Controller
 import tornadofx.addClass
 
 class ShipsTypesPaneController: Controller() {
 
-    private val model: BattleModel by injecting()
-    private val component: ShipTypePaneComponent by injecting()
+    private val model: BattleModel by di()
+    private val component: ShipTypePaneComponent by di()
 
     fun shipTypesPaneControl(): GridPane {
         val shipsTypes = model.battleShipsTypes

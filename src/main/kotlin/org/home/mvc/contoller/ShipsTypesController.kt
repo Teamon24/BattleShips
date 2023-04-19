@@ -1,12 +1,18 @@
 package org.home.mvc.contoller
 
-import javafx.collections.FXCollections
-import javafx.collections.ObservableMap
-import org.home.utils.aliases.Coord
+
+import org.home.mvc.contoller.events.ShipCountEvent
+import org.home.mvc.contoller.events.ShipDiscountEvent
+import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
+import org.home.mvc.model.copy
+import org.home.utils.aliases.Coord
 import tornadofx.Controller
 
-class ShipsTypesController(private val map: ObservableMap<Int, Int> = FXCollections.observableHashMap()): Controller() {
+class ShipsTypesController: Controller() {
+
+    private val model: BattleModel by di()
+    private val map = model.battleShipsTypes.copy()
 
     fun validates(newShip: Collection<Coord>): Boolean {
         newShip.ifEmpty { return false }
@@ -14,7 +20,7 @@ class ShipsTypesController(private val map: ObservableMap<Int, Int> = FXCollecti
         val newShipSize = newShip.size
         if (newShipSize > shipMaxLength()) return false
 
-        val shipsNumber = this[newShipSize]
+        val shipsNumber = map[newShipSize]
         if (shipsNumber == 0) return false
 
         return true
@@ -44,10 +50,11 @@ class ShipsTypesController(private val map: ObservableMap<Int, Int> = FXCollecti
     }
 
     fun discount(ships: List<Ship>) {
-        ships.forEach { ship ->
-            map[ship.size] = map[ship.size]?.plus(1)
-        }
+        ships
+            .filter { it.size != 0 }
+            .onEach { ship -> map[ship.size] = map[ship.size]?.plus(1) }
+            .forEach {
+                fire(ShipDiscountEvent(it.size))
+            }
     }
-
-    operator fun get(index: Int) = map[index]
 }

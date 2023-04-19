@@ -1,9 +1,6 @@
 package org.home.mvc.contoller
 
 import tornadofx.Controller
+import tornadofx.ScopedInstance
 
-/**
- *
- */
-open class BattleController: Controller() {
-}
+abstract class BattleController: Controller()

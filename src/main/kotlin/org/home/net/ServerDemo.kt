@@ -7,7 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.home.mvc.contoller.GameTypeController
-import org.home.utils.fixedThreadPool
+import org.home.utils.threadsScope
 import org.home.utils.singleThread
 
 class ServerDemo {
@@ -23,11 +23,14 @@ class ServerDemo {
             override fun onMiss(msg: MissMessage) = msg("onMiss")
             override fun onConnect(msg: ConnectMessage) = msg("onConnect")
             override fun onMessage(msg: Message) = msg("UNIFIED")
+            override fun onTurn(msg: TurnMessage) { msg("UNIFIED") }
+            override fun onFleetSettings(msg: FleetSettingsMessage) { msg("UNIFIED") }
+            override fun onPlayers(msg: PlayersMessage) { msg("UNIFIED") }
         }
 
         fun msg(act: String) = HitMessage(act.rsp, 0, "player", "target")
         private val String.rsp get() = "$this response"
-        private val battleServer = BattleServer(gameController)
+        private val battleServer = BattleServer()
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -35,10 +38,10 @@ class ServerDemo {
             singleThread("server") { battleServer.start(port) }
 
             val threads = 5
-            val clientPoll = fixedThreadPool(threads, "client-pool")
+            val clientPoll = threadsScope(threads, "client-pool")
 
             val clients = 10
-            val delayAfterConnection: Long = 3000
+            val delayAfterConnection: Long = 5000
             val send = command(clients, clientPoll, port, delayAfterConnection) {
                 this.send(it)
             }
@@ -59,7 +62,7 @@ class ServerDemo {
         ): List<Job> = (1..threads).map {
             val message = message(it)
             clientPoll.launch(start = CoroutineStart.LAZY) {
-                val battleClient = BattleClient(gameController)
+                val battleClient = BattleClient()
                 battleClient.connect("localhost", port)
                 delay(delayAfterConnection)
                 battleClient.send(message)
