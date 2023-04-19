@@ -1,7 +1,6 @@
 package org.home.net
 
 import javafx.beans.property.SimpleListProperty
-import javafx.beans.property.SimpleMapProperty
 import org.home.mvc.model.BattleModel
 import org.home.net.ActionType.*
 import java.io.Serializable
@@ -14,19 +13,20 @@ enum class ActionType {
     DEFEAT,
     ENDGAME,
     TURN,
+    PLAYERS,
     MISS,
     EMPTY,
     FLEET_SETTINGS,
     SUCCESS
 }
 
-interface Message: Serializable
+interface Message: Serializable {val actionType: ActionType}
 
 interface HasText {
     val text: String
 }
 
-open class ActionMessage(val actionType: ActionType): Message
+open class ActionMessage(override val actionType: ActionType): Message
 
 open class TextMessage(actionType: ActionType, override val text: String): ActionMessage(actionType), HasText {
     override fun toString() = "TextMessage($actionType, $text)"
@@ -62,9 +62,11 @@ class DefeatMessage(defeated: String): PlayerMessage(DEFEAT, player = defeated)
 class EndGameMessage(winner: String): PlayerMessage(ENDGAME, player = winner)
 class TurnMessage(player: String): PlayerMessage(TURN, player = player)
 
-class PlayersMessage(val players: List<String>): ActionMessage(TURN) {
+class PlayersMessage(val players: List<String>): ActionMessage(PLAYERS) {
 
-    constructor(players: SimpleListProperty<String>): this(players.value.toList())
+    constructor(excluded: String, players: SimpleListProperty<String>):
+            this(players.value.toList().filter { it != excluded })
+
     override fun toString(): String {
         return "PlayersMessage($actionType, players=$players)"
     }

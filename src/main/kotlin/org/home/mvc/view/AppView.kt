@@ -11,8 +11,10 @@ import org.home.mvc.view.components.cell
 import org.home.mvc.view.components.centerGrid
 import org.home.mvc.view.components.transit
 import org.home.style.AppStyles
+import java.awt.Dimension
 import tornadofx.View
 import tornadofx.addClass
+import kotlin.math.roundToInt
 
 class AppView : View("Hello TornadoFX") {
 
@@ -36,7 +38,15 @@ class AppView : View("Hello TornadoFX") {
             }
         }
         if (appProps.players != null) {
-            StageUtils.setInitialPosition(this, appProps.player!!, appProps.players!!, StageUtils::screenSize)
+            val screenSize = StageUtils.screenSize()
+            val shrink = 0.965
+            StageUtils.setInitialPosition(this, appProps.player!!, appProps.players!!,
+                {
+                    screenSize.run { Dimension((width * shrink).roundToInt(), height) }
+                }, {
+                    this.x = this.x + screenSize.width * (1 - shrink)
+                }
+            )
         }
     }
 }

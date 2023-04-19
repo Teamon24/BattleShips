@@ -15,7 +15,7 @@ import tornadofx.toObservable
 class BattleModel : ViewModel() {
 
     companion object {
-        const val i = 10
+        const val i = 7
         const val shipsTypes = 4
     }
 

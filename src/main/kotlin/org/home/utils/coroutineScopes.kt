@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.newSingleThreadContext
 
-private val serverScope = threadsScope(2, "SERVER-POOL")
+val serverScope = threadsScope(Runtime.getRuntime().availableProcessors(), "SERVER-POOL")
 val ioScope = CoroutineScope(Dispatchers.IO)
 
 fun threadsScope(threads: Int, name: String) =
@@ -14,4 +14,4 @@ fun threadsScope(threads: Int, name: String) =
 
 fun singleThreadScope(name: String) = CoroutineScope(newSingleThreadContext(name))
 
-fun singleThread(name: String = "", launchBlock: suspend () -> Any) = CoroutineScope(newSingleThreadContext(name)).launch { launchBlock() }
+fun singleThreadScope(name: String = "", launchBlock: suspend () -> Any) = CoroutineScope(newSingleThreadContext(name)).launch { launchBlock() }

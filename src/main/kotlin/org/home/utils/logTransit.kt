@@ -5,21 +5,25 @@ import org.home.ApplicationProperties
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.coord
+import org.home.net.socket.ex.sendSign
 import tornadofx.UIComponent
 import kotlin.reflect.KClass
 
 fun logger(block: StringBuilder.() -> Unit) {
     val builder = StringBuilder()
-    singleThread("APP-LOGGER") {
-        builder.block()
-        threadPrint(builder)
-    }
+    builder.block()
+    threadPrint(builder)
 }
 
 fun log(block: () -> Any) {
-    singleThread("APP-LOGGER") {
-        threadPrintln(block())
-    }
+    threadPrintln(block())
+}
+
+fun logCom(client: String, block: () -> Any) {
+    threadPrintln("->>>>>>> ($client) #sendAndReceive ->>>>>>>")
+    block()
+    threadPrintln("<<<<<<<- ($client) #sendAndReceive <<<<<<<-")
+    println()
 }
 
 fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: KClass<out UIComponent>) {

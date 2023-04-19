@@ -17,6 +17,8 @@ import org.home.net.PlayersMessage
 import org.home.net.ShotMessage
 import org.home.net.SuccessConnection
 import org.home.net.TurnMessage
+import org.home.utils.log
+import org.home.utils.logger
 
 class AllAgainstAllController : GameTypeController() {
     override fun onShot(msg: ShotMessage): ActionMessage { TODO("onShot") }
@@ -31,7 +33,7 @@ class AllAgainstAllController : GameTypeController() {
         return SuccessConnection(msg.player)
     }
 
-    override fun onMessage(msg: Message): Message { TODO("onMessage") }
+    override fun onMessage(msg: Message) { log { msg } }
     override fun onTurn(msg: TurnMessage) { TODO("onTurn") }
     override fun onFleetSettings(msg: FleetSettingsMessage) {
         fire(FleetSettingsAccepted(msg))

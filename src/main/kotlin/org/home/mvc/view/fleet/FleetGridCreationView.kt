@@ -36,6 +36,9 @@ class FleetGridCreationView : View("Создание флота") {
     private val currentView = this@FleetGridCreationView
 
     init {
+
+        this.title = applicationProperties.currentPlayer.uppercase()
+
         subscribe<PlayerWasConnected> {
             model.playersAndShips[it.playerName] = mutableListOf()
         }

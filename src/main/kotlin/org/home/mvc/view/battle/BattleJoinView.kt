@@ -41,6 +41,7 @@ class BattleJoinView : View("Присоединиться к битве") {
     private val currentView = this@BattleJoinView
 
     init {
+        this.title = applicationProperties.currentPlayer.uppercase()
         subscribe<FleetSettingsAccepted> {
             model.put(it.msg)
         }

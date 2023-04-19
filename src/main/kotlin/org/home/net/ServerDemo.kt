@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.home.mvc.contoller.GameTypeController
 import org.home.utils.threadsScope
-import org.home.utils.singleThread
+import org.home.utils.singleThreadScope
 
 class ServerDemo {
 
@@ -22,7 +22,7 @@ class ServerDemo {
             override fun onEndGame(msg: EndGameMessage) = msg("onEndGame")
             override fun onMiss(msg: MissMessage) = msg("onMiss")
             override fun onConnect(msg: ConnectMessage) = msg("onConnect")
-            override fun onMessage(msg: Message) = msg("UNIFIED")
+            override fun onMessage(msg: Message) { msg("UNIFIED") }
             override fun onTurn(msg: TurnMessage) { msg("UNIFIED") }
             override fun onFleetSettings(msg: FleetSettingsMessage) { msg("UNIFIED") }
             override fun onPlayers(msg: PlayersMessage) { msg("UNIFIED") }
@@ -35,7 +35,7 @@ class ServerDemo {
         @JvmStatic
         fun main(args: Array<String>) {
             val port = 4444
-            singleThread("server") { battleServer.start(port) }
+            singleThreadScope("server") { battleServer.start(port) }
 
             val threads = 5
             val clientPoll = threadsScope(threads, "client-pool")

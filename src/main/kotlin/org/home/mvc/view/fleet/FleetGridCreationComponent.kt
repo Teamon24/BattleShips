@@ -24,7 +24,7 @@ import org.home.style.AppStyles
 import org.home.utils.atomic
 import org.home.utils.invoke
 import org.home.utils.log
-import org.home.utils.singleThread
+import org.home.utils.singleThreadScope
 import tornadofx.Controller
 import tornadofx.addChildIfPossible
 
@@ -131,7 +131,7 @@ class FleetGridCreationComponent : Controller() {
         exitHappened(true)
         if (dragged()) {
             event.log()
-            singleThread {
+            singleThreadScope {
                 delay(delayTime)
                 removeAnyColor(currentShip.filter { it !in ships.flatten() })
                 ships.forEach { removeIncorrectColor(it) }

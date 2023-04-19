@@ -1,13 +1,15 @@
 package org.home.utils
 
 fun threadPrintln(message: String) {
-    println("[${Thread.currentThread().name}]: $message")
+    println(threadLog(message))
 }
 
 fun threadPrintln(any: Any) {
-    println("[${Thread.currentThread().name}]: $any")
+    println(threadLog(any))
 }
 
 fun threadPrint(any: Any) {
-    print("[${Thread.currentThread().name}]: $any")
+    print(threadLog(any))
 }
+
+fun threadLog(any: Any) = "[${Thread.currentThread().name}]: $any"

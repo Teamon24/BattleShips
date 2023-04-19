@@ -22,8 +22,9 @@ object StageUtils {
         println(getInitialPosition(3, 4, ::screenSize))
     }
 
-    fun setInitialPosition(view: View, player: Int, players: Int, screenSize: () -> Dimension) {
+    fun setInitialPosition(view: View, player: Int, players: Int, screenSize: () -> Dimension, shift: ViewInitialPosition.() -> Unit) {
         val initialPosition = getInitialPosition(player, players, screenSize)
+        initialPosition.shift()
         val (width, height, x, y) = initialPosition
         view.primaryStage.height = height
         view.primaryStage.width = width
@@ -52,8 +53,8 @@ object StageUtils {
     class ViewInitialPosition(
         val width: Double,
         val height: Double,
-        val x: Double,
-        val y: Double,
+        var x: Double,
+        var y: Double,
     )
     {
         val start = x to y

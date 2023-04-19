@@ -20,7 +20,7 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
 import org.home.utils.invoke
-import org.home.utils.singleThread
+import org.home.utils.singleThreadScope
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FleetGridHandlers(
@@ -114,7 +114,7 @@ class FleetGridHandlers(
                     gridPane.getCell(it).addIncorrectColor()
                 }
 
-                singleThread {
+                singleThreadScope {
                     delay(delayTime)
                     toRemove.forEach { gridPane.getCell(it).removeIncorrectColor() }
                     gridPane.removeIncorrectColor(beingConstructedShip)
@@ -185,7 +185,7 @@ class FleetGridHandlers(
             else -> true.also {
                 beingConstructedShip.addIfAbsent(currentCell.coord)
                 startWithinBorder(true)
-                singleThread {
+                singleThreadScope {
                     val filter = beingConstructedShip.filter { it !in ships.flatten() }
 
                     val border = first.border(

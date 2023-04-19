@@ -1,6 +1,8 @@
 package org.home.net
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.home.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
 import org.home.mvc.model.BattleModel
@@ -9,8 +11,7 @@ import org.home.net.socket.ex.sendSign
 import org.home.utils.MessageIO.read
 import org.home.utils.MessageIO.write
 import org.home.utils.ioScope
-import org.home.utils.threadPrintln
-import tornadofx.Controller
+import org.home.utils.log
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -19,7 +20,9 @@ import java.net.UnknownHostException
 
 class BattleClient: BattleController() {
     private val gameController: GameTypeController by di()
+    private val applicationProperties: ApplicationProperties by di()
     private val model: BattleModel by di()
+
     private lateinit var `in`: InputStream
     private lateinit var out: OutputStream
     private lateinit var socket: Socket
@@ -33,39 +36,37 @@ class BattleClient: BattleController() {
 
     @Throws(IOException::class)
     fun listen() {
-        threadPrintln("client is listening for server")
+        log { "client is listening for server" }
         ioScope.launch {
-            while (true) receive()
+            while (true) {
+                receive()
+            }
         }
     }
 
     fun send(msg: ActionMessage) {
         out.write(msg)
-        threadPrintln("$sendSign \"$msg\"")
+        log { "$sendSign \"$msg\"" }
     }
 
     fun receive(): Message {
-        threadPrintln("waiting for message")
-        val response = `in`.read<Message>()
-        threadPrintln("$receiveSign $response")
+        log { "waiting for message" }
+        val message = `in`.read<Message>()
+        log { "$receiveSign $message" }
 
-        when (response) {
-            is HitMessage -> gameController.onHit(response)
-            is ShotMessage -> gameController.onShot(response)
-            is ConnectMessage -> gameController.onConnect(response)
-            is DisconnectMessage -> gameController.onDisconnect(response)
-            is DefeatMessage -> gameController.onDefeat(response)
-            is EndGameMessage -> gameController.onEndGame(response)
-            is TurnMessage -> gameController.onTurn(response)
-            is MissMessage -> gameController.onMiss(response)
-            is FleetSettingsMessage -> model.put(response)
-            is PlayersMessage -> gameController.onPlayers(response)
+        when (message) {
+            is ConnectMessage -> runBlocking { gameController.onConnect(message) }
+            is FleetSettingsMessage -> {
+                model.put(message)
+                send(TextMessage(message.actionType, "${applicationProperties.currentPlayer} received a message"))
+            }
+            is PlayersMessage -> gameController.onPlayers(message)
             else -> throw RuntimeException(
-                "There is no case for class ${response::class.simpleName} in client#receive method"
+                "There is no case for class ${message::class.simpleName} in client#receive method"
             )
         }
 
-        return response
+        return message
     }
 
     fun stop() {

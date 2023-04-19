@@ -60,7 +60,7 @@ class BattleCreationView : View("Настройки боя") {
     private val ipAddress = SimpleStringProperty("$ip:$freePort")
 
     init {
-
+        this.title = applicationProperties.currentPlayer.uppercase()
         with(root) {
             centerGrid {
                 cell(0, 0) { settingsPane(ipAddress) }

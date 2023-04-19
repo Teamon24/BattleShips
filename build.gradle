@@ -126,12 +126,13 @@ task killPlayers {
     }
 }
 
-task server  { doLast { runApp(javaCp, application, 0, 6) }}
-task player0 { doLast { runApp(javaCp, player(0), 1, 6) } }
-task player1 { doLast { runApp(javaCp, player(1), 2, 6) } }
-task player2 { doLast { runApp(javaCp, player(2), 3, 6) } }
-task player3 { doLast { runApp(javaCp, player(3), 4, 6) } }
-task player4 { doLast { runApp(javaCp, player(4), 5, 6) } }
+task server  { doLast { runApp(javaCp, application, 0, 7) }}
+task player0 { doLast { runApp(javaCp, player(0), 1, 7) } }
+task player1 { doLast { runApp(javaCp, player(1), 2, 7) } }
+task player2 { doLast { runApp(javaCp, player(2), 3, 7) } }
+task player3 { doLast { runApp(javaCp, player(3), 4, 7) } }
+task player4 { doLast { runApp(javaCp, player(4), 5, 7) } }
+task player5 { doLast { runApp(javaCp, player(5), 6, 7) } }
 
 
 tasks.server.dependsOn(build)

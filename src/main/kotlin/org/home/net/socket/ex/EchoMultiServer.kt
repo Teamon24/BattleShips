@@ -2,13 +2,9 @@ package org.home.net.socket.ex
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.net.BattleClient
-import org.home.net.Message
 import org.home.net.MultiServer
 import org.home.utils.threadsScope
 import org.home.utils.singleThreadScope
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.Socket
 
 const val receiveSign = "<-"
@@ -42,7 +38,7 @@ fun main() {
 }
 
 private fun echoMultiServer() = object : MultiServer() {
-    override suspend fun listen(`in`: InputStream, out: OutputStream) { EchoServer().handle(`in`, out) }
+    override fun listen(client: Socket, clients: MutableMap<Socket, String>) { EchoServer().handle(client.getInputStream(), client.getOutputStream()) }
 }
 
 private fun GreetClient.send(number: Int, host: String, port: Int) {
