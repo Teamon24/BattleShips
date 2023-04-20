@@ -16,6 +16,7 @@ class MainApp: DiApp<AppView>(AppView::class)
 abstract class DiApp<T: View>(view: KClass<T>): App(view, AppStyles::class) {
 
     init {
+        Thread.currentThread().name = "UI"
         FX.dicontainer = object : DIContainer, KoinComponent {
             override fun <T : Any> getInstance(type: KClass<T>): T {
                 val get = getKoin().get<T>(clazz = type)

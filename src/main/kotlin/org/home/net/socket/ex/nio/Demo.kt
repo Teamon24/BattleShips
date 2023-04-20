@@ -25,7 +25,6 @@ object Demo {
             singleThreadScope("client").launch(start = CoroutineStart.LAZY) {
                 runBlocking {
                     NioEchoClient().run {
-                        println(port())
                         sendMessage(message(it))
                         stop()
                     }

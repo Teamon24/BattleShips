@@ -1,7 +1,7 @@
 package org.home
 
 import org.home.utils.ln
-import org.home.utils.logger
+import org.home.utils.logging
 import java.util.*
 
 
@@ -23,7 +23,7 @@ class ApplicationProperties(
             resourceAsStream.use { stream -> props.load(stream) }
 
             props["port"] = (props["port"] as String).toInt()
-            logger {
+            logging {
                 ln("properties: ${appPropsFileName}.properties")
                 ln("properties content")
                 ln(props.entries.joinToString("\n") { "${it.key}:${it.value}" })

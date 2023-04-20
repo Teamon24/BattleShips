@@ -5,15 +5,16 @@ import org.home.ApplicationProperties
 import org.home.ApplicationProperties.Companion.creationButtonText
 import org.home.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.StageUtils
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.components.cell
 import org.home.mvc.view.components.centerGrid
 import org.home.mvc.view.components.transit
 import org.home.style.AppStyles
-import java.awt.Dimension
 import tornadofx.View
 import tornadofx.addClass
+import java.awt.Dimension
 import kotlin.math.roundToInt
 
 class AppView : View("Hello TornadoFX") {
@@ -22,7 +23,6 @@ class AppView : View("Hello TornadoFX") {
     override val root = VBox()
 
     init {
-
         with(root) {
             addClass(AppStyles.form)
             centerGrid {

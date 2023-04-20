@@ -19,7 +19,8 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
-import org.home.utils.invoke
+import org.home.utils.functions.invoke
+import org.home.utils.log
 import org.home.utils.singleThreadScope
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -77,7 +78,7 @@ class FleetGridHandlers(
                 }
                 gridPane.addIncorrectColor(beingConstructedShip)
 
-                println(beingConstructedShip)
+                log("being constructed ship:")
                 return@leftClickHandler
 
             }
@@ -90,8 +91,13 @@ class FleetGridHandlers(
                 gridPane.addIncorrectColor(beingConstructedShip)
             }
 
-            println(beingConstructedShip)
+            log("being constructed ship:")
         }
+    }
+
+    private fun log(title: String) {
+        log { title }
+        log { beingConstructedShip }
     }
 
     fun addDragReleasedHandler(currentCell: FleetCell, gridPane: GridPane) {

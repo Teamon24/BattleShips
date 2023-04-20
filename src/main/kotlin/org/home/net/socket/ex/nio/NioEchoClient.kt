@@ -1,7 +1,7 @@
 package org.home.net.socket.ex.nio
 
-import org.home.net.socket.ex.receiveSign
-import org.home.net.socket.ex.sendSign
+import org.home.utils.SocketUtils.receiveSign
+import org.home.utils.SocketUtils.sendSign
 import org.home.utils.threadPrintln
 import java.io.IOException
 import java.net.SocketAddress

@@ -27,7 +27,7 @@ repositories {
 }
 
 application {
-    mainClassName = 'org.home.MainKt'
+    mainClassName = 'org.home.ApplicationKt'
 }
 
 test {
@@ -58,6 +58,8 @@ javafx {
     configuration = 'implementation'
 }
 
+
+
 task fatJar(type: Jar) {
     manifest {
         attributes 'Main-Class': mainClassName
@@ -77,22 +79,41 @@ def pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors
 def sl = rootProject.ext.sl
 
 def application = "application"
-def additionalPlayersNumber = 12
+def additionalPlayersNumber = 6
 
-def propsList = concatArgs(application, toString(createProperties(additionalPlayersNumber)))
+def propsList = concat(application, toString(createProperties(additionalPlayersNumber)))
 
 
 String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
 
 def javaCp = [java, "-classpath",
-              sourceSets.main.runtimeClasspath.getAsPath(),
-              mainClassName]
+              sourceSets.main.runtimeClasspath.getAsPath()]
 
 def javaJar = [java, "-jar",
                "${project.path}\\build\\libs\\${project.name}-${project.version}.jar",
                mainClassName]
 
 def pidsFile = createFile("$projectDir${sl}pids.txt")
+
+
+task server  { doLast { runApp(concat(javaCp, mainClassName), application, 0, 7) }}
+task player0 { doLast { runApp(concat(javaCp, mainClassName), player(0), 1, 7) } }
+task player1 { doLast { runApp(concat(javaCp, mainClassName), player(1), 2, 7) } }
+task player2 { doLast { runApp(concat(javaCp, mainClassName), player(2), 3, 7) } }
+task player3 { doLast { runApp(concat(javaCp, mainClassName), player(3), 4, 7) } }
+task player4 { doLast { runApp(concat(javaCp, mainClassName), player(4), 5, 7) } }
+task player5 { doLast { runApp(concat(javaCp, mainClassName), player(5), 6, 7) } }
+tasks.server.dependsOn(build)
+
+
+task multiscreenCheck { doLast { runApp(concat(javaCp, 'org.home.Multiscreen_checkKt')) } }
+tasks.multiscreenCheck.dependsOn(build)
+
+def runApp(List<String> command, Object... args) {
+    exec {
+        commandLine concat(command, toString(args))
+    }
+}
 
 task runPlayers {
     doLast {
@@ -101,7 +122,7 @@ task runPlayers {
 
         for (int player = 0; player < propsList.size(); player++) {
             def props = propsList.get(player)
-            def process = process(javaCp, props, player, propsNumber)
+            def process = process(concat(javaCp, mainClassName), props, player, propsNumber)
             processes.add(process)
         }
 
@@ -113,6 +134,8 @@ task runPlayers {
         writer.close()
     }
 }
+tasks.runPlayers.dependsOn(build)
+
 
 task killPlayers {
     doLast {
@@ -126,23 +149,13 @@ task killPlayers {
     }
 }
 
-task server  { doLast { runApp(javaCp, application, 0, 7) }}
-task player0 { doLast { runApp(javaCp, player(0), 1, 7) } }
-task player1 { doLast { runApp(javaCp, player(1), 2, 7) } }
-task player2 { doLast { runApp(javaCp, player(2), 3, 7) } }
-task player3 { doLast { runApp(javaCp, player(3), 4, 7) } }
-task player4 { doLast { runApp(javaCp, player(4), 5, 7) } }
-task player5 { doLast { runApp(javaCp, player(5), 6, 7) } }
 
 
-tasks.server.dependsOn(build)
 
-def runApp(javaCp, Object... args) {
-    exec { commandLine concatArgs(javaCp, toString(args)) }
-}
 
-static def process(javaCp, Object... args) {
-    def process = new ProcessBuilder(concatArgs(javaCp, toString(args))).start()
+
+static def process(List<String> command, Object... args) {
+    def process = new ProcessBuilder(concat(command, toString(args))).start()
     println "process ${process.pid()} was started"
     return process
 }
@@ -155,15 +168,21 @@ static def toString(List<?> args) {
     return args.stream().map(Object::toString).collect(Collectors.toList())
 }
 
-static def concatArgs(ArrayList<String> list1, List<String> list2) {
-    def all = new ArrayList<String>(list1)
-    all.addAll(list2)
+static def concat(List<String> args1, List<String> args2) {
+    def all = new ArrayList<String>(args1)
+    all.addAll(args2)
     return all
 }
 
-static def concatArgs(String string, List<String> list2) {
-    def all = new ArrayList<String>(list2)
-    all.add(string)
+static def concat(String arg, List<String> args) {
+    def all = new ArrayList<String>(args)
+    all.add(arg)
+    return all
+}
+
+static def concat(List<String> args, String arg) {
+    def all = new ArrayList<String>(args)
+    all.add(arg)
     return all
 }
 

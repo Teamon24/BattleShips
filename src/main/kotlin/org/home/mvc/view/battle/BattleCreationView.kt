@@ -112,6 +112,7 @@ class BattleCreationView : View("Настройки боя") {
                     battleServer.start(freePort)
                     view.replaceWith(FleetGridCreationView::class, slide)
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     openErrorWindow {
                         "Не удалось создать хост ${ipAddress.value}"
                     }

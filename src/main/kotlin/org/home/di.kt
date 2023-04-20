@@ -1,9 +1,7 @@
 package org.home
 
 import org.home.mvc.contoller.AllAgainstAllController
-import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
-import org.home.mvc.contoller.PlayersNamesPaneController
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.model.BattleModel
@@ -23,7 +21,6 @@ val diModule = { props: String, player: Int, players: Int ->
 
         single { BattleModel() }
         single { BattleCreationView() }
-        single { PlayersNamesPaneController() }
         single { ShipsTypesPaneController() }
         single { ShipTypePaneComponent() }
         single { ShipsTypesController() }

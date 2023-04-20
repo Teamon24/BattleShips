@@ -11,6 +11,7 @@ import org.home.mvc.view.components.removeColumn
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.style.AppStyles
 import org.home.utils.RomansDigits
+import org.home.utils.log
 import tornadofx.Controller
 import tornadofx.action
 import tornadofx.addClass
@@ -37,7 +38,8 @@ class ShipTypePaneComponent: Controller() {
                         setNewNumberAsText(gridPane, shipType, number + 1)
                     }
                     shipsTypes[column] = 1
-                    println(shipsTypes)
+                    log { "ships types:" }
+                    log { shipsTypes }
                 }
             }
             gridPane.add(it, 0, 0)
@@ -57,7 +59,8 @@ class ShipTypePaneComponent: Controller() {
                             shipsTypes[shipType] = newNumber
                             setNewNumberAsText(gridPane, shipType, newNumber)
                         }
-                        println(shipsTypes)
+                        log { "ships types:" }
+                        log { shipsTypes }
                     }
                 }
             }

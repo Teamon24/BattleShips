@@ -1,5 +1,6 @@
 package org.home.mvc.model
 
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
@@ -8,7 +9,6 @@ import javafx.collections.MapChangeListener
 import javafx.collections.ObservableMap
 import org.home.net.FleetSettingsMessage
 import tornadofx.ViewModel
-import tornadofx.onChange
 import tornadofx.toObservable
 
 
@@ -28,27 +28,19 @@ class BattleModel : ViewModel() {
 
     private val widthProp = SimpleIntegerProperty(i)
     private val heightProp = SimpleIntegerProperty(i)
-    private val playersNumberProp = SimpleIntegerProperty(2)
+    private val playersNumberProp = SimpleIntegerProperty(6)
     private val playersNamesProp = SimpleListProperty<String>()
 
-    private val shipsProp =
+    private val playersAndShipsProp =
         emptySimpleMapProperty<String, MutableList<Ship>>()
 
     private val shipsTypesProp = emptySimpleMapProperty<Int, Int>().apply(::putInitials)
 
-    val width = bind { widthProp }.apply {
-        onChange {
-            println("new width: $it")
-        }
-    }
-    val height = bind { heightProp }.apply {
-        onChange {
-            println("new height: $it")
-        }
-    }
-    val playersNumber = bind { playersNumberProp }
+    val width = bind { widthProp }
+    val height = bind { heightProp }
 
-    val playersAndShips = bind { shipsProp }.apply(::playersNamesListener)
+    val playersNumber = bind { playersNumberProp }
+    val playersAndShips = bind { playersAndShipsProp }.apply(::notifyOnChange)
     val playersNames = bind { playersNamesProp }
 
     val battleShipsTypes = bind { shipsTypesProp }
@@ -57,11 +49,24 @@ class BattleModel : ViewModel() {
         (0 until shipsTypes).forEach { map[it + 1] = shipsTypes - it }
     }
 
-    private fun playersNamesListener(map: SimpleMapProperty<String, MutableList<Ship>>) {
+    val readyPlayers = mutableMapOf<String, SimpleBooleanProperty>()
+
+
+
+    private fun notifyOnChange(
+        map: SimpleMapProperty<String, MutableList<Ship>>
+    ) {
         map.addListener(MapChangeListener { change ->
+            val newPlayer = change.key
             when {
-                change.wasAdded() -> playersNames.add(change.key)
-                change.wasRemoved() -> playersNames.remove(change.key)
+                change.wasAdded() -> {
+                    playersNames.add(newPlayer)
+                    readyPlayers[newPlayer] = SimpleBooleanProperty(false)
+                }
+                change.wasRemoved() -> {
+                    playersNames.remove(newPlayer)
+                    readyPlayers.remove(newPlayer)
+                }
             }
         })
     }
@@ -72,6 +77,8 @@ class BattleModel : ViewModel() {
         battleShipsTypes.putAll(receive.shipsTypes)
     }
 }
+
+val MutableMap<String, SimpleBooleanProperty>.thoseAreReady get() = run { filter { it.value.value }.keys.toSet() }
 
 fun <K, V> SimpleMapProperty<K, V>.copy(): ObservableMap<K, V> {
     return toMutableMap().toObservable()

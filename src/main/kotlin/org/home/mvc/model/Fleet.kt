@@ -2,6 +2,7 @@ package org.home.mvc.model
 
 import org.home.utils.aliases.Coord
 import org.home.utils.aliases.border
+import org.home.utils.log
 
 @JvmInline
 value class Team(val number: String)
@@ -54,8 +55,8 @@ fun Ships.addIfAbsent(ship: Ship) {
 }
 
 fun logShips(ships: Ships, action: String = "") {
-    println(action)
-    ships.forEach { println(it) }
+    log { action }
+    ships.forEach { log { it } }
 }
 
 fun Collection<Coord>.toShip() = Ship(this)

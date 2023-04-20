@@ -43,7 +43,6 @@ class FleetGridCreator(height: Int, width: Int) {
     }
 
     private fun fleetCells(gridPane: GridPane) {
-        println("creating fleet grid: (${rowRange.last}, ${colRange.last})")
         for (row in rowRange) {
             for (col in colRange) {
                 cell(row, col) {

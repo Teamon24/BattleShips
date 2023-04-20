@@ -3,17 +3,11 @@ package org.home.net
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
 import org.home.mvc.model.BattleModel
-import org.home.net.socket.ex.receiveSign
-import org.home.net.socket.ex.sendSign
-import org.home.utils.MessageIO.read
-import org.home.utils.MessageIO.write
-import org.home.utils.log
-import org.home.utils.logCom
-import org.home.utils.threadPrintln
-import java.io.InputStream
-import java.io.OutputStream
+import org.home.utils.SocketUtils.receive
+import org.home.utils.SocketUtils.sendAll
+import org.home.utils.functions.exclude
+import org.home.utils.logThreadClientWaiting
 import java.net.Socket
-import kotlin.concurrent.thread
 
 class BattleServer : BattleController() {
 
@@ -21,97 +15,75 @@ class BattleServer : BattleController() {
     private val model: BattleModel by di()
 
     private val multiServer = object : MultiServer() {
-        override fun listen(client: Socket, clients: MutableMap<Socket, String>) {
+
+        override fun listen(client: Socket,
+                            clients: MutableMap<Socket, String>) {
 
             val `in` = client.getInputStream()
+
             while (true) {
-                log {
-                    "waiting for ${
-                        clients[client]!!
-                            .ifEmpty { "connection" }
-                            .apply { ifNoEmpty { Thread.currentThread().name = "$this listener" } }
-                    } "
-                }
+                logThreadClientWaiting(clients, client)
                 val message = `in`.receive()
-                when (message) {
-                    is ShotMessage -> gameController.onShot(message)
-                    is HitMessage -> gameController.onHit(message)
-                    is EmptyMessage -> gameController.onEmpty(message)
-                    is DefeatMessage -> gameController.onDefeat(message)
+                process(message, client, clients)
+            }
+        }
+    }
 
-                    is DisconnectMessage -> gameController.onDisconnect(message)
-                    is EndGameMessage -> gameController.onEndGame(message)
+    private fun process(
+        message: Message,
+        client: Socket,
+        clients: MutableMap<Socket, String>,
+    ) {
+        when (message) {
+            is ShotMessage -> gameController.onShot(message)
+            is HitMessage -> gameController.onHit(message)
+            is EmptyMessage -> gameController.onEmpty(message)
+            is DefeatMessage -> gameController.onDefeat(message)
 
-                    is MissMessage -> gameController.onMiss(message)
-                    is ConnectMessage -> {
-                        val playerConnectedMessage = message
+            is DisconnectMessage -> gameController.onDisconnect(message)
+            is EndGameMessage -> gameController.onEndGame(message)
 
-                        gameController.onConnect(playerConnectedMessage)
+            is MissMessage -> gameController.onMiss(message)
+            is ConnectMessage -> gameController.onConnect(client, clients, message)
+            is ReadyMessage -> {
+                clients.exclude(client).sendAll(message)
 
-                        val connectedPlayer = playerConnectedMessage.player
+                val turnMessage = gameController.onReady(message)
 
-                        clients[client] = connectedPlayer
-                        val out = client.getOutputStream()
-
-                        logCom(connectedPlayer) {
-                            out.sendAndReceive(FleetSettingsMessage(model), `in`)
-                        }
-
-                        logCom(connectedPlayer) {
-                            out.send(PlayersMessage(connectedPlayer, model.playersNames))
-                        }
-
-                        thread(name = "onConnection listener") {
-                            clients
-                                .filter { it.value != connectedPlayer }
-                                .sendAll(playerConnectedMessage, `in`)
-                        }
-                    }
-
-                    else -> gameController.onMessage(message)
+                turnMessage?.also { msg ->
+                    clients.exclude(client).sendAll(msg)
+                    gameController.onTurn(msg)
                 }
             }
-        }
-    }
 
-    private fun Map<Socket, String>.sendAll(
-        message: ConnectMessage,
-        `in`: InputStream,
-    ) {
-        forEach {
-            logCom(it.value) {
-                it.key.getOutputStream().send(message)
-            }
+            else -> gameController.onMessage(message)
         }
-    }
-
-    fun listen(client: Socket, clients: MutableMap<Socket, String>) {
-        multiServer.listen(client, clients)
     }
 
     fun start(port: Int) {
         multiServer.start(port)
     }
 
-    fun OutputStream.sendAndReceive(msg: Message, `in`: InputStream) {
-        send(msg)
-        `in`.receive()
+    fun listen(client: Socket, clients: MutableMap<Socket, String>) {
+        multiServer.listen(client, clients)
     }
 
-    private fun InputStream.receive(): Message {
-        val message = read<Message>()
-        threadPrintln("$receiveSign \"$message\"")
-        return message
+    override fun onFleetCreationViewExit() {
+        TODO("Not yet implemented")
     }
 
-    private fun OutputStream.send(msg: Message) {
-        write(msg)
-        threadPrintln("$sendSign \"$msg\"")
+    override fun startBattle() {
+        val currentPlayer = applicationProperties.currentPlayer
+        model.readyPlayers[currentPlayer]!!.value = true
+        val readyMessage = ReadyMessage(currentPlayer)
+        multiServer.clients.sendAll(readyMessage)
     }
 
-    private fun String.ifNoEmpty(function: String.() -> Unit) {
-        if (this.isNotEmpty()) {
-            this.function()
-        }
+    override fun hitLogic(hitMessage: HitMessage) {
+        multiServer.clients.sendAll(hitMessage)
     }
 }
+
+
+
+

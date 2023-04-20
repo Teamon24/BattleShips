@@ -44,7 +44,7 @@ class AppStyles : Stylesheet() {
 
         private const val fleetBorderWidth = 0.5
 
-        private val chosenCellColor = Paint.valueOf("#085191")
+        val chosenCellColor = Paint.valueOf("#085191")
         private val wrongCellColor = RED
         private val emptyCellColor = WHITE
 

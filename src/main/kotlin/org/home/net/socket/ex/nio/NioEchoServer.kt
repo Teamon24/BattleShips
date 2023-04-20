@@ -2,9 +2,8 @@ package org.home.net.socket.ex.nio
 
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.home.net.socket.ex.receiveSign
-import org.home.net.socket.ex.sendSign
-import org.home.utils.ioScope
+import org.home.utils.SocketUtils.receiveSign
+import org.home.utils.SocketUtils.sendSign
 import org.home.utils.threadsScope
 import org.home.utils.threadPrintln
 import java.io.File
@@ -104,7 +103,6 @@ object NioEchoServer {
 
     fun stop() {
         scope.cancel()
-        ioScope.cancel()
     }
 
     @Throws(IOException::class, InterruptedException::class)

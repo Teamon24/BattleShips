@@ -21,8 +21,8 @@ import org.home.mvc.view.components.getCell
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.style.AppStyles
-import org.home.utils.atomic
-import org.home.utils.invoke
+import org.home.utils.functions.atomic
+import org.home.utils.functions.invoke
 import org.home.utils.log
 import org.home.utils.singleThreadScope
 import tornadofx.Controller
@@ -58,10 +58,6 @@ class FleetGridCreationComponent : Controller() {
     private val components = FleetGridCreator(model.height.value, model.width.value)
 
     val root: VBox = VBox().apply {
-        println("${this::class.simpleName}: " +
-                "creating fleet grid " +
-                "(${model.width.value}, ${model.height.value})")
-
         alignment = Pos.CENTER
 
         val grid = components

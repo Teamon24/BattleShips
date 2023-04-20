@@ -14,6 +14,11 @@ class FleetGrid : GridPane() {
         return this
     }
 
+    fun onEachFleetCells(block: (FleetCell) -> Unit): FleetGrid {
+        forEachFleetCells(block)
+        return this
+    }
+
     fun forEachFleetCells(block: (FleetCell) -> Unit) {
         this.children.forEach {
             val (row, col) = getIndices(it)
@@ -25,10 +30,8 @@ class FleetGrid : GridPane() {
     }
 
     fun addFleetCellClass(cssRule: CssRule): FleetGrid {
-        forEachFleetCells {
+        return onEachFleetCells {
             it.addClass(cssRule)
         }
-
-        return this
     }
 }

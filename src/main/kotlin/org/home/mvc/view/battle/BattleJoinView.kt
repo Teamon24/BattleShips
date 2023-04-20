@@ -23,7 +23,6 @@ import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
-import tornadofx.gridpane
 import tornadofx.label
 import tornadofx.textfield
 
@@ -37,13 +36,12 @@ class BattleJoinView : View("Присоединиться к битве") {
     }
 
     private val fleetGridCreationView = FleetGridCreationView::class
-
     private val currentView = this@BattleJoinView
 
     init {
         this.title = applicationProperties.currentPlayer.uppercase()
         subscribe<FleetSettingsAccepted> {
-            model.put(it.msg)
+            model.put(it.settings)
         }
     }
 
@@ -60,13 +58,8 @@ class BattleJoinView : View("Присоединиться к битве") {
                     try {
                         applicationProperties.isServer = false
                         val (ip, port) = extract()
-
-
-
                         battleClient.connect(ip, port)
-
                         log { "connected to $ip:$port" }
-
                         battleClient.send(connectMessage())
                         battleClient.listen()
                         currentView.replaceWith(fleetGridCreationView, slide)
