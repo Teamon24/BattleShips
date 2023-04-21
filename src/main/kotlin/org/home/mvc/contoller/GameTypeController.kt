@@ -17,7 +17,7 @@ abstract class GameTypeController: Controller() {
     abstract fun onDisconnect(msg: DisconnectMessage): ActionMessage
     abstract fun onEndGame(msg: EndGameMessage): ActionMessage
     abstract fun onMiss(msg: MissMessage): ActionMessage
-    abstract fun onConnect(client: Socket, clients: MutableMap<Socket, String>, msg: ConnectMessage)
+    abstract fun onConnect(sockets: MutableMap<String, Socket>, msg: ConnectMessage)
     abstract fun onMessage(msg: Message)
     abstract fun onTurn(msg: TurnMessage)
     abstract fun onReady(msg: ReadyMessage): TurnMessage?

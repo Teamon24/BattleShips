@@ -65,16 +65,15 @@ class AllAgainstAllController : GameTypeController() {
     }
 
     override fun onConnect(
-        client: Socket,
-        clients: MutableMap<Socket, String>,
+        sockets: MutableMap<String, Socket>,
         msg: ConnectMessage
     ) {
         val connectedPlayer = msg.player
 
-        clients[client] = connectedPlayer
+        val socket = sockets[connectedPlayer]!!
 
-        val out = client.getOutputStream()
-        val `in` = client.getInputStream()
+        val out = socket.getOutputStream()
+        val `in` = socket.getInputStream()
 
         fire(PlayerWasConnected(connectedPlayer))
 
@@ -90,7 +89,7 @@ class AllAgainstAllController : GameTypeController() {
             out.send(ReadyPlayersMessage(model.readyPlayers.thoseAreReady))
         }
 
-        clients
+        sockets
             .exclude(connectedPlayer)
             .sendAll(msg)
     }

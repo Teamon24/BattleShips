@@ -13,7 +13,7 @@ import kotlin.concurrent.thread
 
 class CheckTimeoutServer {
 
-    private val readTimeout = 1000
+    private val readTimeout = 250
 
     private lateinit var serverSocket: ServerSocket
 

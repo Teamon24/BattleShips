@@ -1,6 +1,8 @@
 package org.home.net
 
+import kotlinx.coroutines.launch
 import org.home.mvc.view.openErrorWindow
+import org.home.utils.functions.threadsScope
 import org.home.utils.log
 import java.io.IOException
 import java.net.ServerSocket
@@ -9,9 +11,10 @@ import kotlin.concurrent.thread
 
 abstract class MultiServer {
     private lateinit var serverSocket: ServerSocket
-    internal val clients: MutableMap<Socket, String> = mutableMapOf()
+    internal val sockets: MutableMap<String, Socket> = mutableMapOf()
+    private val threadsScope = threadsScope(Runtime.getRuntime().availableProcessors() * 2, "clients")
 
-    abstract fun listen(client: Socket, clients: MutableMap<Socket, String>)
+    abstract fun listen(socket: Socket)
 
     @Throws(IOException::class)
     fun start(port: Int) {
@@ -22,7 +25,9 @@ abstract class MultiServer {
             while (true) {
                 val client = serverSocket.accept()
                 log { "client has been connected" }
-                listen(client, clients)
+                threadsScope.launch {
+                    listen(client)
+                }
             }
         }
     }
@@ -32,18 +37,15 @@ abstract class MultiServer {
         start(getFreePort())
     }
 
-    fun getFreePort(): Int {
+    private fun getFreePort(): Int {
         try {
-            return ServerSocket(0).run {
-                use {
-                    assert(it.localPort > 0)
-                    return@run it.localPort
-                }
+            ServerSocket(0).run {
+                if (localPort > 0) return localPort
             }
 
         } catch (e: IOException) {
             openErrorWindow {
-                "Нет свободного порта"
+                "При выборе порта возникла ошибка"
             }
         }
         return 0

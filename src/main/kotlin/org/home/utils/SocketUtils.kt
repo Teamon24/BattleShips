@@ -30,10 +30,10 @@ object SocketUtils {
         log { "$sendSign $msg" }
     }
 
-    fun Map<Socket, String>.sendAll(message: Message) {
+    fun Map<String, Socket>.sendAll(message: Message) {
         forEach {
-            logCom(it.value) {
-                it.key.getOutputStream().send(message)
+            logCom(it.key) {
+                it.value.getOutputStream().send(message)
             }
         }
     }
