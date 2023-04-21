@@ -4,7 +4,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.home.utils.SocketUtils.receiveSign
 import org.home.utils.SocketUtils.sendSign
-import org.home.utils.threadsScope
+import org.home.utils.functions.threadsScope
 import org.home.utils.threadPrintln
 import java.io.File
 import java.io.IOException

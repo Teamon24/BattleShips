@@ -2,6 +2,7 @@ package org.home.utils
 
 import org.home.net.Message
 import org.home.utils.MessageIO.read
+import org.home.utils.MessageIO.readAll
 import org.home.utils.MessageIO.write
 import java.io.InputStream
 import java.io.OutputStream
@@ -21,6 +22,9 @@ object SocketUtils {
         log { "$receiveSign $msg" }
         return msg
     }
+
+    fun InputStream.receiveAll() = readAll()
+
     fun OutputStream.send(msg: Message) {
         write(msg)
         log { "$sendSign $msg" }

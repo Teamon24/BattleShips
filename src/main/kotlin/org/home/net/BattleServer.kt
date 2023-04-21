@@ -19,6 +19,7 @@ class BattleServer : BattleController() {
         override fun listen(client: Socket,
                             clients: MutableMap<Socket, String>) {
 
+            clients[client] = ""
             val `in` = client.getInputStream()
 
             while (true) {

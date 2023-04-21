@@ -24,7 +24,7 @@ import org.home.style.AppStyles
 import org.home.utils.functions.atomic
 import org.home.utils.functions.invoke
 import org.home.utils.log
-import org.home.utils.singleThreadScope
+import org.home.utils.functions.singleThreadScope
 import tornadofx.Controller
 import tornadofx.addChildIfPossible
 

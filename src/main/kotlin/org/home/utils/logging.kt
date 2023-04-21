@@ -1,6 +1,7 @@
 package org.home.utils
 
 import javafx.event.Event
+import kotlinx.coroutines.runBlocking
 import org.home.ApplicationProperties
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
@@ -27,6 +28,16 @@ fun logging(block: StringBuilder.() -> Unit) {
 }
 
 fun log(block: () -> Any) { threadPrintln(block()) }
+
+fun logTitle(title: String, block: () -> Any) {
+    val titlePart = buildString { repeat(7) { append('-') } }
+    runBlocking {
+        threadPrintln("$titlePart $title $titlePart")
+        threadPrintln(block())
+        threadPrintln("$titlePart $titlePart $titlePart")
+    }
+}
+
 
 @JvmName("logEvent")
 inline fun View.log(fxEvent: FXEvent, block: () -> Any = {}) {

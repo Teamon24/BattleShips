@@ -15,7 +15,7 @@ import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.receiveSign
 import org.home.utils.SocketUtils.sendSign
 import org.home.utils.log
-import org.home.utils.singleThreadScope
+import org.home.utils.functions.singleThreadScope
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream

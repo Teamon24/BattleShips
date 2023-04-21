@@ -21,7 +21,7 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
 import org.home.utils.functions.invoke
 import org.home.utils.log
-import org.home.utils.singleThreadScope
+import org.home.utils.functions.singleThreadScope
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FleetGridHandlers(
