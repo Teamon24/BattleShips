@@ -59,9 +59,8 @@ class BattleJoinView : View("Присоединиться к битве") {
                         applicationProperties.isServer = false
                         val (ip, port) = extract()
                         battleClient.connect(ip, port)
-                        log { "connected to $ip:$port" }
-                        battleClient.send(connectMessage())
                         battleClient.listen()
+                        battleClient.send(connectMessage())
                         currentView.replaceWith(fleetGridCreationView, slide)
                     } catch (e: Exception) {
                         e.printStackTrace()

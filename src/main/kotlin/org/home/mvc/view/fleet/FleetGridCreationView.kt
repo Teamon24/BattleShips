@@ -18,13 +18,16 @@ import org.home.mvc.view.components.col
 import org.home.mvc.view.components.row
 import org.home.mvc.view.components.transit
 import org.home.style.AppStyles
+import org.home.utils.functions.or
+import org.home.utils.functions.then
 import org.home.utils.log
-import org.home.utils.logEach
+import tornadofx.UIComponent
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.listview
+import kotlin.reflect.KClass
 
 class FleetGridCreationView : View("Создание флота") {
 
@@ -57,7 +60,7 @@ class FleetGridCreationView : View("Создание флота") {
 
         subscribe<ReadyPlayersAccepted> { event ->
             listView.refresh()
-            currentView.logEach(event, event.players) { "ready: $it" }
+            currentView.log(event, event.players) { "ready: $it" }
         }
 
         subscribe<PlayersAccepted> {
@@ -74,7 +77,17 @@ class FleetGridCreationView : View("Создание флота") {
             }
 
             row(2) {
-                col(0) { backTransit(currentView, BattleCreationView::class) }
+                col(0) {
+                    backTransit(
+                        currentView, {
+                            if (applicationProperties.isServer) {
+                                BattleCreationView::class
+                            } else {
+                                FleetGridCreationView::class
+                            }
+                        }
+                    )
+                }
                 col(1) { clearFieldButton() }
                 col(2) {
                     transit(currentView, BattleView::class, "В бой") {

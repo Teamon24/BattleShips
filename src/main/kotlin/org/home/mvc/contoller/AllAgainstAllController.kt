@@ -19,6 +19,7 @@ import org.home.net.ActionMessage
 import org.home.net.FleetSettingsMessage
 import org.home.net.Message
 import org.home.net.MissMessage
+import org.home.net.PlayerSocket
 import org.home.net.PlayersMessage
 import org.home.net.ReadyMessage
 import org.home.net.ReadyPlayersMessage
@@ -26,15 +27,13 @@ import org.home.net.ShotMessage
 import org.home.net.TurnMessage
 import org.home.utils.SocketUtils.send
 import org.home.utils.SocketUtils.sendAll
-import org.home.utils.SocketUtils.sendAndReceive
 import org.home.utils.functions.exclude
-import org.home.utils.ln
+import org.home.utils.functions.ln
 import org.home.utils.log
 import org.home.utils.logCom
 import org.home.utils.logging
 import org.home.utils.functions.or
 import org.home.utils.functions.then
-import java.net.Socket
 
 class AllAgainstAllController : GameTypeController() {
     override fun onShot(msg: ShotMessage): ActionMessage {
@@ -65,32 +64,29 @@ class AllAgainstAllController : GameTypeController() {
     }
 
     override fun onConnect(
-        sockets: MutableMap<String, Socket>,
+        socket: PlayerSocket,
+        sockets: Collection<PlayerSocket>,
         msg: ConnectMessage
     ) {
         val connectedPlayer = msg.player
-
-        val socket = sockets[connectedPlayer]!!
-
-        val out = socket.getOutputStream()
-        val `in` = socket.getInputStream()
+        socket.player = connectedPlayer
 
         fire(PlayerWasConnected(connectedPlayer))
 
         logCom(connectedPlayer) {
-            out.sendAndReceive(FleetSettingsMessage(model), `in`)
+            socket.send(FleetSettingsMessage(model))
         }
 
         logCom(connectedPlayer) {
-            out.send(PlayersMessage(model.playersNames.exclude(connectedPlayer)))
+            socket.send(PlayersMessage(model.playersNames.exclude(connectedPlayer)))
         }
 
         logCom(connectedPlayer) {
-            out.send(ReadyPlayersMessage(model.readyPlayers.thoseAreReady))
+            socket.send(ReadyPlayersMessage(model.readyPlayers.thoseAreReady))
         }
 
         sockets
-            .exclude(connectedPlayer)
+            .exclude(socket)
             .sendAll(msg)
     }
 
@@ -110,9 +106,10 @@ class AllAgainstAllController : GameTypeController() {
             .all(::isReady)
             .and(model.playersNames.size == model.playersNumber.value)
             .then {
-                chooseTurn(model).also {
-                    log { "server chose ${it.player} to shot first" }
-                }
+                chooseTurn(model)
+                    .also { log {
+                        "server chose ${it.player} to shot first"
+                    } }
             } or {
                 logging {
                     ln("ready players")

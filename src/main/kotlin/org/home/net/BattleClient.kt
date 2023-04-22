@@ -11,7 +11,6 @@ import org.home.mvc.contoller.events.WaitForYourTurn
 import org.home.mvc.model.BattleModel
 import org.home.utils.MessageIO.read
 import org.home.utils.MessageIO.write
-import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.receiveSign
 import org.home.utils.SocketUtils.sendSign
 import org.home.utils.log
@@ -36,29 +35,17 @@ class BattleClient: BattleController() {
         socket = Socket(ip, port, )
         out = socket.getOutputStream()
         `in` = socket.getInputStream()
+        log { "connected to $ip:$port" }
     }
 
     @Throws(IOException::class)
     fun listen() {
-
         log { "client is listening for server" }
-
-        singleThreadScope("server-listener#${appProps.currentPlayer}") {
+        singleThreadScope("receiver-#${appProps.currentPlayer}") {
             while (true) {
-                receive()
+                receiving()
             }
         }
-    }
-
-    private fun can(kFunction0: () -> Message): Boolean {
-        try {
-            kFunction0()
-        } catch (t: Throwable) {
-            log { "connection was closed" }
-            log { "reconnecting..." }
-            return true
-        }
-        return false
     }
 
     fun send(msg: Message) {
@@ -66,14 +53,7 @@ class BattleClient: BattleController() {
         log { "$sendSign \"$msg\"" }
     }
 
-    fun sendAndReceive(msg: Message) {
-        out.write(msg)
-        log { "$sendSign \"$msg\"" }
-        val receive = `in`.receive()
-        log { "$sendSign \"$receive\"" }
-    }
-
-    fun receive(): Message {
+    private fun receiving(): Message {
         log { "waiting for message" }
         val message = `in`.read<Message>()
         log { "$receiveSign $message" }
@@ -83,7 +63,7 @@ class BattleClient: BattleController() {
 
             is FleetSettingsMessage -> {
                 model.put(message)
-                sendResponse(message)
+                model.commit()
             }
 
             is ReadyPlayersMessage -> {

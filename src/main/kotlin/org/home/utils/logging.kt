@@ -1,12 +1,14 @@
 package org.home.utils
 
 import javafx.event.Event
-import kotlinx.coroutines.runBlocking
 import org.home.ApplicationProperties
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.coord
+import org.home.utils.functions.add
+import org.home.utils.functions.ifNotEmpty
 import org.home.utils.functions.isNotUnit
+import org.home.utils.functions.ln
 import tornadofx.FXEvent
 import tornadofx.UIComponent
 import tornadofx.View
@@ -21,6 +23,12 @@ fun threadPrint(any: Any) = print(threadLog(any))
 
 fun threadPrintln(message: String) = println(threadLog(message))
 
+fun threadPrintln(build: StringBuilder.() -> Unit) {
+    val builder = StringBuilder()
+    builder.build()
+    println(threadLog(builder))
+}
+
 fun logging(block: StringBuilder.() -> Unit) {
     val builder = StringBuilder()
     builder.block()
@@ -29,62 +37,52 @@ fun logging(block: StringBuilder.() -> Unit) {
 
 fun log(block: () -> Any) { threadPrintln(block()) }
 
-fun logTitle(title: String, block: () -> Any) {
-    val titlePart = buildString { repeat(7) { append('-') } }
-    runBlocking {
-        threadPrintln("$titlePart $title $titlePart")
-        threadPrintln(block())
-        threadPrintln("$titlePart $titlePart $titlePart")
+fun log(battleModel: BattleModel) {
+    logging {
+        battleModel.battleShipsTypes.forEach { entry -> add(entry) }
+        ln(battleModel.width.value)
+        ln(battleModel.height.value)
     }
 }
 
-
 @JvmName("logEvent")
-inline fun View.log(fxEvent: FXEvent, block: () -> Any = {}) {
-    val title = "<<< ${this::class.simpleName}: ${fxEvent::class.simpleName} >>>"
-
-    threadPrintln(title)
-    val result = block()
-    result.isNotUnit {
-        log { result }
+fun View.log(fxEvent: FXEvent, block: () -> Any = {}) {
+    logView(fxEvent) {
+        logResult(block)
     }
-    threadPrintln(title)
 }
 
 @JvmName("logEachEvent")
-inline fun <E> View.logEach(fxEvent: FXEvent, collection: Collection<E>, block: (E) -> Any = {}) {
-    val title = "<<< ${this::class.simpleName}: ${fxEvent::class.simpleName} >>>"
-
-    threadPrintln(title)
-    collection.forEach {
-        val result = block(it)
-        result.isNotUnit {
-            log { result }
+fun <E : Any> View.log(fxEvent: FXEvent, collection: Collection<E>, block: (E) -> Any = {}) {
+    logView(fxEvent) {
+        collection.forEach {
+            logResult { block(it) }
         }
     }
-    threadPrintln(title)
 }
 
+fun View.logView(fxEvent: FXEvent, block: () -> Any = {}) {
+    val (left, right) = "<<< " to " >>>"
+    val title = "$left${this::class.simpleName}: ${fxEvent::class.simpleName}$right"
 
-fun logCom(client: String, block: () -> Any) {
-    val title = "-------- ($client) #sendAndReceive --------"
+    threadPrintln(title)
+    block()
+
+    threadPrintln {
+        append(left)
+        repeat(title.length - left.length - right.length) { append("-") }
+        append(right)
+    }
+
+    println()
+}
+
+fun logCom(client: String = "", block: () -> Any) {
+    val title = "-------- ($client) --------"
     threadPrintln(title)
     block()
     threadPrintln(title)
     println()
-}
-
-fun logThreadClientWaiting(
-    clients: Map<Socket, String>,
-    client: Socket,
-) {
-    log {
-        "waiting for ${
-            clients[client]!!
-                .ifEmpty { "connection" }
-                .apply { ifNoEmpty { Thread.currentThread().name = "$this listener" } }
-        } "
-    }
 }
 
 fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: KClass<out UIComponent>) {
@@ -93,9 +91,6 @@ fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: KClas
         ln("model: (${model.width.value}, ${model.height.value})")
     }
 }
-
-infix fun StringBuilder.ln(s: Any): StringBuilder = append(s).append("\n")
-infix fun StringBuilder.add(s: Any): StringBuilder = append(s)
 
 fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: UIComponent) {
     logging {
@@ -116,11 +111,17 @@ fun UIComponent.logInject(vararg injected: Any) {
         }
 }
 
-fun log(battleModel: BattleModel) {
-    logging {
-        battleModel.battleShipsTypes.forEach { entry -> add(entry) }
-        ln(battleModel.width.value)
-        ln(battleModel.height.value)
+fun logThreadClientWaiting(
+    clients: Map<Socket, String>,
+    client: Socket,
+) {
+    log {
+        "waiting for ${
+            clients[client]!!
+                .ifEmpty { "connection" }
+                .apply {
+                    ifNotEmpty { Thread.currentThread().name = "$this listener" } }
+        } "
     }
 }
 
@@ -140,9 +141,10 @@ fun <T : Event> T.log() {
     }
 }
 
-private fun String.ifNoEmpty(function: String.() -> Unit) {
-    if (this.isNotEmpty()) {
-        this.function()
+fun logResult(block: () -> Any) {
+    val result = block()
+    result.isNotUnit {
+        log { result }
     }
 }
 

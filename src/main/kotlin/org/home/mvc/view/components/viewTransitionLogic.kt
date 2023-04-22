@@ -24,7 +24,8 @@ fun <T: UIComponent> EventTarget.transit(from: UIComponent, to: T, text: String,
     }
 
 
-
+fun EventTarget.backTransit(from: UIComponent, toClass: () -> KClass<out UIComponent>, text: String = "Назад", body: () -> Unit = {}) =
+    transitLogic(from, toClass, text, backSlide, body)
 
 fun EventTarget.backTransit(from: UIComponent, toClass: KClass<out UIComponent>, text: String = "Назад", body: () -> Unit = {}) =
     transitLogic(from, toClass, text, backSlide, body)
@@ -43,6 +44,20 @@ private fun EventTarget.transitLogic(
         action {
             body()
             from.replaceWith(toClass, transition)
+        }
+    }
+
+private fun EventTarget.transitLogic(
+    from: UIComponent,
+    toClass: () -> KClass<out UIComponent>,
+    text: String,
+    transition: Slide,
+    body: () -> Unit = {},
+) =
+    button(text) {
+        action {
+            body()
+            from.replaceWith(toClass(), transition)
         }
     }
 

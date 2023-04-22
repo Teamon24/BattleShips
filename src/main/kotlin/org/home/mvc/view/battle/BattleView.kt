@@ -23,7 +23,6 @@ import org.home.style.AppStyles
 import org.home.utils.functions.ifNotNull
 import org.home.utils.functions.or
 import org.home.utils.log
-import org.home.utils.logEach
 import org.home.utils.logTransit
 import org.koin.core.component.KoinComponent
 import tornadofx.View
@@ -66,7 +65,7 @@ class BattleView : View("Battle View"), KoinComponent {
 
         subscribe<ReadyPlayersAccepted> { event ->
             listView.refresh()
-            currentView.logEach(event, event.players) { "ready: $it" }
+            currentView.log(event, event.players) { "ready: $it" }
         }
 
         subscribe<PlayerTurnToShoot> {

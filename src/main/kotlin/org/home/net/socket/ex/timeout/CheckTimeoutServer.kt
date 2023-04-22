@@ -51,7 +51,7 @@ class CheckTimeoutServer {
                 sockets.forEach { (socket, player) ->
                     try {
                         log { "receiving" }
-                        val receivedMessage = socket.getInputStream().receiveAll()
+                        val receivedMessage = socket.receiveAll<Message>()
                         messagesQueue.addAll(receivedMessage)
                     } catch (e: InterruptedIOException) {
                         log { "trying to listen to next socket: socket has not sent any message" }

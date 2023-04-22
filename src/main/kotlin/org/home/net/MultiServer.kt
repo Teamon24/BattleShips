@@ -1,59 +1,67 @@
 package org.home.net
 
-import kotlinx.coroutines.launch
-import org.home.mvc.view.openErrorWindow
-import org.home.utils.functions.threadsScope
+import org.home.utils.SocketUtils.receiveAll
 import org.home.utils.log
-import java.io.IOException
+import java.io.InterruptedIOException
+import java.io.Serializable
 import java.net.ServerSocket
 import java.net.Socket
+import java.util.concurrent.LinkedBlockingQueue
 import kotlin.concurrent.thread
 
-abstract class MultiServer {
+typealias PlayersSockets = LinkedBlockingQueue<PlayerSocket>
+typealias PlayerSocketMessages<T> = Pair<PlayerSocket, Collection<T>>
+typealias PlayersSocketsMessages<T> = LinkedBlockingQueue<PlayerSocketMessages<T>>
+
+abstract class MultiServer<T: Serializable> {
+    private val readTimeout = 1000
+
     private lateinit var serverSocket: ServerSocket
-    internal val sockets: MutableMap<String, Socket> = mutableMapOf()
-    private val threadsScope = threadsScope(Runtime.getRuntime().availableProcessors() * 2, "clients")
 
-    abstract fun listen(socket: Socket)
+    private val socketMessagesQueue: PlayersSocketsMessages<T> = PlayersSocketsMessages()
+    internal val socketsQueue: PlayersSockets = PlayersSockets()
 
-    @Throws(IOException::class)
-    fun start(port: Int) {
-        serverSocket = ServerSocket(port)
+    private fun PlayerSocket.withTimeout(): PlayerSocket {
+        soTimeout = readTimeout
+        return this
+    }
 
-        log { "server socket is created" }
-        thread(name = "connection listener") {
+    abstract fun  process(socket: PlayerSocket, message: T)
+
+    init {
+        thread(name = "processor") {
             while (true) {
-                val client = serverSocket.accept()
-                log { "client has been connected" }
-                threadsScope.launch {
-                    listen(client)
+                val (socket, messages) = socketMessagesQueue.take()
+                messages.forEach { process(socket, it) }
+            }
+        }
+
+        thread(name = "receiver") {
+            while (true) {
+                socketsQueue.forEach { socket ->
+                    try {
+                        val receivedMessages = socket.receiveAll<T>()
+                        socketMessagesQueue.add(socket to receivedMessages)
+                    } catch (e: InterruptedIOException) {
+                        log { "trying to listen to next socket: socket has not sent any message" }
+                    }
                 }
             }
         }
     }
 
-    @Throws(IOException::class)
-    fun start() {
-        start(getFreePort())
-    }
+    fun start(port: Int) {
+        serverSocket = ServerSocket(port)
 
-    private fun getFreePort(): Int {
-        try {
-            ServerSocket(0).run {
-                if (localPort > 0) return localPort
-            }
+        log { "server socket is created" }
 
-        } catch (e: IOException) {
-            openErrorWindow {
-                "При выборе порта возникла ошибка"
+        thread(name = "connection listener") {
+            while (true) {
+                val socket = PlayerSocket(serverSocket.accept())
+                log { "client has been connected" }
+                socketsQueue.add(socket.withTimeout())
             }
         }
-        return 0
-    }
-
-    @Throws(IOException::class)
-    fun stop() {
-        serverSocket.close()
     }
 }
 
