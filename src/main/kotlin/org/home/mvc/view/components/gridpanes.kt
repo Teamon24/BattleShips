@@ -4,7 +4,7 @@ import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.layout.GridPane
 import org.home.style.AppStyles
-import org.home.utils.aliases.Coord
+import org.home.mvc.model.Coord
 import tornadofx.addClass
 import tornadofx.opcr
 

@@ -1,8 +1,7 @@
 package org.home.net.socket.ex.nio
 
-import org.home.utils.SocketUtils.receiveSign
-import org.home.utils.SocketUtils.sendSign
-import org.home.utils.threadPrintln
+import org.home.utils.logReceive
+import org.home.utils.logSend
 import java.io.IOException
 import java.net.SocketAddress
 import java.nio.ByteBuffer
@@ -22,9 +21,9 @@ class NioEchoClient {
         var response: String
         try {
             bufferedWrite(msg)
-            threadPrintln("$sendSign $msg")
+            logSend { msg }
             response = readString()
-            threadPrintln("$receiveSign $response")
+            logReceive { response }
         } catch (e: IOException) {
             e.printStackTrace()
             response = "${e.message}"

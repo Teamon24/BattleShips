@@ -1,6 +1,6 @@
 package org.home
 
-import org.home.utils.functions.ln
+import org.home.utils.extensions.ln
 import org.home.utils.logging
 import java.util.*
 

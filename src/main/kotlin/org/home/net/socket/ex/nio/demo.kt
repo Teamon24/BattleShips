@@ -3,7 +3,7 @@ package org.home.net.socket.ex.nio
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.utils.functions.singleThreadScope
+import org.home.utils.extensions.singleThreadScope
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch

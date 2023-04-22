@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.control.ListView
+import javafx.scene.layout.GridPane
 import org.home.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.PlayerIsReadyAccepted
@@ -20,10 +21,9 @@ import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.style.AppStyles
-import org.home.utils.functions.ifNotNull
-import org.home.utils.functions.or
+import org.home.utils.extensions.ifNotNull
+import org.home.utils.extensions.BooleansExtensions.or
 import org.home.utils.log
-import org.home.utils.logTransit
 import org.koin.core.component.KoinComponent
 import tornadofx.View
 import tornadofx.borderpane
@@ -44,7 +44,9 @@ class BattleView : View("Battle View"), KoinComponent {
 
     private val selectedPlayer = SimpleStringProperty()
     private val turn = SimpleStringProperty().apply { onChange { listView.refresh() } }
+
     private val enemyFleetFields = hashMapOf<String, FleetGrid>()
+
     private lateinit var listView: ListView<String>
 
     private val fleetGridCreator = FleetGridCreator(
@@ -54,6 +56,26 @@ class BattleView : View("Battle View"), KoinComponent {
 
     private val currentPlayer = appProps.currentPlayer
     private val currentView = this@BattleView
+
+    override val root: GridPane
+
+    init {
+        model.playersNames.forEach { name ->
+            if (name == currentPlayer) return@forEach
+            addEnemyFleet(name)
+        }
+    }
+
+    private val enemiesFleetsPane = borderpane {
+        model.playersNames
+            .firstOrNull { it != currentPlayer }
+            .ifNotNull {
+                selectedPlayer.value = it
+                center = enemyFleetFields[it]!!
+            } or {
+            run { center = fleetGridCreator.fleetGrid().addFleetCellClass(AppStyles.enemyCell) }
+        }
+    }
 
     init {
         subscribe<PlayerIsReadyAccepted> {
@@ -85,60 +107,42 @@ class BattleView : View("Battle View"), KoinComponent {
             model.playersAndShips[it.playerName] = mutableListOf()
         }
 
-        model.playersNames.forEach { name ->
-            if (name == currentPlayer) return@forEach
-            addEnemyFleet(name)
+        root = centerGrid {
+            row(0) {
+                col(0) { label(currentPlayer) { alignment = Pos.BASELINE_LEFT } }
+                col(1) {
+                    flowpane {
+                        label("Ходит: ")
+                        label(turn) { alignment = Pos.BASELINE_LEFT }
+                    }
+                }
+
+                col(2) { flowpane {
+                    alignment = Pos.BASELINE_RIGHT
+                    label(selectedPlayer) }
+                }
+            }
+
+            row(1) {
+                col(0) { currentPlayerFleetGrid(model) }
+                col(1) {
+                    listview<String>(model.playersNames)
+                        .apply { listView = this }
+                        .apply { viewEnemyFleetOnSelection() }
+                        .apply { cellFactory = MarkReadyPlayersCells(model) }
+                }
+                col(2) { enemiesFleetsPane.also { add(it) } }
+            }
+
+            cell(2, 0) {
+                backTransit(this@BattleView, FleetGridCreationView::class)
+            }
         }
     }
 
     private fun addEnemyFleet(playerName: String) {
         enemyFleetFields[playerName] = enemyFleetGrid(playerName, model).apply { isDisable = true }
     }
-
-    private val enemiesFleetsPane = borderpane {
-        model.playersNames
-            .firstOrNull { it != currentPlayer }
-            .ifNotNull {
-                selectedPlayer.value = it
-                center = enemyFleetFields[it]!!
-            } or {
-                run { center = fleetGridCreator.fleetGrid().addFleetCellClass(AppStyles.enemyCell) }
-            }
-    }
-
-    override val root = centerGrid {
-        row(0) {
-            col(0) { label(currentPlayer) { alignment = Pos.BASELINE_LEFT } }
-            col(1) {
-                flowpane {
-                    label("Ходит: ")
-                    label(turn) { alignment = Pos.BASELINE_LEFT }
-                }
-            }
-
-            col(2) { flowpane {
-                alignment = Pos.BASELINE_RIGHT
-                label(selectedPlayer) }
-            }
-        }
-
-        row(1) {
-            col(0) { currentPlayerFleetGrid(model) }
-            col(1) {
-                listview<String>(model.playersNames)
-                    .apply { listView = this }
-                    .apply { viewEnemyFleetOnSelection() }
-                    .apply { cellFactory = MarkReadyPlayersCells(model) }
-            }
-            col(2) { enemiesFleetsPane.also { add(it) } }
-        }
-
-        cell(2, 0) {
-            logTransit(model, "backTransit", this@BattleView, FleetGridCreationView::class)
-            backTransit(this@BattleView, FleetGridCreationView::class)
-        }
-    }
-
 
     private fun ListView<String>.viewEnemyFleetOnSelection() {
         selectionModel.selectedItemProperty().addListener { _, _, newVal ->

@@ -1,8 +1,8 @@
 package org.home.mvc.contoller
 
 import org.home.ApplicationProperties
-import org.home.net.HitMessage
-import org.home.utils.aliases.Coord
+import org.home.net.HitAction
+import org.home.mvc.model.Coord
 import tornadofx.Controller
 
 abstract class BattleController: Controller() {
@@ -10,10 +10,10 @@ abstract class BattleController: Controller() {
     abstract fun onFleetCreationViewExit()
     abstract fun startBattle()
 
-    protected abstract fun hitLogic(hitMessage: HitMessage)
+    protected abstract fun hitLogic(hitMessage: HitAction)
 
     fun hit(enemyToHit: String, hitCoord: Coord) {
-        val hitMessage = HitMessage(hitCoord, applicationProperties.currentPlayer, enemyToHit)
+        val hitMessage = HitAction(hitCoord, applicationProperties.currentPlayer, enemyToHit)
         hitLogic(hitMessage)
     }
 

@@ -18,16 +18,12 @@ import org.home.mvc.view.components.col
 import org.home.mvc.view.components.row
 import org.home.mvc.view.components.transit
 import org.home.style.AppStyles
-import org.home.utils.functions.or
-import org.home.utils.functions.then
 import org.home.utils.log
-import tornadofx.UIComponent
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.listview
-import kotlin.reflect.KClass
 
 class FleetGridCreationView : View("Создание флота") {
 

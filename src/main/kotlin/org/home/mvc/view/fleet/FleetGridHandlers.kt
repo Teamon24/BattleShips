@@ -19,9 +19,9 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
-import org.home.utils.functions.invoke
+import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.log
-import org.home.utils.functions.singleThreadScope
+import org.home.utils.extensions.singleThreadScope
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FleetGridHandlers(

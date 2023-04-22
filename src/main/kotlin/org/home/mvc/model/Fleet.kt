@@ -1,7 +1,5 @@
 package org.home.mvc.model
 
-import org.home.utils.aliases.Coord
-import org.home.utils.aliases.border
 import org.home.utils.log
 
 @JvmInline
@@ -12,7 +10,7 @@ class Fleet {
     val ships: List<Ship> = listOf()
 }
 
-typealias Ships = MutableCollection<Ship>
+
 
 class Ship(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
     constructor(coordinate: Coord) : this(listOf(coordinate))

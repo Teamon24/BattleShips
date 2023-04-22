@@ -1,7 +1,7 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.control.Label
-import org.home.utils.aliases.Coord
+import org.home.mvc.model.Coord
 import org.home.style.AppStyles
 import tornadofx.addClass
 

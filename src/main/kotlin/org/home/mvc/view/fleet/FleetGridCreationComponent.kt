@@ -21,10 +21,10 @@ import org.home.mvc.view.components.getCell
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.style.AppStyles
-import org.home.utils.functions.atomic
-import org.home.utils.functions.invoke
+import org.home.utils.extensions.BooleansExtensions.atomic
+import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.log
-import org.home.utils.functions.singleThreadScope
+import org.home.utils.extensions.singleThreadScope
 import tornadofx.Controller
 import tornadofx.addChildIfPossible
 

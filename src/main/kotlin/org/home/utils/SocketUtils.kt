@@ -1,55 +1,29 @@
 package org.home.utils
 
+import org.home.net.Message
+import org.home.net.Messages
+import org.home.net.MessagesDSL.wrap
 import org.home.net.PlayerSocket
-import org.home.utils.MessageIO.read
 import org.home.utils.MessageIO.readAll
+import org.home.utils.MessageIO.readBatch
 import org.home.utils.MessageIO.write
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.Serializable
 import java.net.Socket
 
 object SocketUtils {
 
-    const val receiveSign = "<=="
-    const val sendSign = "==>"
+    fun <T: Message> Socket.receiveBatch() = getInputStream().readBatch<T>()
 
-    fun <T: Serializable> InputStream.receive(): T {
-        val msg = read<T>()
-        log { "$receiveSign $msg" }
-        return msg
-    }
+    fun <T: Message> Socket.receiveAll() = getInputStream().readAll<T>()
 
-    fun <T: Serializable> Socket.receiveAll() = getInputStream().readAll<T>()
-
-    fun <T: Serializable> OutputStream.send(msg: T) {
-        write(msg)
-        log { "$sendSign $msg" }
-    }
-
-    fun <T: Serializable, S: Socket> Map<String, S>.sendAll(message: T) {
-        forEach {
-            logCom(it.key) {
-                it.value.getOutputStream().send(message)
+    fun <T: Message> Collection<PlayerSocket>.sendAll(message: T) {
+        forEach { socket ->
+            logCom(socket.player!!) {
+                socket.send(message.wrap())
             }
         }
     }
 
-    @JvmName("playerSocketsSendAll")
-    fun <T: Serializable> Collection<PlayerSocket>.sendAll(message: T) {
-        forEach {
-            logCom(it.player!!) {
-                it.outputStream.send(message)
-            }
-        }
-    }
-
-    fun <T: Serializable, S: Socket> S.sendAndReceive(msg: T) {
-        getOutputStream().send(msg)
-        getInputStream().receive<T>()
-    }
-
-    fun <T: Serializable, S: Socket> S.send(msg: T) {
-        getOutputStream().send(msg)
+    fun <T: Message, S: Socket> S.send(messages: Messages<T>) {
+        getOutputStream().write(messages)
     }
 }

@@ -2,9 +2,9 @@ package org.home.net.socket.ex.nio
 
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.home.utils.SocketUtils.receiveSign
-import org.home.utils.SocketUtils.sendSign
-import org.home.utils.functions.threadsScope
+import org.home.utils.extensions.threadsScope
+import org.home.utils.logReceive
+import org.home.utils.logSend
 import org.home.utils.threadPrintln
 import java.io.File
 import java.io.IOException
@@ -71,14 +71,14 @@ object NioEchoServer {
         val client = key.channel() as SocketChannel
         client.read(byteBuffer)
         val message = readString(byteBuffer)
-        threadPrintln("$receiveSign $message")
+        logReceive { message }
         byteBuffer.clear()
         if (isPoisonPill(message)) {
             close(client)
         } else {
             val buffer = ByteBuffer.wrap("Ive read \"$message\"".toByteArray())
             client.writeTo(buffer)
-            threadPrintln("$sendSign ${String(buffer.array())}")
+            logSend { String(buffer.array()) }
         }
     }
 

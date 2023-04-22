@@ -6,7 +6,7 @@ import org.home.mvc.contoller.events.ShipDiscountEvent
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
 import org.home.mvc.model.copy
-import org.home.utils.aliases.Coord
+import org.home.mvc.model.Coord
 import tornadofx.Controller
 
 class ShipsTypesController: Controller() {

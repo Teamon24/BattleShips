@@ -3,31 +3,32 @@ package org.home.net
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
 import org.home.mvc.model.BattleModel
+import org.home.utils.PlayersSockets
 import org.home.utils.SocketUtils.sendAll
-import org.home.utils.functions.exclude
+import org.home.utils.extensions.exclude
 
 class BattleServer : BattleController() {
 
     private val gameController: GameTypeController by di()
     private val model: BattleModel by di()
 
-    private val multiServer = object : MultiServer<Message>() {
-        override fun process(socket: PlayerSocket, message: Message) {
-            when (message) {
-                is ShotMessage -> gameController.onShot(message)
-                is HitMessage -> gameController.onHit(message)
-                is EmptyMessage -> gameController.onEmpty(message)
-                is DefeatMessage -> gameController.onDefeat(message)
+    private val multiServer = object : MultiServer<Action>() {
+        override fun process(socket: PlayerSocket, action: Action) {
+            when (action) {
+                is ShotAction -> gameController.onShot(action)
+                is HitAction -> gameController.onHit(action)
+                is EmptyAction -> gameController.onEmpty(action)
+                is DefeatAction -> gameController.onDefeat(action)
 
-                is DisconnectMessage -> gameController.onDisconnect(message)
-                is EndGameMessage -> gameController.onEndGame(message)
+                is DisconnectAction -> gameController.onDisconnect(action)
+                is EndGameAction -> gameController.onEndGame(action)
 
-                is MissMessage -> gameController.onMiss(message)
-                is ConnectMessage -> gameController.onConnect(socket, sockets, message)
-                is ReadyMessage -> {
-                    sockets.exclude(socket).sendAll(message)
+                is MissAction -> gameController.onMiss(action)
+                is ConnectAction -> gameController.onConnect(socket, sockets, action)
+                is ReadyAction -> {
+                    sockets.exclude(socket).sendAll(action)
 
-                    val turnMessage = gameController.onReady(message)
+                    val turnMessage = gameController.onReady(action)
 
                     turnMessage?.also { msg ->
                         sockets.exclude(socket).sendAll(msg)
@@ -35,7 +36,7 @@ class BattleServer : BattleController() {
                     }
                 }
 
-                else -> gameController.onMessage(message)
+                else -> gameController.onMessage(action)
             }
         }
     }
@@ -54,11 +55,11 @@ class BattleServer : BattleController() {
     override fun startBattle() {
         val currentPlayer = applicationProperties.currentPlayer
         model.readyPlayers[currentPlayer]!!.value = true
-        val readyMessage = ReadyMessage(currentPlayer)
+        val readyMessage = ReadyAction(currentPlayer)
         sockets.sendAll(readyMessage)
     }
 
-    override fun hitLogic(hitMessage: HitMessage) {
+    override fun hitLogic(hitMessage: HitAction) {
         sockets.sendAll(hitMessage)
     }
 }

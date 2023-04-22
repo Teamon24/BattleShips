@@ -5,15 +5,20 @@ import org.home.ApplicationProperties
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.coord
-import org.home.utils.functions.add
-import org.home.utils.functions.ifNotEmpty
-import org.home.utils.functions.isNotUnit
-import org.home.utils.functions.ln
+import org.home.utils.extensions.add
+import org.home.utils.extensions.ifNotEmpty
+import org.home.utils.extensions.isNotUnit
+import org.home.utils.extensions.ln
 import tornadofx.FXEvent
 import tornadofx.UIComponent
 import tornadofx.View
 import java.net.Socket
 import kotlin.reflect.KClass
+
+
+
+const val receiveSign = "<=="
+const val sendSign = "==>"
 
 fun threadLog(any: Any) = "[${Thread.currentThread().name}]: $any"
 
@@ -35,14 +40,43 @@ fun logging(block: StringBuilder.() -> Unit) {
     threadPrint(builder)
 }
 
-fun log(block: () -> Any) { threadPrintln(block()) }
-
-fun log(battleModel: BattleModel) {
-    logging {
-        battleModel.battleShipsTypes.forEach { entry -> add(entry) }
-        ln(battleModel.width.value)
-        ln(battleModel.height.value)
+fun log(disabled: Boolean = false, block: () -> Any) {
+    if (!disabled) {
+        threadPrintln(block())
     }
+}
+
+fun logTitle(title: String, disabled: Boolean = false, block: () -> Any) {
+    if (!disabled) {
+        threadPrintln(block())
+    }
+}
+
+fun logReceive(disabled: Boolean = false, block: () -> Any) {
+    if (!disabled) {
+        log { "$receiveSign ${block()}" }
+    }
+}
+
+fun logSend(disabled: Boolean = false, block: () -> Any) {
+    if (!disabled) {
+        log { "$sendSign ${block()}" }
+    }
+}
+
+fun <T> Collection<T>.logEach(block: (T) -> Any) {
+    forEach {
+        threadPrintln(block(it))
+    }
+}
+
+fun log(model: BattleModel) {
+    log { "battle model" }
+    log {
+        model.battleShipsTypes.entries.joinToString(";")
+    }
+    log { model.width.value }
+    log { model.height.value }
 }
 
 @JvmName("logEvent")
@@ -85,19 +119,14 @@ fun logCom(client: String = "", block: () -> Any) {
     println()
 }
 
-fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: KClass<out UIComponent>) {
-    logging {
-        ln("$transit: ${from.name} to ${to.name}")
-        ln("model: (${model.width.value}, ${model.height.value})")
-    }
+fun logTransit(transit: String, from: UIComponent, to: UIKClass) {
+    logTransit(transit, from, "-->", to)
 }
 
-fun logTransit(model: BattleModel, transit: String, from: UIComponent, to: UIComponent) {
-    logging {
-        ln("$transit: ${from::class.simpleName} to ${to::class.simpleName}")
-        ln("model: (${model.width.value}, ${model.height.value})")
-    }
+fun logBackTransit(transit: String, from: UIComponent, to: UIKClass) {
+    logTransit(transit, from,  "<--", to)
 }
+
 
 fun UIComponent.logInject(vararg injected: KClass<*>) {
     logging {
@@ -141,12 +170,24 @@ fun <T : Event> T.log() {
     }
 }
 
-fun logResult(block: () -> Any) {
+private fun logResult(block: () -> Any) {
     val result = block()
     result.isNotUnit {
         log { result }
     }
 }
+
+private fun logTransit(
+    transit: String,
+    from: UIComponent,
+    back: String,
+    to: KClass<out UIComponent>,
+) {
+    logging {
+        ln("$transit: ${from.name} $back ${to.name}")
+    }
+}
+
 
 fun main() {
     println(ApplicationProperties::class.name)

@@ -2,8 +2,10 @@ package org.home.net
 
 import org.home.mvc.model.BattleModel
 import org.home.net.ActionType.*
-import org.home.utils.aliases.Coord
-import tornadofx.FXEvent
+import org.home.mvc.model.Coord
+import org.home.mvc.model.thoseAreReady
+import org.home.net.MessagesDSL.plus
+import org.home.utils.extensions.exclude
 import java.io.Serializable
 
 enum class ActionType {
@@ -18,56 +20,65 @@ enum class ActionType {
     PLAYERS,
     MISS,
     EMPTY,
-    FLEET_SETTINGS,
-    CONNECTION_TIMEOUT
+    FLEET_SETTINGS
 }
 
-interface Message: Serializable { val actionType: ActionType }
+interface Message: Serializable
+
+@JvmInline
+value class Messages<T: Message>
+internal constructor(val collection: Collection<T>) {
+    fun forEach(function: (T) -> Unit) {
+        collection.forEach { function(it) }
+    }
+}
+
+class MessagesInfo(val number: Int): Message
+
+interface Action: Message { val actionType: ActionType }
 interface HasText { val text: String }
 
-open class ActionMessage(override val actionType: ActionType): Message
+abstract class AbstractAction(override val actionType: ActionType): Action
 
-open class TextMessage(actionType: ActionType, override val text: String): ActionMessage(actionType), HasText {
+open class TextAction(actionType: ActionType, override val text: String): AbstractAction(actionType), HasText {
     override fun toString() = "TextMessage($actionType, $text)"
 }
 
-open class PlayerMessage(actionType: ActionType, val player: String): ActionMessage(actionType) {
+open class PlayerAction(actionType: ActionType, val player: String): AbstractAction(actionType) {
     override fun toString() = "PlayerMessage($actionType, '$player')"
 }
 
-class ShotMessage(val coord: Coord, player: String, val target: String): PlayerMessage(SHOT, player)
+class ShotAction(val coord: Coord, player: String, val target: String): PlayerAction(SHOT, player)
 
-class HitMessage(val coord: Coord, player: String, val target: String): PlayerMessage(HIT, player)
-class DisconnectMessage(player: String): PlayerMessage(DISCONNECT, player = player)
+class HitAction(val coord: Coord, player: String, val target: String): PlayerAction(HIT, player)
+class DisconnectAction(player: String): PlayerAction(DISCONNECT, player = player)
 
-class ConnectMessage(player: String): PlayerMessage(CONNECT, player = player)
-class DefeatMessage(defeated: String): PlayerMessage(DEFEAT, player = defeated)
-class EndGameMessage(winner: String): PlayerMessage(ENDGAME, player = winner)
-class ReadyMessage(readyPlayer: String): PlayerMessage(READY, player = readyPlayer)
-open class TurnMessage(player: String): PlayerMessage(TURN, player = player)
+class ConnectAction(player: String): PlayerAction(CONNECT, player = player)
+class DefeatAction(defeated: String): PlayerAction(DEFEAT, player = defeated)
+class EndGameAction(winner: String): PlayerAction(ENDGAME, player = winner)
+class ReadyAction(readyPlayer: String): PlayerAction(READY, player = readyPlayer)
+open class TurnAction(player: String): PlayerAction(TURN, player = player)
 
-class TeamTurnMessage(team: String): TurnMessage(player = team)
-open class PlayersMessage(val players: Collection<String>): ActionMessage(PLAYERS) {
+class TeamTurnAction(team: String): TurnAction(player = team)
+open class PlayersAction(val players: Collection<String>): AbstractAction(PLAYERS) {
     override fun toString() = "PlayersMessage($actionType, players=$players)"
 }
 
-class ReadyPlayersMessage(players: Collection<String>): PlayersMessage(players) {
+class ReadyPlayersAction(players: Collection<String>): PlayersAction(players) {
     override fun toString() = "ReadyPlayersMessage($actionType, players=$players)"
 }
 
-class FleetSettingsMessage(
-    val height: Int, val width: Int, val shipsTypes: Map<Int, Int>): ActionMessage(FLEET_SETTINGS)
+class FleetSettingsAction(
+    val height: Int, val width: Int, val shipsTypes: Map<Int, Int>): AbstractAction(FLEET_SETTINGS)
 {
     constructor(model: BattleModel) : this(
         model.height.value, model.width.value, model.battleShipsTypes.value.toMutableMap())
     override fun toString() = "FleetSettingsMessage(height=$height, width=$width, shipsTypes=$shipsTypes)"
-
 }
 
-object MissMessage: ActionMessage(MISS)
-object ConnectionTimeoutMessage : ActionMessage(CONNECTION_TIMEOUT)
+object MissAction: AbstractAction(MISS)
 
-object EmptyMessage: ActionMessage(EMPTY) {
+object EmptyAction: AbstractAction(EMPTY) {
     override fun toString() = "EmptyMessage($actionType)"
 }
 

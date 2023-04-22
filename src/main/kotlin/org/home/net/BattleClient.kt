@@ -1,6 +1,7 @@
 package org.home.net
 
 import javafx.beans.property.SimpleBooleanProperty
+import kotlinx.coroutines.launch
 import org.home.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.GameTypeController
@@ -9,12 +10,12 @@ import org.home.mvc.contoller.events.PlayerWasConnected
 import org.home.mvc.contoller.events.ReadyPlayersAccepted
 import org.home.mvc.contoller.events.WaitForYourTurn
 import org.home.mvc.model.BattleModel
-import org.home.utils.MessageIO.read
+import org.home.net.Condition.Companion.condition
 import org.home.utils.MessageIO.write
-import org.home.utils.SocketUtils.receiveSign
-import org.home.utils.SocketUtils.sendSign
+import org.home.utils.SocketUtils.receiveBatch
+import org.home.utils.extensions.singleThreadScope
 import org.home.utils.log
-import org.home.utils.functions.singleThreadScope
+import org.home.utils.logSend
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -22,6 +23,11 @@ import java.net.Socket
 import java.net.UnknownHostException
 
 class BattleClient: BattleController() {
+
+    companion object {
+        var fleetSettingsReceived = condition("fleet settings received")
+    }
+
     private val gameController: GameTypeController by di()
     private val appProps: ApplicationProperties by di()
     private val model: BattleModel by di()
@@ -29,6 +35,7 @@ class BattleClient: BattleController() {
     private lateinit var `in`: InputStream
     private lateinit var out: OutputStream
     private lateinit var socket: Socket
+    private val receiver = singleThreadScope("receiver-#${appProps.currentPlayer}")
 
     @Throws(UnknownHostException::class, IOException::class)
     fun connect(ip: String, port: Int) {
@@ -40,57 +47,56 @@ class BattleClient: BattleController() {
 
     @Throws(IOException::class)
     fun listen() {
-        log { "client is listening for server" }
-        singleThreadScope("receiver-#${appProps.currentPlayer}") {
+        log { "client is listening for server..." }
+        receiver.launch {
             while (true) {
                 receiving()
             }
         }
     }
 
-    fun send(msg: Message) {
-        out.write(msg)
-        log { "$sendSign \"$msg\"" }
+    fun send(action: Action) {
+        out.write(action)
+        logSend { action }
     }
 
-    private fun receiving(): Message {
-        log { "waiting for message" }
-        val message = `in`.read<Message>()
-        log { "$receiveSign $message" }
+    private fun receiving() {
+        log { "waiting for message..." }
+        val actions = socket.receiveBatch<Action>()
+        actions.forEach(::process)
+    }
 
-        when (message) {
-            is ConnectMessage -> fire(PlayerWasConnected(message.player))
+    private fun process(action: Action) {
+        when (action) {
+            is ConnectAction -> fire(PlayerWasConnected(action.player))
 
-            is FleetSettingsMessage -> {
-                model.put(message)
-                model.commit()
+            is FleetSettingsAction -> {
+                fleetSettingsReceived.notifyUI { model.put(action) }
             }
 
-            is ReadyPlayersMessage -> {
+            is ReadyPlayersAction -> {
                 model.readyPlayers
-                    .filter { message.players.contains(it.key) }
+                    .filter { action.players.contains(it.key) }
                     .forEach { (player, _) -> model.readyPlayers[player]!!.value = true }
 
-                fire(ReadyPlayersAccepted(message.players))
+                fire(ReadyPlayersAccepted(action.players))
             }
-            is PlayersMessage -> gameController.onPlayers(message)
+            is PlayersAction -> gameController.onPlayers(action)
 
-            is ReadyMessage -> {
-                model.readyPlayers[message.player] = SimpleBooleanProperty(true)
-                fire(PlayerIsReadyAccepted(message.player))
+            is ReadyAction -> {
+                model.readyPlayers[action.player] = SimpleBooleanProperty(true)
+                fire(PlayerIsReadyAccepted(action.player))
             }
 
-            is TurnMessage -> gameController.onTurn(message)
+            is TurnAction -> gameController.onTurn(action)
             else -> throw RuntimeException(
-                "There is no case for class ${message::class.simpleName} in client#receive method"
+                "There is no case for class ${action::class.simpleName} in client#receive method"
             )
         }
-
-        return message
     }
 
-    private fun sendResponse(message: Message) {
-        send(TextMessage(message.actionType, "${super.applicationProperties.currentPlayer} received a message"))
+    private fun sendResponse(action: Action) {
+        send(TextAction(action.actionType, "${super.applicationProperties.currentPlayer} received a message"))
     }
 
     fun close() {
@@ -107,11 +113,13 @@ class BattleClient: BattleController() {
         val readyPlayer = applicationProperties.currentPlayer
         model.readyPlayers[readyPlayer]!!.value = true
         fire(WaitForYourTurn)
-        send(ReadyMessage(readyPlayer))
+        send(ReadyAction(readyPlayer))
     }
 
-    override fun hitLogic(hitMessage: HitMessage) {
+    override fun hitLogic(hitMessage: HitAction) {
         send(hitMessage)
         gameController.onHit(hitMessage)
     }
+
+
 }

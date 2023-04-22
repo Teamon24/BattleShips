@@ -8,6 +8,7 @@ import javafx.scene.paint.Color.LIGHTSLATEGRAY
 import javafx.scene.paint.Color.RED
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Paint
+import org.home.utils.LinearUnits
 import tornadofx.CssRule
 import tornadofx.CssSelectionBlock
 import tornadofx.Dimension
@@ -19,7 +20,7 @@ import tornadofx.loadFont
 import tornadofx.mixin
 import tornadofx.px
 
-typealias LinearUnits = Dimension<Dimension.LinearUnits>
+
 
 class AppStyles : Stylesheet() {
 

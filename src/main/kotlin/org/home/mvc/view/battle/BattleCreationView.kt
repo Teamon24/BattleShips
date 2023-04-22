@@ -140,7 +140,6 @@ class BattleCreationView : View("Настройки боя") {
 
     private fun EventTarget.intField(prop: SimpleIntegerProperty): TextField {
         return textfield(prop) {
-            required()
             addClass(AppStyles.fieldSize)
             focusedProperty().addListener { _, _, _ ->
                 if (!text.matches(Regex("\\d+"))) {

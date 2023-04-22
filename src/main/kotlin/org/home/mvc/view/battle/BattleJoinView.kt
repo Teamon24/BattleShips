@@ -16,9 +16,10 @@ import org.home.mvc.view.components.slide
 import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.openErrorWindow
 import org.home.net.BattleClient
-import org.home.net.ConnectMessage
+import org.home.net.BattleClient.Companion.fleetSettingsReceived
+import org.home.net.Condition.Companion.waitFor
+import org.home.net.ConnectAction
 import org.home.style.AppStyles
-import org.home.utils.log
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
@@ -61,7 +62,10 @@ class BattleJoinView : View("Присоединиться к битве") {
                         battleClient.connect(ip, port)
                         battleClient.listen()
                         battleClient.send(connectMessage())
-                        currentView.replaceWith(fleetGridCreationView, slide)
+
+                        waitFor(fleetSettingsReceived) {
+                            currentView.replaceWith(fleetGridCreationView, slide)
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
                         openErrorWindow {
@@ -77,11 +81,13 @@ class BattleJoinView : View("Присоединиться к битве") {
         }
     }
 
-    private fun connectMessage() = ConnectMessage(applicationProperties.currentPlayer)
+    private fun connectMessage() = ConnectAction(applicationProperties.currentPlayer)
 
     private fun extract(): Pair<String, Int> {
         val split = ipAddress.value.split(":")
         return split[0] to split[1].toInt()
     }
 }
+
+
 

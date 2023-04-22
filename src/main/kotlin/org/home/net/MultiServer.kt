@@ -1,25 +1,22 @@
 package org.home.net
 
-import org.home.utils.SocketUtils.receiveAll
+import org.home.utils.PlayersSockets
+import org.home.utils.PlayersSocketsMessages
+import org.home.utils.SocketUtils.receiveBatch
 import org.home.utils.log
 import java.io.InterruptedIOException
-import java.io.Serializable
 import java.net.ServerSocket
-import java.net.Socket
-import java.util.concurrent.LinkedBlockingQueue
 import kotlin.concurrent.thread
 
-typealias PlayersSockets = LinkedBlockingQueue<PlayerSocket>
-typealias PlayerSocketMessages<T> = Pair<PlayerSocket, Collection<T>>
-typealias PlayersSocketsMessages<T> = LinkedBlockingQueue<PlayerSocketMessages<T>>
 
-abstract class MultiServer<T: Serializable> {
-    private val readTimeout = 1000
+
+abstract class MultiServer<T: Message> {
+    private val readTimeout = 100
+
+    internal val socketsQueue = PlayersSockets()
 
     private lateinit var serverSocket: ServerSocket
-
-    private val socketMessagesQueue: PlayersSocketsMessages<T> = PlayersSocketsMessages()
-    internal val socketsQueue: PlayersSockets = PlayersSockets()
+    private val socketMessagesQueue = PlayersSocketsMessages<T>()
 
     private fun PlayerSocket.withTimeout(): PlayerSocket {
         soTimeout = readTimeout
@@ -40,7 +37,7 @@ abstract class MultiServer<T: Serializable> {
             while (true) {
                 socketsQueue.forEach { socket ->
                     try {
-                        val receivedMessages = socket.receiveAll<T>()
+                        val receivedMessages = socket.receiveBatch<T>()
                         socketMessagesQueue.add(socket to receivedMessages)
                     } catch (e: InterruptedIOException) {
                         log { "trying to listen to next socket: socket has not sent any message" }
