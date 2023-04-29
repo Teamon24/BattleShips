@@ -1,101 +1,135 @@
 package org.home.mvc.view.fleet
 
 import javafx.event.EventTarget
-import org.home.ApplicationProperties
+import javafx.scene.control.ListView
+import javafx.scene.layout.GridPane
+import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPaneController
-import org.home.mvc.contoller.events.PlayerIsReadyAccepted
-import org.home.mvc.contoller.events.PlayerWasConnected
-import org.home.mvc.contoller.events.PlayersAccepted
-import org.home.mvc.contoller.events.ReadyPlayersAccepted
 import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleModel.Companion.fleetReadiness
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.battle.MarkReadyPlayersCells
-import org.home.mvc.view.components.backTransit
+import org.home.mvc.view.battle.MarkReadyPlayers
+import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.centerGrid
 import org.home.mvc.view.components.col
 import org.home.mvc.view.components.row
-import org.home.mvc.view.components.transit
+import org.home.mvc.view.components.transitButton
+import org.home.mvc.view.playerWasDisconnected
+import org.home.mvc.view.connectedPlayersReceived
+import org.home.mvc.view.readyPlayersReceived
+import org.home.mvc.view.subscriptions
+import org.home.net.action.ReadyAction
 import org.home.style.AppStyles
-import org.home.utils.log
+import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.ln
+import org.home.utils.logging
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.listview
+import kotlin.reflect.KClass
 
 class FleetGridCreationView : View("Создание флота") {
 
-    private val model: BattleModel by di()
-    private val applicationProperties: ApplicationProperties by di()
-    private val currentPlayer = applicationProperties.currentPlayer
+    internal val model: BattleModel by di()
+    internal val applicationProperties: ApplicationProperties by di()
+    internal val currentPlayer = applicationProperties.currentPlayer
 
-    private val fleetGridCreationComponent: FleetGridCreationComponent by di()
+    private val fleetGridCreationController: FleetGridCreationController by di()
     private val shipsTypesPaneController: ShipsTypesPaneController by di()
-    private val battleController: BattleController by di()
+    internal val battleController: BattleController by di()
 
-    private val listView = listview(model.playersNames) {
-        cellFactory = MarkReadyPlayersCells(model)
-    }
+    private lateinit var playersListView: ListView<String>
+    private lateinit var shipsTypesInfoPane: GridPane
 
     override val root = centerGrid()
     private val currentView = this@FleetGridCreationView
 
     init {
-        this.title = applicationProperties.currentPlayer.uppercase()
-
-        subscribe<PlayerWasConnected> {
-            model.playersAndShips[it.playerName] = mutableListOf()
+        primaryStage.setOnCloseRequest {
+            battleController.onWindowClose()
         }
 
-        subscribe<PlayerIsReadyAccepted> {
-            listView.refresh()
-            currentView.log(it) { "${it.player} is ready" }
+        val fleetState = fleetReadiness(model.battleShipsTypes)
+        model.fleetsReadiness[currentPlayer] = fleetState
+
+        title = currentPlayer.uppercase()
+
+        model.playersReadiness.addValueListener {
+            playersListView.refresh()
         }
 
-        subscribe<ReadyPlayersAccepted> { event ->
-            listView.refresh()
-            currentView.log(event, event.players) { "ready: $it" }
+        model.turn.addListener { _, _, _ ->
+            playersListView.refresh()
         }
 
-        subscribe<PlayersAccepted> {
-            it.players.forEach { player ->
-                model.playersAndShips[player] = mutableListOf()
+        model.defeatedPlayers.addListener { _, _, new ->
+            new?.run {
+                playersListView.refresh()
             }
+        }
+
+        subscriptions {
+            playerWasConnected()
+            playerWasDisconnected(model)
+            playerIsReadyReceived()
+            playerIsNotReadyReceived()
+            shipWasConstructed()
+            shipWasDeleted()
+            fleetsReadinessReceived()
+            connectedPlayersReceived(model)
         }
 
         with(root) {
             row(0) {
-                col(0) { listView.also { add(it) } }
-                col(1) { fleetGridCreationComponent.root.also { add(it) } }
-                col(2) { shipsTypesInfoPane() }
+                col(0) {
+                    listview<String>(model.playersNames).also {
+                        playersListView = it
+                        it.cellFactory = MarkReadyPlayers(model)
+                        subscriptions {
+                            readyPlayersReceived(model, it)
+                        }
+                    }
+                }
+                col(1) { currentPlayerFleetGrid() }
+                col(2) { currentPlayerShipsTypesInfoPane().apply { shipsTypesInfoPane = this } }
             }
 
             row(2) {
                 col(0) {
-                    backTransit(
-                        currentView, {
-                            if (applicationProperties.isServer) {
-                                BattleCreationView::class
-                            } else {
-                                FleetGridCreationView::class
-                            }
-                        }
-                    )
+                    backTransitButton(currentView, ::chooseViewToBack) {
+                        battleController.onFleetCreationViewExit()
+                    }
                 }
                 col(1) { clearFieldButton() }
                 col(2) {
-                    transit(currentView, BattleView::class, "В бой") {
-                        battleController.startBattle()
+                    transitButton(currentView, BattleView::class, "Дальше") {
+                        applicationProperties.isServer.so {
+                            model.playersReadiness[currentPlayer] = true
+                            battleController.send(ReadyAction(currentPlayer))
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun EventTarget.shipsTypesInfoPane() =
-        shipsTypesPaneController.shipTypesPane().also { add(it); it.addClass(AppStyles.shipsTypesInfoPane) }
+    private fun chooseViewToBack(): KClass<out View> =
+        when {
+            applicationProperties.isServer -> BattleCreationView::class
+            else -> FleetGridCreationView::class
+        }
+
+    private fun EventTarget.currentPlayerFleetGrid() = fleetGridCreationController.root.also { add(it) }
+
+    private fun EventTarget.currentPlayerShipsTypesInfoPane() =
+        shipsTypesPaneController.shipTypesPaneTransposed(currentPlayer).also {
+            add(it)
+            it.addClass(AppStyles.shipsTypesInfoPane)
+        }
 
     private fun EventTarget.clearFieldButton() = button("Очистить") {
         action {

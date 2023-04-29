@@ -5,13 +5,21 @@ import java.io.OutputStream
 import java.net.InetAddress
 import java.net.Socket
 import java.net.SocketAddress
+import java.net.SocketException
 import java.net.SocketOption
 import java.nio.channels.SocketChannel
 
 class PlayerSocket(private val socket: Socket) : Socket() {
     var player: String? = null
 
-    override fun toString() = socket.toString()
+    override fun toString(): String {
+        try {
+            if (isConnected)
+                return "$player ($inetAddress:$port <-> ${socket.localSocketAddress})"
+        } catch (_: SocketException) {}
+        return "PlayerSocket[unconnected]"
+
+    }
     override fun close() = socket.close()
 
     override fun connect(endpoint: SocketAddress?) = socket.connect(endpoint)
@@ -76,3 +84,5 @@ class PlayerSocket(private val socket: Socket) : Socket() {
     override fun <T : Any?> getOption(name: SocketOption<T>?): T = socket.getOption(name)
     override fun supportedOptions(): MutableSet<SocketOption<*>?> = socket.supportedOptions()
 }
+
+val Socket.isNotClosed get() = !isClosed

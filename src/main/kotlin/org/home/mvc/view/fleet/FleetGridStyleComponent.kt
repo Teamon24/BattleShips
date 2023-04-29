@@ -15,7 +15,8 @@ object FleetGridStyleComponent {
         .removeClass(
             AppStyles.chosenFleetCell,
             AppStyles.incorrectFleetCell,
-            AppStyles.shipBorderCell)
+            AppStyles.shipBorderCell,
+            AppStyles.titleCell)
 
     fun Node.addSelectionColor() =  addClass(AppStyles.chosenFleetCell)
     fun Node.addIncorrectColor() =  addClass(AppStyles.incorrectFleetCell)

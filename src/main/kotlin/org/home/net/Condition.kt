@@ -1,28 +1,34 @@
 package org.home.net
 
-import org.home.utils.extensions.BooleansExtensions.invoke
+import org.home.utils.extensions.AtomicBooleansExtensions.invoke
+import org.home.utils.log
 import java.util.concurrent.atomic.AtomicBoolean
 
-class Condition(val name: String) {
+class Condition<A>(val name: String, private val accepter: A) {
+
+
     private val state = AtomicBoolean(false)
     fun isNotDone() = !state()
 
-    private var afterNotify: () -> Any = {}
+    private var afterNotify: A.() -> Unit = {}
 
-    fun notifyUI(afterNotify: () -> Any) {
+    fun notifyUI(afterNotify: A.() -> Unit = {}) {
         this.afterNotify = afterNotify
         state(true)
+        log { "$this: true" }
+    }
+
+    fun await() {
+        log { "awaiting for $this" }
+        while (isNotDone()) { Thread.sleep(10L) }
+        accepter.afterNotify()
+    }
+
+    override fun toString(): String {
+        return "Condition('$name', $state)"
     }
 
     companion object {
-        fun <T> waitFor(condition: Condition, body: () -> T): T {
-            while (condition.isNotDone()) {
-                Thread.sleep(100L)
-            }
-            condition.afterNotify()
-            return body()
-        }
-
-        fun condition(name: String) = Condition(name)
+        fun <A> condition(name: String, accepter: A) = Condition(name, accepter)
     }
 }

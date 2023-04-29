@@ -2,7 +2,7 @@ package org.home.net.socket.ex.nio
 
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.home.utils.extensions.threadsScope
+import org.home.utils.threadsScope
 import org.home.utils.logReceive
 import org.home.utils.logSend
 import org.home.utils.threadPrintln

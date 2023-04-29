@@ -8,14 +8,17 @@ import tornadofx.App
 import tornadofx.DIContainer
 import tornadofx.FX
 import tornadofx.View
+import tornadofx.importStylesheet
 import tornadofx.launch
 import kotlin.reflect.KClass
 
 class MainApp: DiApp<AppView>(AppView::class)
 
 abstract class DiApp<T: View>(view: KClass<T>): App(view, AppStyles::class) {
-
     init {
+
+        importStylesheet("/${AppStyles.playersListView}.css")
+
         Thread.currentThread().name = "UI"
         FX.dicontainer = object : DIContainer, KoinComponent {
             override fun <T : Any> getInstance(type: KClass<T>): T {

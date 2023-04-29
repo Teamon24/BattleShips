@@ -4,12 +4,12 @@ import javafx.event.Event
 import javafx.event.EventType
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
-import org.home.utils.log
+import org.home.utils.logCoordinate
 
 fun <T : MouseEvent> FleetCell.leftClickHandler(eventType: EventType<T>, handle: FleetCell.() -> Unit) {
     this.addEventHandler(eventType) {
         if (it.isPrimary()) {
-            it.log()
+            it.logCoordinate()
             this.handle()
         }
     }
@@ -18,7 +18,7 @@ fun <T : MouseEvent> FleetCell.leftClickHandler(eventType: EventType<T>, handle:
 fun <T : MouseEvent> FleetCell.rightClickHandler(eventType: EventType<T>, handle: FleetCell.() -> Unit) {
     this.addEventHandler(eventType) {
         if (it.isSecondary()) {
-            it.log()
+            it.logCoordinate()
             this.handle()
         }
     }

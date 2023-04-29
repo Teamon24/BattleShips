@@ -10,11 +10,12 @@ import tornadofx.find
 import kotlin.reflect.KClass
 
 
-val slide = slide(0.2)
-val backSlide = slide(0.2).right()
+private const val SLIDE_TIME = 0.3
 
+val slide = slide(SLIDE_TIME)
+val backSlide = slide(SLIDE_TIME).right()
 
-fun <T: UIComponent> EventTarget.transit(from: UIComponent, to: T, text: String, body: () -> Unit = {}) =
+fun <T: UIComponent> EventTarget.transitButton(from: UIComponent, to: T, text: String, body: () -> Unit = {}) =
     button(text) {
         action {
             body()
@@ -23,13 +24,28 @@ fun <T: UIComponent> EventTarget.transit(from: UIComponent, to: T, text: String,
     }
 
 
-fun EventTarget.backTransit(from: UIComponent, toClass: () -> KClass<out UIComponent>, text: String = "Назад", body: () -> Unit = {}) =
+fun EventTarget.backTransitButton(
+    from: UIComponent,
+    toClass: () -> KClass<out UIComponent>,
+    text: String = "Назад",
+    body: () -> Unit = {},
+) =
     transitLogic(from, toClass, text, backSlide, body)
 
-fun EventTarget.backTransit(from: UIComponent, toClass: KClass<out UIComponent>, text: String = "Назад", body: () -> Unit = {}) =
+fun EventTarget.backTransitButton(
+    from: UIComponent,
+    toClass: KClass<out UIComponent>,
+    text: String = "Назад",
+    body: () -> Unit = {},
+) =
     transitLogic(from, toClass, text, backSlide, body)
 
-fun EventTarget.transit(from: UIComponent, toClass: KClass<out UIComponent>, text: String, body: () -> Unit = {}) =
+fun EventTarget.transitButton(
+    from: UIComponent,
+    toClass: KClass<out UIComponent>,
+    text: String,
+    body: () -> Unit = {},
+) =
     transitLogic(from, toClass, text, slide, body)
 
 private fun EventTarget.transitLogic(
@@ -46,12 +62,12 @@ private fun EventTarget.transitLogic(
         }
     }
 
-private fun EventTarget.transitLogic(
+private inline fun EventTarget.transitLogic(
     from: UIComponent,
-    toClass: () -> KClass<out UIComponent>,
+    crossinline toClass: () -> KClass<out UIComponent>,
     text: String,
     transition: Slide,
-    body: () -> Unit = {},
+    crossinline body: () -> Unit = {},
 ) =
     button(text) {
         action {
@@ -67,10 +83,10 @@ private fun EventTarget.transitLogic(
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 
-fun <T: UIComponent> EventTarget.transfer(from: UIComponent, toClass: KClass<T>, text: String, body: () -> Unit = {}) =
+fun <T: UIComponent> EventTarget.transferButton(from: UIComponent, toClass: KClass<T>, text: String, body: () -> Unit = {}) =
     transferLogic(Scope(), from, toClass, text, body)
 
-fun EventTarget.backTransfer(from: UIComponent, toClass: KClass<out UIComponent>, text: String = "Назад") =
+fun EventTarget.backTransferButton(from: UIComponent, toClass: KClass<out UIComponent>, text: String = "Назад") =
     transferLogic(Scope(), from, toClass, text)
 
 private  fun <T: UIComponent> EventTarget.transferLogic(

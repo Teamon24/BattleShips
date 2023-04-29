@@ -3,7 +3,7 @@ package org.home.net.socket.ex.nio
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.utils.extensions.singleThreadScope
+import org.home.utils.singleThreadScope
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
@@ -23,11 +23,9 @@ object Demo {
         lock.await()
         (1..60).map {
             singleThreadScope("client").launch(start = CoroutineStart.LAZY) {
-                runBlocking {
-                    NioEchoClient().run {
-                        sendMessage(message(it))
-                        stop()
-                    }
+                NioEchoClient().run {
+                    sendMessage(message(it))
+                    stop()
                 }
             }
         }.apply {

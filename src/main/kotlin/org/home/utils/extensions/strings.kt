@@ -1,6 +1,6 @@
 package org.home.utils.extensions
 
-import org.home.utils.threadPrintln
+import org.home.utils.threadLog
 
 fun String.ifNotEmpty(function: String.() -> Unit) {
     if (this.isNotEmpty()) {
@@ -8,15 +8,17 @@ fun String.ifNotEmpty(function: String.() -> Unit) {
     }
 }
 
-infix fun StringBuilder.ln(s: Any): StringBuilder = append(s).append("\n")
+fun StringBuilder.ln(s: String = ""): StringBuilder = apply {
+    s.ifNotEmpty { append(s) }
+    append("\n")
+}
 infix fun StringBuilder.add(s: Any): StringBuilder = append(s)
 
 class LogBuilder {
-    val string = StringBuilder()
+    val builder = StringBuilder()
     override fun toString(): String {
-        return string.toString().apply { string.clear() }
+        return builder.toString().apply { builder.clear() }
     }
 }
 
-infix fun LogBuilder.ln(s: Any): StringBuilder = string.append(threadPrintln(s))
-infix fun LogBuilder.add(s: Any): StringBuilder = string.append(s)
+infix fun LogBuilder.ln(s: Any): StringBuilder = builder.append(threadLog(s)).ln()

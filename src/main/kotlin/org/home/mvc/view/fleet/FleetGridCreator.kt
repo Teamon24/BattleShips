@@ -1,18 +1,20 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.components.cell
 import org.home.style.AppStyles
+import tornadofx.Controller
 import tornadofx.addChildIfPossible
 import tornadofx.addClass
 
-class FleetGridCreator(height: Int, width: Int) {
-
-    val rowRange = 1..height
-    val colRange = 1..width
+class FleetGridCreator(model: BattleModel) {
+    val rowRange = 1.. model.height.value
+    val colRange = 1.. model.width.value
 
     fun fleetGrid() = FleetGrid().also {
         it.addClass(AppStyles.fleetGrid)
+
         zeroTitleCell(it)
         digitTitle(it)
         letterTitle(it)

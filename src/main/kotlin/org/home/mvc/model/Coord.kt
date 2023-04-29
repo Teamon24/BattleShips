@@ -2,7 +2,6 @@ package org.home.mvc.model
 
 import kotlin.math.abs
 
-typealias Ships = MutableCollection<Ship>
 typealias Coord = Pair<Int, Int>
 
 fun xDistance(it: Coord, pair: Coord) = abs(it.first - pair.first)

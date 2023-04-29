@@ -1,0 +1,72 @@
+package org.home.mvc.contoller
+
+import org.home.mvc.ApplicationProperties
+import org.home.net.action.Action
+import org.home.net.action.HasAShot
+import org.home.net.action.HitAction
+import org.home.net.action.MissAction
+import org.home.net.action.ShotAction
+import org.home.utils.PlayersSockets
+import org.home.utils.extensions.CollectionsExtensions.exclude
+import org.home.utils.extensions.className
+import tornadofx.Controller
+import kotlin.reflect.KClass
+
+object ShotNotifierStrategies: Controller() {
+    private val applicationProperties: ApplicationProperties by di()
+
+    private var notifyAll: ShotNotifierStrategy? = null
+    private var notifyOnlyShooter: ShotNotifierStrategy? = null
+
+    fun create(sockets: PlayersSockets): ShotNotifierStrategy {
+        return if (applicationProperties.isToNotifyAll) {
+            notifyAll ?: ShotNotifierStrategy
+                .Builder(sockets)
+                .notifyAll(MissAction::class)
+                .notifyAll(HitAction::class)
+                .build()
+                .also { notifyAll = it }
+        } else {
+            notifyOnlyShooter ?: ShotNotifierStrategy
+                .Builder(sockets)
+                .onlyShooterNotifier()
+                .also { notifyOnlyShooter = it }
+        }
+    }
+}
+
+abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
+
+    protected val map = HashMap<KClass<out HasAShot>, Boolean>().apply {
+        val notifyOnlyWhoMadeAShot = true
+        put(ShotAction::class, notifyOnlyWhoMadeAShot)
+        put(MissAction::class, notifyOnlyWhoMadeAShot)
+        put(HitAction::class, notifyOnlyWhoMadeAShot)
+    }
+
+    fun shouldNotifyAll(action: KClass<out HasAShot>) { map[action] = false }
+
+    fun createNotifications(action: HasAShot): HashMap<String, MutableList<Action>> {
+        val toNotifyShooter = map[action::class]
+
+        toNotifyShooter ?: throw RuntimeException(
+            "There is no boolean flag for ${HasAShot::className}'s descendant: ${action.className}"
+        )
+
+        val toSend = hashMapOf<String, MutableList<Action>>()
+        if(toNotifyShooter) {
+            toSend[action.shooter] = mutableListOf(action)
+        } else {
+            toSend.putAll(sockets.map { it.player!! }.exclude(action.target).associateWith { mutableListOf(action) })
+        }
+
+        return toSend
+    }
+
+    internal class Builder(private val sockets: PlayersSockets) {
+        private val strategy = object : ShotNotifierStrategy(sockets) {}
+        fun notifyAll(hasAShot: KClass<out HasAShot>) = apply { strategy.shouldNotifyAll(hasAShot) }
+        fun build() = strategy
+        fun onlyShooterNotifier() = Builder(sockets).build()
+    }
+}

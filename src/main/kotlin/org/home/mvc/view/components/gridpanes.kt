@@ -72,7 +72,7 @@ fun setIndices(child: Node, coord: Coord) {
     GridPane.setColumnIndex(child, coord.second)
 }
 
-fun GridPane.transpose(): GridPane {
+fun <T: GridPane> T.transpose(): T {
     children.forEach {
         val (row, col) = getIndices(it)
         setIndices(it, col, row)

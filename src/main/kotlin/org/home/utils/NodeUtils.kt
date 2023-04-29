@@ -7,7 +7,7 @@ import org.home.utils.NodeUtils
 
 object NodeUtils {
     fun getAllNodes(root: Parent): ArrayList<Node> {
-        var nodes = ArrayList<Node>()
+        val nodes = ArrayList<Node>()
         fun recurseNodes(node: Node) {
             nodes.add(node)
             if(node is Parent)

@@ -44,7 +44,7 @@ object StageUtils {
         val y = (player / cols) * height
         val viewInitialPosition = ViewInitialPosition(width, height, x, y)
         log { "factors: $factors" }
-        log { viewInitialPosition }
+        log { "app window: $viewInitialPosition" }
         return viewInitialPosition
     }
 

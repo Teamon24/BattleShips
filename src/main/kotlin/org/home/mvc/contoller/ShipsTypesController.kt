@@ -1,8 +1,9 @@
 package org.home.mvc.contoller
 
 
-import org.home.mvc.contoller.events.ShipCountEvent
-import org.home.mvc.contoller.events.ShipDiscountEvent
+import org.home.mvc.ApplicationProperties
+import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
 import org.home.mvc.model.copy
@@ -12,6 +13,7 @@ import tornadofx.Controller
 class ShipsTypesController: Controller() {
 
     private val model: BattleModel by di()
+    private val applicationProperties: ApplicationProperties by di()
     private val map = model.battleShipsTypes.copy()
 
     fun validates(newShip: Collection<Coord>): Boolean {
@@ -28,14 +30,12 @@ class ShipsTypesController: Controller() {
 
     private fun shipMaxLength() = map.maxOf { it.key }
 
+
     fun count(vararg ships: Ship) {
         ships
             .filter { it.size != 0 }
-            .onEach { ship ->
-                map[ship.size] = map[ship.size]?.minus(1)
-            }.forEach {
-                fire(ShipCountEvent(it.size))
-            }
+            .onEach { ship -> map[ship.size] = map[ship.size]?.minus(1) }
+            .forEach { fire(ShipWasConstructed(it.size, applicationProperties.currentPlayer)) }
 
     }
 
@@ -43,18 +43,7 @@ class ShipsTypesController: Controller() {
         ships
             .filter { it.size != 0 }
             .onEach { ship -> map[ship.size] = map[ship.size]?.plus(1) }
-            .forEach {
-                fire(ShipDiscountEvent(it.size))
-            }
+            .forEach { fire(ShipWasDeleted(it.size, applicationProperties.currentPlayer)) }
 
-    }
-
-    fun discount(ships: List<Ship>) {
-        ships
-            .filter { it.size != 0 }
-            .onEach { ship -> map[ship.size] = map[ship.size]?.plus(1) }
-            .forEach {
-                fire(ShipDiscountEvent(it.size))
-            }
     }
 }

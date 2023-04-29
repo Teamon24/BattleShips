@@ -10,6 +10,8 @@ buildscript {
     dependencies {
         classpath 'org.codehaus.gpars:gpars:1.2.1'
         classpath 'org.apache.commons:commons-lang3:3.12.0'
+        classpath 'org.apache.commons:commons-lang3:3.12.0'
+        classpath 'commons-io:commons-io:2.11.0'
     }
 }
 
@@ -34,6 +36,11 @@ test {
     useJUnitPlatform()
 }
 
+sourceSets {
+    main.kotlin.srcDirs = ['src/main/kotlin']
+    main.resources.srcDirs = ['src/main/resources']
+}
+
 dependencies {
     implementation 'no.tornado:tornadofx:1.7.20'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
@@ -43,6 +50,7 @@ dependencies {
     implementation 'io.insert-koin:koin-core:3.3.3'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'com.google.guava:guava-collections:r03'
+    implementation 'com.google.guava:guava:13.0'
 }
 
 compileKotlin {
@@ -71,46 +79,49 @@ task fatJar(type: Jar) {
 ext {
     sl = File.separator
     close = false
+    resourcesFolder = "${projectDir.path}${sl}src${sl}main${sl}resources${sl}"
+    playerPropPrefix = "player"
 }
-def pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
 def sl = rootProject.ext.sl
-
 def application = "application"
-def additionalPlayersNumber = 6
+def playersNumber = 6
 
-def propsList = concat(application, toString(createProperties(additionalPlayersNumber)))
-
+def propsList = concat(application, toString(createProperties(playersNumber)))
 
 String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
 
-def javaCp = [java, "-classpath",
-              sourceSets.main.runtimeClasspath.getAsPath()]
+def javaCp =
+[java, "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
 
-def javaJar = [java, "-jar",
-               "${project.path}\\build\\libs\\${project.name}-${project.version}.jar",
-               mainClassName]
+def javaJar =
+[java, "-jar", "${project.path}\\build\\libs\\${project.name}-${project.version}.jar", mainClassName]
 
 def pidsFile = createFile("$projectDir${sl}pids.txt")
 
 
-task server  { doLast { runApp(concat(javaCp, mainClassName), application, 0, 7) }}
-task player0 { doLast { runApp(concat(javaCp, mainClassName), player(0), 1, 7) } }
-task player1 { doLast { runApp(concat(javaCp, mainClassName), player(1), 2, 7) } }
-task player2 { doLast { runApp(concat(javaCp, mainClassName), player(2), 3, 7) } }
-task player3 { doLast { runApp(concat(javaCp, mainClassName), player(3), 4, 7) } }
-task player4 { doLast { runApp(concat(javaCp, mainClassName), player(4), 5, 7) } }
-task player5 { doLast { runApp(concat(javaCp, mainClassName), player(5), 6, 7) } }
-tasks.server.dependsOn(build)
+task createProperties {
+    deleteProperties()
+    createProperties(playersNumber - 1)
+}
 
+task server  { doLast { runApp(concat(javaCp, mainClassName), application, 0, playersNumber - 1) } }
+task player0 { doLast { runApp(concat(javaCp, mainClassName), player(0),   1, playersNumber - 1) } }
+task player1 { doLast { runApp(concat(javaCp, mainClassName), player(1),   2, playersNumber - 1) } }
+task player2 { doLast { runApp(concat(javaCp, mainClassName), player(2),   3, playersNumber - 1) } }
+task player3 { doLast { runApp(concat(javaCp, mainClassName), player(3),   4, playersNumber - 1) } }
+task player4 { doLast { runApp(concat(javaCp, mainClassName), player(4),   5, playersNumber - 1) } }
+task player5 { doLast { runApp(concat(javaCp, mainClassName), player(5),   6, playersNumber - 1) } }
+task player6 { doLast { runApp(concat(javaCp, mainClassName), player(6),   7, playersNumber - 1) } }
 
 task multiscreenCheck { doLast { runApp(concat(javaCp, 'org.home.Multiscreen_checkKt')) } }
+
+tasks.server.dependsOn(build)
+tasks.server.dependsOn(createProperties)
 tasks.multiscreenCheck.dependsOn(build)
 
 def runApp(List<String> command, Object... args) {
-    exec {
-        commandLine concat(command, toString(args))
-    }
+    exec { commandLine concat(command, toString(args)) }
 }
 
 task runPlayers {
@@ -194,12 +205,12 @@ def createProperties(Integer playersNumber) {
     def properties = new ArrayList<String>(playersNumber)
     StringBuilder stringBuilder = new StringBuilder()
 
-    def applicationProps = new File(propFile("application"))
+    def applicationProps = new File(propFilepath("application"))
     readFile(applicationProps, (line) -> stringBuilder.append(line).append("\n"))
     for (i in 0..<playersNumber) {
         String playerName = player(i)
         properties.add(playerName)
-        def filePath = propFile(playerName)
+        def filePath = propFilepath(playerName)
         toFile(
                 (writer, content) -> writer.write(content),
                 filePath,
@@ -207,6 +218,12 @@ def createProperties(Integer playersNumber) {
         )
     }
     return properties
+}
+
+def deleteProperties() {
+    def dir = new File(rootProject.ext.resourcesFolder)
+    for(File file: dir.listFiles())
+        if (file.name.matches(rootProject.ext.playerPropPrefix + "-[\\d]+.properties")) file.delete()
 }
 
 private static void toFile(BiConsumer<PrintWriter, String> op, String filepath, String content) {
@@ -217,8 +234,8 @@ private static void toFile(BiConsumer<PrintWriter, String> op, String filepath, 
     writer.close()
 }
 
-private static String player(i) {
-    return "player-${i}"
+private String player(i) {
+    return "${rootProject.ext.playerPropPrefix}-${i}"
 }
 
 private static String content(StringBuilder stringBuilder, String playerName) {
@@ -228,9 +245,8 @@ private static String content(StringBuilder stringBuilder, String playerName) {
     return StringUtils.join(propsContent, "\n")
 }
 
-private String propFile(String prop) {
-    def sl = rootProject.ext.sl
-    return "${projectDir.path}${sl}src${sl}main${sl}resources${sl}${prop}.properties"
+private String propFilepath(String prop) {
+    return "${rootProject.ext.resourcesFolder}${prop}.properties"
 }
 
 static def readFile(File file, Consumer<String> body) {

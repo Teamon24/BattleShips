@@ -5,24 +5,22 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventTarget
 import javafx.scene.control.Button
 import javafx.scene.control.CheckBox
-import javafx.scene.control.Label
 import javafx.scene.control.TextField
 import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
-import org.home.ApplicationProperties
-import org.home.ApplicationProperties.Companion.battleFieldCreationMenuTitle
-import org.home.ApplicationProperties.Companion.heightFieldLabel
-import org.home.ApplicationProperties.Companion.ipAddressFieldLabel
-import org.home.ApplicationProperties.Companion.playersNumberLabel
-import org.home.ApplicationProperties.Companion.squareSize
-import org.home.ApplicationProperties.Companion.widthFieldLabel
-import org.home.DiApp
+import org.home.mvc.ApplicationProperties
+import org.home.mvc.ApplicationProperties.Companion.battleFieldCreationMenuTitle
+import org.home.mvc.ApplicationProperties.Companion.heightFieldLabel
+import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
+import org.home.mvc.ApplicationProperties.Companion.playersNumberLabel
+import org.home.mvc.ApplicationProperties.Companion.squareSize
+import org.home.mvc.ApplicationProperties.Companion.widthFieldLabel
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.AppView
-import org.home.mvc.view.components.backTransit
+import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.cell
 import org.home.mvc.view.components.centerGrid
 import org.home.mvc.view.components.col
@@ -30,8 +28,8 @@ import org.home.mvc.view.components.marginGrid
 import org.home.mvc.view.components.row
 import org.home.mvc.view.components.slide
 import org.home.mvc.view.fleet.FleetGridCreationView
-import org.home.mvc.view.openErrorWindow
-import org.home.net.BattleServer
+import org.home.mvc.view.openAlertWindow
+import org.home.net.server.BattleServer
 import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
@@ -40,8 +38,6 @@ import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.label
-import tornadofx.launch
-import tornadofx.required
 import tornadofx.textfield
 
 class BattleCreationView : View("Настройки боя") {
@@ -68,7 +64,7 @@ class BattleCreationView : View("Настройки боя") {
                 cell(2, 0) {
                     marginGrid {
                         val view = this@BattleCreationView
-                        cell(0, 0) { backTransit(view, AppView::class) }
+                        cell(0, 0) { backTransitButton(view, AppView::class) }
                         cell(0, 1) { createBattleButton(view) }
                     }
                 }
@@ -81,24 +77,24 @@ class BattleCreationView : View("Настройки боя") {
 
         return marginGrid {
             row(0) {
-                col(0) { fieldLabel(ipAddressFieldLabel) }
+                col(0) { label(ipAddressFieldLabel) }
                 col(1) { textfield(ipAddress).apply { isEditable = false } }
                 col(2) { copyIpButton(ipAddress) }
             }
 
             row(1) {
-                col(0) { fieldLabel(playersNumberLabel) }
+                col(0) { label(playersNumberLabel) }
                 col(1) { intField(model.playersNumber) }
             }
 
             row(2) {
-                col(0) { fieldLabel(widthFieldLabel) }
+                col(0) { label(widthFieldLabel) }
                 col(1) { intField(model.width) }
                 col(2) { squareBattleFieldCheckBox().also { add(it) } }
             }
 
             row(3) {
-                col(0) { fieldLabel(heightFieldLabel) }
+                col(0) { label(heightFieldLabel) }
                 col(1) { intField(model.height) }
             }
         }
@@ -113,17 +109,12 @@ class BattleCreationView : View("Настройки боя") {
                     view.replaceWith(FleetGridCreationView::class, slide)
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    openErrorWindow {
+                    openAlertWindow {
                         "Не удалось создать хост ${ipAddress.value}"
                     }
                 }
             }
         }
-
-
-    private fun EventTarget.fieldLabel(text: String): Label {
-        return label(text).apply { addClass(AppStyles.fieldSize) }
-    }
 
     private fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
         return button("", ImageView("/icons/clipboard.png"))
@@ -140,7 +131,6 @@ class BattleCreationView : View("Настройки боя") {
 
     private fun EventTarget.intField(prop: SimpleIntegerProperty): TextField {
         return textfield(prop) {
-            addClass(AppStyles.fieldSize)
             focusedProperty().addListener { _, _, _ ->
                 if (!text.matches(Regex("\\d+"))) {
                     text = ""
@@ -174,18 +164,6 @@ class BattleCreationView : View("Настройки боя") {
         })
 
         return checkBox
-    }
-
-
-
-    companion object {
-        class BCMApp : DiApp<BattleCreationView>(BattleCreationView::class)
-
-        @JvmStatic
-        fun main(args: Array<String>) {
-            org.home.startKoin()
-            launch<BCMApp>()
-        }
     }
 }
 

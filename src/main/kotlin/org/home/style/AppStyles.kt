@@ -3,15 +3,11 @@ package org.home.style
 import javafx.geometry.Pos
 import javafx.scene.Cursor
 import javafx.scene.paint.Color
-import javafx.scene.paint.Color.BLACK
-import javafx.scene.paint.Color.LIGHTSLATEGRAY
-import javafx.scene.paint.Color.RED
-import javafx.scene.paint.Color.WHITE
+import javafx.scene.paint.Color.*
 import javafx.scene.paint.Paint
 import org.home.utils.LinearUnits
 import tornadofx.CssRule
 import tornadofx.CssSelectionBlock
-import tornadofx.Dimension
 import tornadofx.MultiValue
 import tornadofx.Stylesheet
 import tornadofx.box
@@ -19,12 +15,36 @@ import tornadofx.cssclass
 import tornadofx.loadFont
 import tornadofx.mixin
 import tornadofx.px
-
-
+import java.io.File
+import java.net.URI
+import java.net.URL
 
 class AppStyles : Stylesheet() {
 
+    class PlayerListViewColors(
+        val turn: Color,
+        val defeated: Color,
+        val ready: Color,
+        val default: Color,
+    )
+
     companion object {
+
+        val chosenCellColor = valueOf("#085191")
+        val readyPlayerCellColor = MEDIUMSEAGREEN!!
+
+        val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
+        val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyPlayerCellColor, BLACK)
+
+        val String.resource: URL? get() =
+            ClassLoader.getSystemResource(this)
+
+        val String.resourceFile: File
+            get() =
+                resource
+                    ?.let { File(it.file) }
+                    ?: throw RuntimeException("Resource (\"${this}\") was not found")
+
 
         private const val fontName = "JetBrainsMono-Light.ttf"
 
@@ -32,11 +52,13 @@ class AppStyles : Stylesheet() {
             loadFont("/fonts/static/$fontName", 12)!!
         }
 
-        val jetBrainsMonoLightFont = mixin { fontFamily =
-            fontName
-                .dropLastWhile { it != '.' }
-                .split(" ")
-                .joinToString(" ") }
+        val jetBrainsMonoLightFont = mixin {
+            fontFamily =
+                fontName
+                    .dropLastWhile { it != '.' }
+                    .split(" ")
+                    .joinToString(" ")
+        }
 
         val small = mixin { fontSize = 15.px }
 
@@ -45,7 +67,6 @@ class AppStyles : Stylesheet() {
 
         private const val fleetBorderWidth = 0.5
 
-        val chosenCellColor = Paint.valueOf("#085191")
         private val wrongCellColor = RED
         private val emptyCellColor = WHITE
 
@@ -56,6 +77,9 @@ class AppStyles : Stylesheet() {
 
         val emptyFleetCell by cssclass()
         val fleetLabel by cssclass()
+
+        val missCell by cssclass()
+        val hitCell by cssclass()
 
         val shipBorderCell by cssclass()
 
@@ -69,16 +93,19 @@ class AppStyles : Stylesheet() {
         val gridMargin by cssclass()
 
         val debugClass by cssclass()
+        val defeatedCell by cssclass()
         val centerGrid by cssclass()
 
         val shipsTypesInfoPane by cssclass()
-        val playerCell by cssclass()
+        val currentPlayerCell by cssclass()
         val enemyCell by cssclass()
         val errorLabel by cssclass()
+        val readyButton by cssclass()
+
+        const val playersListView = "players-list-view"
     }
 
     init {
-
         errorLabel + padding(20.px)
 
         odd {
@@ -92,46 +119,13 @@ class AppStyles : Stylesheet() {
         }
 
         label + jetBrainFont
-        button + fillParent + jetBrainFont
-
-        fleetLabel + cellSize + center + jetBrainFont
-
+        button + jetBrainFont + fillParent
+        fleetLabel + jetBrainFont + cellSize + center
         centerGrid + center
 
-        (emptyFleetCell + border) {
-            and(hover) {
-                backgroundColor += chosenCellColor
-            }
-        }
-
-        (playerCell + border) {
-            focusTraversable = false
-        }
-
-        (enemyCell + border) {
-            and(hover) {
-                cursor = Cursor.CROSSHAIR
-                backgroundColor += Color.rgb(231, 64, 67, 0.5)
-            }
-        }
-
-        (shipsTypesInfoPane + margin(10.px)) {
-            backgroundColor += Color.rgb(58, 132, 192, 0.35)
-        }
-
-        shipTypeLabel {
-            backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
-        }
-
-        shipBorderCell {
-            backgroundColor += Color.rgb(255, 0, 0, 0.3)
-            borderColor += box(Color.rgb(255, 0, 0, 0.15))
-            borderWidth += box(fleetBorderWidth.px + 0.5)
-        }
-
-        incorrectFleetCell {
-            backgroundColor += wrongCellColor
-            borderWidth += box(0.px)
+        readyButton {
+            backgroundColor += AppStyles.readyPlayerCellColor
+            textFill = WHITE
         }
 
         chosenFleetCell {
@@ -140,10 +134,59 @@ class AppStyles : Stylesheet() {
             borderWidth += box(0.px)
         }
 
+        (missCell + border) {
+            backgroundColor += DIMGREY
+        }
+
+        (hitCell + border) {
+            backgroundColor += ORANGERED
+        }
+
+
         (titleCell + border) {
             textFill = emptyCellColor
             backgroundColor += LIGHTSLATEGRAY
         }
+
+        (emptyFleetCell + border) {
+            and(hover) {
+                backgroundColor += chosenCellColor
+            }
+        }
+
+        (currentPlayerCell + border) { focusTraversable = false }
+
+        (enemyCell + border) {
+            and(hover) {
+                cursor = Cursor.CROSSHAIR
+                backgroundColor += rgb(231, 64, 67, 0.5)
+                backgroundImage += URI("/icons/target-3699.svg")
+            }
+        }
+
+        (defeatedCell + border) {
+            backgroundColor += PINK
+        }
+
+        (shipsTypesInfoPane + margin(10.px)) {
+            backgroundColor += rgb(58, 132, 192, 0.35)
+        }
+
+        shipTypeLabel {
+            backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
+        }
+
+        shipBorderCell {
+            backgroundColor += rgb(255, 0, 0, 0.3)
+            borderColor += box(rgb(255, 0, 0, 0.15))
+            borderWidth += box(fleetBorderWidth.px)
+        }
+
+        incorrectFleetCell {
+            backgroundColor += wrongCellColor
+            borderWidth += box(0.px)
+        }
+
 
         (debugClass + gridMargin(10.px)) {
             borderColor += box(BLACK)

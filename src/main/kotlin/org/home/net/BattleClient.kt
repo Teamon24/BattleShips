@@ -1,125 +1,233 @@
 package org.home.net
 
-import javafx.beans.property.SimpleBooleanProperty
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.home.ApplicationProperties
+import kotlinx.coroutines.runBlocking
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.Conditions
 import org.home.mvc.contoller.GameTypeController
-import org.home.mvc.contoller.events.PlayerIsReadyAccepted
-import org.home.mvc.contoller.events.PlayerWasConnected
-import org.home.mvc.contoller.events.ReadyPlayersAccepted
-import org.home.mvc.contoller.events.WaitForYourTurn
+import org.home.mvc.contoller.events.BattleStarted
+import org.home.mvc.contoller.events.FleetsReadinessReceived
+import org.home.mvc.contoller.events.PlayerLeaved
+import org.home.mvc.contoller.events.PlayerTurnToShootReceived
+import org.home.mvc.contoller.events.ConnectedPlayerReceived
+import org.home.mvc.contoller.events.PlayerWasDefeated
+import org.home.mvc.contoller.events.PlayerWasDisconnected
+import org.home.mvc.contoller.events.ReadyPlayersReceived
+import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasDeleted
+import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ThereWasAMiss
+import org.home.mvc.contoller.events.BattleIsEnded
+import org.home.mvc.contoller.events.NewServerConnectionReceived
+import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.model.BattleModel
-import org.home.net.Condition.Companion.condition
-import org.home.utils.MessageIO.write
-import org.home.utils.SocketUtils.receiveBatch
-import org.home.utils.extensions.singleThreadScope
+import org.home.mvc.model.Ship
+import org.home.mvc.model.hadHit
+import org.home.mvc.model.removeDestroyedDeck
+import org.home.mvc.view.openMessageWindow
+import org.home.net.action.Action
+import org.home.net.action.ActionExtensions.defeat
+import org.home.net.action.ActionExtensions.hit
+import org.home.net.action.ActionType.HIT
+import org.home.net.action.ActionType.SHOT
+import org.home.net.action.ActionType.CONNECT
+import org.home.net.action.ActionType.DISCONNECT
+import org.home.net.action.ActionType.SHIP_CREATION
+import org.home.net.action.ActionType.SHIP_DELETION
+import org.home.net.action.ActionType.LEAVE_BATTLE
+import org.home.net.action.ActionType.NEW_SERVER
+import org.home.net.action.ActionType.NEW_SERVER_CONNECTION
+import org.home.net.action.ActionType.DEFEAT
+import org.home.net.action.ActionType.BATTLE_ENDED
+import org.home.net.action.ActionType.READY
+import org.home.net.action.ActionType.NOT_READY
+import org.home.net.action.ActionType.TURN
+import org.home.net.action.ActionType.PLAYERS
+import org.home.net.action.ActionType.READY_PLAYERS
+import org.home.net.action.ActionType.FLEETS_READINESS
+import org.home.net.action.ActionType.MISS
+import org.home.net.action.ActionType.BATTLE_STARTED
+import org.home.net.action.ActionType.FLEET_SETTINGS
+import org.home.net.action.AreReadyAction
+import org.home.net.action.ConnectionAction
+import org.home.net.action.DefeatAction
+import org.home.net.action.HitAction
+import org.home.net.action.MissAction
+import org.home.net.action.LeaveAction
+import org.home.net.action.ReadyAction
+import org.home.net.action.DisconnectAction
+import org.home.net.action.NewServerAction
+import org.home.net.action.ShotAction
+import org.home.net.action.TurnAction
+import org.home.utils.SocketUtils.receive
+import org.home.utils.SocketUtils.send
+import org.home.utils.extensions.BooleansExtensions.no
+import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.log
-import org.home.utils.logSend
+import org.home.utils.singleThreadScope
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
+import java.net.SocketException
 import java.net.UnknownHostException
 
 class BattleClient: BattleController() {
-
-    companion object {
-        var fleetSettingsReceived = condition("fleet settings received")
-    }
-
     private val gameController: GameTypeController by di()
-    private val appProps: ApplicationProperties by di()
     private val model: BattleModel by di()
 
-    private lateinit var `in`: InputStream
-    private lateinit var out: OutputStream
-    private lateinit var socket: Socket
-    private val receiver = singleThreadScope("receiver-#${appProps.currentPlayer}")
+    private val conditions: Conditions by di()
+
+    private lateinit var input: InputStream
+    private lateinit var output: OutputStream
+    private lateinit var serverSocket: Socket
+
+    private val currentPlayer = applicationProperties.currentPlayer
+    private val receiver = singleThreadScope(currentPlayer)
+    private lateinit var receiverJob: Job
+
+    class ActionTypeAbsentException(any: Any, source: String, method: String):
+    RuntimeException("There is no when-branch for $any in $source#$method")
 
     @Throws(UnknownHostException::class, IOException::class)
     fun connect(ip: String, port: Int) {
-        socket = Socket(ip, port, )
-        out = socket.getOutputStream()
-        `in` = socket.getInputStream()
+        serverSocket = Socket(ip, port)
+        output = serverSocket.getOutputStream()
+        input = serverSocket.getInputStream()
         log { "connected to $ip:$port" }
+    }
+
+    override fun connectAndSend(ip: String, port: Int) {
+        connect(ip, port)
+        send(ConnectionAction(currentPlayer))
     }
 
     @Throws(IOException::class)
     fun listen() {
-        log { "client is listening for server..." }
-        receiver.launch {
-            while (true) {
-                receiving()
+        log { "client is listening for server ..." }
+        receiverJob = receiver.launch {
+            log { "receiver is launched" }
+            while (isActive) {
+                log { "waiting for message ..." }
+                try {
+                    serverSocket.receive<Action>().forEach(::process)
+                } catch (e: SocketException) {
+                    log { e.message }
+                }
             }
         }
-    }
-
-    fun send(action: Action) {
-        out.write(action)
-        logSend { action }
-    }
-
-    private fun receiving() {
-        log { "waiting for message..." }
-        val actions = socket.receiveBatch<Action>()
-        actions.forEach(::process)
+        receiverJob.start()
     }
 
     private fun process(action: Action) {
-        when (action) {
-            is ConnectAction -> fire(PlayerWasConnected(action.player))
-
-            is FleetSettingsAction -> {
-                fleetSettingsReceived.notifyUI { model.put(action) }
+        when (action.type) {
+            CONNECT -> fire(ConnectedPlayerReceived(action.cast()))
+            FLEET_SETTINGS -> {
+                conditions
+                    .fleetSettingsReceived
+                    .notifyUI {
+                        putSettings(action.cast())
+                    }
             }
 
-            is ReadyPlayersAction -> {
-                model.readyPlayers
-                    .filter { action.players.contains(it.key) }
-                    .forEach { (player, _) -> model.readyPlayers[player]!!.value = true }
+            READY_PLAYERS -> fire(ReadyPlayersReceived(action.cast<AreReadyAction>().players))
 
-                fire(ReadyPlayersAccepted(action.players))
+            PLAYERS -> gameController.onPlayers(action.cast())
+
+            READY,
+            NOT_READY -> gameController.onReady(action.cast())
+
+            FLEETS_READINESS -> fire(FleetsReadinessReceived(action.cast()))
+            SHIP_CREATION -> fire(ShipWasConstructed(action.cast()))
+            SHIP_DELETION -> fire(ShipWasDeleted(action.cast()))
+            BATTLE_STARTED -> fire(BattleStarted)
+            BATTLE_ENDED -> fire(BattleIsEnded(action.cast()))
+            TURN -> fire(PlayerTurnToShootReceived(action.cast<TurnAction>().player))
+
+            SHOT -> {
+                val shotAction = action.cast<ShotAction>()
+                if (shotAction.target == currentPlayer) {
+                    val ships = model.playersAndShips[currentPlayer]!!
+                    ships.hadHit(shotAction.shot)
+                        .yes { onHit(ships, shotAction) }
+                        .no {
+                            MissAction(shotAction).also {
+                                serverSocket.send(it)
+                                fire(ThereWasAMiss(it))
+                            }
+                        }
+                }
             }
-            is PlayersAction -> gameController.onPlayers(action)
 
-            is ReadyAction -> {
-                model.readyPlayers[action.player] = SimpleBooleanProperty(true)
-                fire(PlayerIsReadyAccepted(action.player))
-            }
+            HIT -> fire(ShipWasHit(action.cast()))
+            MISS -> fire(ThereWasAMiss(action.cast()))
 
-            is TurnAction -> gameController.onTurn(action)
-            else -> throw RuntimeException(
-                "There is no case for class ${action::class.simpleName} in client#receive method"
-            )
+            DEFEAT -> fire(PlayerWasDefeated(action.cast<DefeatAction>().player))
+            LEAVE_BATTLE -> fire(PlayerLeaved(action.cast<LeaveAction>().player))
+            DISCONNECT -> fire(PlayerWasDisconnected(action.cast<DisconnectAction>().player))
+            NEW_SERVER -> fire(NewServerReceived(action.cast<NewServerAction>().player))
+
+            NEW_SERVER_CONNECTION -> fire(NewServerConnectionReceived(action.cast()))
+
+            else -> throw ActionTypeAbsentException(action.type, javaClass.name, "process")
         }
     }
 
-    private fun sendResponse(action: Action) {
-        send(TextAction(action.actionType, "${super.applicationProperties.currentPlayer} received a message"))
+    override fun send(action: Action) = serverSocket.send(action)
+
+    override fun onWindowClose() {
+        serverSocket.isClosed.no {
+            leaveBattle()
+        }
     }
 
-    fun close() {
-        `in`.close()
-        out.close()
-        socket.close()
-    }
 
     override fun onFleetCreationViewExit() {
-        TODO("Not yet implemented")
+        leaveBattle()
     }
 
     override fun startBattle() {
-        val readyPlayer = applicationProperties.currentPlayer
-        model.readyPlayers[readyPlayer]!!.value = true
-        fire(WaitForYourTurn)
-        send(ReadyAction(readyPlayer))
+        val readyPlayer = currentPlayer
+        model.playersReadiness[readyPlayer] = true
+        serverSocket.send(ReadyAction(readyPlayer))
     }
 
-    override fun hitLogic(hitMessage: HitAction) {
-        send(hitMessage)
-        gameController.onHit(hitMessage)
+    override fun leaveBattle() {
+        send(LeaveAction(currentPlayer))
+        disconnect()
     }
 
+    override fun endGame(winner: String) {
+        openMessageWindow { "Победитель: $winner" }
+    }
 
+    override fun disconnect() {
+        input.close()
+        output.close()
+        serverSocket.close()
+        runBlocking {
+            receiverJob.cancel()
+            log { "${this.javaClass }#receiver is canceled" }
+        }
+    }
+
+    private fun onHit(ships: MutableList<Ship>, shotAction: ShotAction) {
+        ships.removeDestroyedDeck(shotAction.shot)
+        val hitAction = HitAction(shotAction)
+
+        serverSocket.send {
+            hit(hitAction)
+            ships.ifEmpty { defeat(currentPlayer) }
+        }
+
+        fire(ShipWasHit(hitAction))
+
+        ships.ifEmpty {
+            fire(PlayerWasDefeated(currentPlayer))
+        }
+    }
+
+    private inline fun <reified R: Action> Action.cast(): R = this as R
 }

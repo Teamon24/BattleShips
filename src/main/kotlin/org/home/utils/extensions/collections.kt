@@ -1,15 +1,21 @@
 package org.home.utils.extensions
 
-@JvmName("excludeByKey")
-fun <K, V> Map<K, V>.exclude(exception: K): Map<K, V> {
-    return filter { it.key != exception }
-}
+object CollectionsExtensions {
 
-@JvmName("excludeByValue")
-fun <K, V> Map<K, V>.exclude(exception: V): Map<K, V> {
-    return filter { it.value != exception }
-}
+    @JvmName("excludeByKey")
+    fun <K, V> Map<K, V>.exclude(exception: K) = filter { it.key != exception }
 
-fun <K> Iterable<K>.exclude(exception: K): Collection<K> {
-    return filter { it != exception }
+    fun <K, V> Map<K, V>.excludeAll(exceptions: Collection<K>) = filter { it.key !in exceptions }
+
+    fun <K> Collection<K>.exclude(exception: K) = filter { it != exception }
+
+    fun <K, V> Map<K, V>.shuffledKeys() = keys.toMutableList().shuffled().toMutableList()
+
+    fun <E> List<E>.asMutableList(): MutableList<E> {
+        if (this is MutableList<E>) {
+            return this
+        }
+        return this.toMutableList()
+    }
+
 }

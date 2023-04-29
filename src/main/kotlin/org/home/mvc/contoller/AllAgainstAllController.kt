@@ -1,144 +1,115 @@
 package org.home.mvc.contoller
 
-import javafx.beans.property.SimpleBooleanProperty
-import org.home.mvc.contoller.events.FleetSettingsAccepted
-import org.home.mvc.contoller.events.PlayerIsReadyAccepted
-import org.home.mvc.contoller.events.PlayerTurnToShoot
-import org.home.mvc.contoller.events.PlayerWasConnected
-import org.home.mvc.contoller.events.PlayersAccepted
-import org.home.mvc.contoller.events.WaitForYourTurn
-import org.home.mvc.model.BattleModel
-import org.home.net.Action
-import org.home.net.ConnectAction
-import org.home.net.DefeatAction
-import org.home.net.DisconnectAction
-import org.home.net.EmptyAction
-import org.home.net.EndGameAction
-import org.home.net.FleetSettingsAction
-import org.home.net.HitAction
-import org.home.net.MessagesDSL.fleetSettings
-import org.home.net.MessagesDSL.messages
-import org.home.net.MessagesDSL.playersExcept
-import org.home.net.MessagesDSL.readyPlayers
-import org.home.net.MissAction
+import org.home.mvc.contoller.events.ConnectedPlayerReceived
+import org.home.mvc.contoller.events.ConnectedPlayersReceived
+import org.home.mvc.contoller.events.FleetSettingsReceived
+import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
+import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.net.PlayerSocket
-import org.home.net.PlayersAction
-import org.home.net.ReadyAction
-import org.home.net.ShotAction
-import org.home.net.TurnAction
+import org.home.net.action.Action
+import org.home.net.action.ActionExtensions.connectedPlayersExcept
+import org.home.net.action.ActionExtensions.fleetSettings
+import org.home.net.action.ActionExtensions.fleetsReadinessExcept
+import org.home.net.action.ActionExtensions.readyPlayers
+import org.home.net.action.BattleEndAction
+import org.home.net.action.ConnectionAction
+import org.home.net.action.ConnectionsAction
+import org.home.net.action.DefeatAction
+import org.home.net.action.DisconnectAction
+import org.home.net.action.EmptyAction
+import org.home.net.action.FleetSettingsAction
+import org.home.net.action.HitAction
+import org.home.net.action.MissAction
+import org.home.net.action.PlayerReadinessAction
+import org.home.net.action.ShotAction
+import org.home.net.action.TurnAction
+import org.home.utils.PlayersSockets
+import org.home.utils.extensions.CollectionsExtensions.exclude
+import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
-import org.home.utils.SocketUtils.sendAll
-import org.home.utils.extensions.BooleansExtensions.or
-import org.home.utils.extensions.BooleansExtensions.then
-import org.home.utils.extensions.exclude
-import org.home.utils.extensions.ln
+import org.home.utils.extensions.AnysExtensions.excludeFrom
+import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.removeFrom
 import org.home.utils.log
-import org.home.utils.logCom
-import org.home.utils.logging
+
 
 class AllAgainstAllController : GameTypeController() {
-    override fun onShot(msg: ShotAction) {
+    override fun onShot(sockets: Collection<PlayerSocket>, action: ShotAction) {
         TODO("onShot")
     }
-    override fun onHit(msg: HitAction) {
-        fire(WaitForYourTurn)
+
+    override fun onHit(sockets: Collection<PlayerSocket>, action: HitAction) {
+        TODO("onHit")
     }
 
-    override fun onEmpty(msg: EmptyAction) {
-        TODO("onEmpty")
-    }
-
-    override fun onDefeat(msg: DefeatAction) {
-        TODO("onDefeat")
-    }
-
-    override fun onDisconnect(msg: DisconnectAction) {
-        TODO("onDisconnect")
-    }
-
-    override fun onEndGame(msg: EndGameAction) {
-        TODO("onEndGame")
-    }
-
-    override fun onMiss(msg: MissAction) {
+    override fun onMiss(sockets: Collection<PlayerSocket>, action: MissAction) {
         TODO("onMiss")
     }
 
+    override fun onEmpty(action: EmptyAction) {
+        TODO("onEmpty")
+    }
+
+    override fun onDefeat(action: DefeatAction) {
+        TODO("onDefeat")
+    }
+
+    override fun onDisconnect(action: DisconnectAction) {
+        TODO("onDisconnect")
+    }
+
+    override fun onEndGame(action: BattleEndAction) {
+        TODO("onEndGame")
+    }
+
     override fun onConnect(
-        socket: PlayerSocket,
-        sockets: Collection<PlayerSocket>,
-        connectAction: ConnectAction
+        sockets: PlayersSockets,
+        connectionAction: ConnectionAction,
     ) {
-        val connectedPlayer = connectAction.player
-        socket.player = connectedPlayer
+        connectionAction.also {
+            fire(ConnectedPlayerReceived(it))
 
-        fire(PlayerWasConnected(connectedPlayer))
+            val connectedSocket = sockets[it.player]
 
-
-        logCom(connectedPlayer) {
-            socket.send(
-                messages {
+            connectedSocket {
+                send {
                     fleetSettings(model)
-                    playersExcept(connectedPlayer, model)
+                    connectedPlayersExcept(player!!, model)
+                    fleetsReadinessExcept(player!!, model)
                     readyPlayers(model)
                 }
-            )
-        }
-
-        sockets
-            .exclude(socket)
-            .sendAll(connectAction)
-    }
-
-    override fun onMessage(msg: Action) {
-        log { msg }
-    }
-
-    override fun onTurn(msg: TurnAction) {
-        fire(PlayerTurnToShoot(msg.player))
-    }
-
-    override fun onReady(msg: ReadyAction): TurnAction? {
-        model.readyPlayers[msg.player]!!.value = true
-        fire(PlayerIsReadyAccepted(msg.player))
-
-        return model.readyPlayers
-            .all(::isReady)
-            .and(model.playersNames.size == model.playersNumber.value)
-            .then {
-                chooseTurn(model)
-                    .also { log {
-                        "server chose ${it.player} to shot first"
-                    } }
-            } or {
-                logging {
-                    ln("ready players")
-                    model.readyPlayers.forEach { (player, isReady) ->
-                        ln("$player: ${isReady.value}")
-                    }
-                }
-                null
+                excludeFrom(sockets).send(it)
             }
-    }
 
-    private fun isReady(it: Map.Entry<String, SimpleBooleanProperty>) = it.value.value
-
-    override fun onFleetSettings(msg: FleetSettingsAction) {
-        fire(FleetSettingsAccepted(msg))
-    }
-
-    override fun onPlayers(msg: PlayersAction) {
-        fire(PlayersAccepted(msg.players))
-    }
-
-    override fun chooseTurn(model: BattleModel): TurnAction {
-        val player = model.playersNames.toMutableList().run {
-            shuffle()
-            first()
         }
-        return TurnAction(player)
+    }
+
+    override fun onMessage(action: Action) {
+        log { action }
+    }
+
+    override fun onTurn(action: TurnAction) {
+        TODO("onTurn")
+    }
+
+    override fun onReady(action: PlayerReadinessAction) {
+        model.playersReadiness[action.player] = action.isReady
+        if (action.isReady) {
+            fire(PlayerIsReadyReceived(action.player))
+        } else {
+            fire(PlayerIsNotReadyReceived(action.player))
+        }
+    }
+
+    override fun onFleetSettings(action: FleetSettingsAction) {
+        fire(FleetSettingsReceived(action))
+    }
+
+    override fun onPlayers(action: ConnectionsAction) {
+        fire(ConnectedPlayersReceived(action.players))
     }
 }
+
 
 
 

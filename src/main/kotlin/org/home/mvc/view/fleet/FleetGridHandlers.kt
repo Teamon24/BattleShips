@@ -3,7 +3,7 @@ package org.home.mvc.view.fleet
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
-import org.home.ApplicationProperties.Companion.delayTime
+import org.home.mvc.ApplicationProperties.Companion.delayTime
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
@@ -19,41 +19,41 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
-import org.home.utils.extensions.BooleansExtensions.invoke
+import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.log
-import org.home.utils.extensions.singleThreadScope
+import org.home.utils.singleThreadScope
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FleetGridHandlers(
     private val mouseWentOutOfBound: AtomicBoolean,
     private val startWithinBorder: AtomicBoolean,
-    private val beingConstructedShip: Ship,
+    private val beingConstructed: Ship,
     private val ships: Ships,
-    private val shipsTypesController: ShipsTypesController,
+    private val shipsTypesController: ShipsTypesController
 ) {
 
     fun addDragEnteredHandler(currentCell: FleetCell, gridPane: GridPane) {
         currentCell.leftClickHandler(MouseDragEvent.MOUSE_DRAG_ENTERED) {
             if (startWithinBorder() ||
                 mouseWentOutOfBound() ||
-                beingConstructedShip.crosses(ships) ||
+                beingConstructed.crosses(ships) ||
                 withinBorder(currentCell, gridPane)
             ) {
                 return@leftClickHandler
             }
 
-            if (beingConstructedShip.isNotEmpty() &&
-                beingConstructedShip.first().withinAnyBorder(ships)
+            if (beingConstructed.isNotEmpty() &&
+                beingConstructed.first().withinAnyBorder(ships)
             ) {
                 startWithinBorder(true)
-                gridPane.removeAnyColor(beingConstructedShip)
-                beingConstructedShip.clear()
+                gridPane.removeAnyColor(beingConstructed)
+                beingConstructed.clear()
                 return@leftClickHandler
             }
 
-            if (beingConstructedShip.size >= 2 && beingConstructedShip.secondLast() == currentCell.coord) {
-                val last = beingConstructedShip.last()
-                beingConstructedShip.remove(last)
+            if (beingConstructed.size >= 2 && beingConstructed.secondLast() == currentCell.coord) {
+                val last = beingConstructed.last()
+                beingConstructed.remove(last)
 
                 val lastCell = gridPane.getCell(last)
                 if (ships.any { ship -> last in ship }) {
@@ -62,9 +62,9 @@ class FleetGridHandlers(
                     lastCell.removeAnyColor()
                 }
 
-                for (i in 0..beingConstructedShip.size) {
-                    val dropped = beingConstructedShip.takeLast(i).toShip()
-                    val droppedShip = beingConstructedShip.dropLast(i).toShip()
+                for (i in 0..beingConstructed.size) {
+                    val dropped = beingConstructed.takeLast(i).toShip()
+                    val droppedShip = beingConstructed.dropLast(i).toShip()
                     if (shipsTypesController.validates(droppedShip)) {
                         gridPane.removeAnyColor(droppedShip)
                         gridPane.addSelectionColor(droppedShip)
@@ -76,19 +76,19 @@ class FleetGridHandlers(
                         gridPane.addIncorrectColor(dropped)
                     }
                 }
-                gridPane.addIncorrectColor(beingConstructedShip)
+
+                gridPane.addIncorrectColor(beingConstructed)
 
                 log("being constructed ship:")
                 return@leftClickHandler
-
             }
 
-            beingConstructedShip.addIfAbsent(currentCell.coord)
+            beingConstructed.addIfAbsent(currentCell.coord)
 
-            if (shipsTypesController.validates(beingConstructedShip)) {
-                gridPane.addSelectionColor(beingConstructedShip)
+            if (shipsTypesController.validates(beingConstructed)) {
+                gridPane.addSelectionColor(beingConstructed)
             } else {
-                gridPane.addIncorrectColor(beingConstructedShip)
+                gridPane.addIncorrectColor(beingConstructed)
             }
 
             log("being constructed ship:")
@@ -97,7 +97,7 @@ class FleetGridHandlers(
 
     private fun log(title: String) {
         log { title }
-        log { beingConstructedShip }
+        log { beingConstructed }
     }
 
     fun addDragReleasedHandler(currentCell: FleetCell, gridPane: GridPane) {
@@ -111,9 +111,9 @@ class FleetGridHandlers(
                 return@leftClickHandler
             }
 
-            if (beingConstructedShip.crosses(ships)) {
+            if (beingConstructed.crosses(ships)) {
                 val flatten = ships.flatten()
-                val toRemove = beingConstructedShip.filter { it !in flatten }
+                val toRemove = beingConstructed.filter { it !in flatten }
 
                 toRemove.forEach {
                     gridPane.getCell(it).removeSelectionColor()
@@ -123,23 +123,22 @@ class FleetGridHandlers(
                 singleThreadScope {
                     delay(delayTime)
                     toRemove.forEach { gridPane.getCell(it).removeIncorrectColor() }
-                    gridPane.removeIncorrectColor(beingConstructedShip)
-                    beingConstructedShip.clear()
+                    gridPane.removeIncorrectColor(beingConstructed)
+                    beingConstructed.clear()
                 }
 
                 return@leftClickHandler
             }
 
-            if (shipsTypesController.validates(beingConstructedShip)) {
-                shipsTypesController.count(beingConstructedShip)
-                ships.addIfAbsent(beingConstructedShip.copy())
-                gridPane.removeIncorrectColor(beingConstructedShip)
-                beingConstructedShip.clear()
+            if (shipsTypesController.validates(beingConstructed)) {
+                shipsTypesController.count(beingConstructed)
+                ships.addIfAbsent(beingConstructed.copy())
+                gridPane.removeIncorrectColor(beingConstructed)
             } else {
-                gridPane.removeAnyColor(beingConstructedShip)
-                beingConstructedShip.clear()
+                gridPane.removeAnyColor(beingConstructed)
             }
-            logShips(ships, "after adding")
+            beingConstructed.clear()
+            log { "ships: $ships" }
         }
     }
 
@@ -158,7 +157,6 @@ class FleetGridHandlers(
                 }
 
                 ships.remove(beingDeletedShip)
-
                 shipsTypesController.discount(beingDeletedShip)
                 logShips(ships, "after deleting")
                 return@rightClickHandler
@@ -189,10 +187,10 @@ class FleetGridHandlers(
         return when (first) {
             null -> false
             else -> true.also {
-                beingConstructedShip.addIfAbsent(currentCell.coord)
+                beingConstructed.addIfAbsent(currentCell.coord)
                 startWithinBorder(true)
                 singleThreadScope {
-                    val filter = beingConstructedShip.filter { it !in ships.flatten() }
+                    val filter = beingConstructed.filter { it !in ships.flatten() }
 
                     val border = first.border(
                         gridPane.rowCount - 1,
@@ -206,7 +204,7 @@ class FleetGridHandlers(
                     gridPane.removeAnyColor(filter)
                     gridPane.removeBorderColor(border)
                     startWithinBorder(false)
-                    beingConstructedShip.clear()
+                    beingConstructed.clear()
                 }
             }
         }
