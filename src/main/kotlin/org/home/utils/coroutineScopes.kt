@@ -15,5 +15,4 @@ fun singleThreadScope(name: String) = CoroutineScope(newSingleThreadContext(name
 fun <T> singleThreadScope(name: String = "", launchBlock: suspend () -> T) =
     CoroutineScope(newSingleThreadContext(name)).launch { launchBlock() }
 
-@OptIn(ExperimentalCoroutinesApi::class)
-fun ioScope(name: String) = CoroutineScope(Dispatchers.IO.limitedParallelism(1))
+

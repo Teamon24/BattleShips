@@ -64,7 +64,7 @@ class FleetSettingsAction(
     override fun toString() = "FleetSettingsAction(height=$height, width=$width, shipsTypes=$shipsTypes)"
 }
 
-open class ConnectionsAction(val players: Collection<String>): Action(PLAYERS) {
+open class ConnectedPlayersAction(val players: Collection<String>): Action(PLAYERS) {
     override fun toString() = "PlayersAction($type, players=$players)"
 }
 
@@ -88,7 +88,7 @@ class TurnAction(player: String): PlayerAction(TURN, player = player)
 abstract class HasAShot(actionType: ActionType, val shooter: String): PlayerAction(actionType, shooter) {
     abstract val shot: Coord
     abstract val target: String
-    override fun toString() = "$type: $shot '$shooter' -> '$target'"
+    override fun toString() = "$type: '$shooter' --$shot->> '$target'"
 }
 
 class ShotAction(override val shot: Coord,

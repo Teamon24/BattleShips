@@ -13,7 +13,7 @@ import org.home.net.action.Action
 import org.home.net.action.MissAction
 import org.home.net.PlayerSocket
 import org.home.net.action.PlayerReadinessAction
-import org.home.net.action.ConnectionsAction
+import org.home.net.action.ConnectedPlayersAction
 import org.home.net.action.ShotAction
 import org.home.net.action.TurnAction
 import org.home.utils.PlayersSockets
@@ -34,7 +34,7 @@ abstract class GameTypeController: Controller() {
     abstract fun onTurn(action: TurnAction)
     abstract fun onReady(action: PlayerReadinessAction)
     abstract fun onFleetSettings(action: FleetSettingsAction)
-    abstract fun onPlayers(action: ConnectionsAction)
+    abstract fun onPlayers(action: ConnectedPlayersAction)
 
 
 }

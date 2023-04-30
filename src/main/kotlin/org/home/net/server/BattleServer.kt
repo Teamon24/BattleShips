@@ -5,9 +5,11 @@ import org.home.mvc.contoller.GameTypeController
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleStarted
+import org.home.mvc.contoller.events.DSLContainer
+import org.home.mvc.contoller.events.DSLContainer.Companion.eventbus
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerToRemoveReceived
-import org.home.mvc.contoller.events.PlayerTurnToShootReceived
+import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.contoller.events.ShipWasConstructed
@@ -21,13 +23,8 @@ import org.home.mvc.model.removeDestroyedDeck
 import org.home.net.BattleClient.ActionTypeAbsentException
 import org.home.net.PlayerSocket
 import org.home.net.action.Action
-import org.home.net.action.ActionExtensions.battleStarted
-import org.home.net.action.ActionExtensions.defeat
-import org.home.net.action.ActionExtensions.hit
-import org.home.net.action.ActionExtensions.miss
-import org.home.net.action.ActionExtensions.ready
-import org.home.net.action.ActionExtensions.turn
 import org.home.net.action.BattleEndAction
+import org.home.net.action.BattleStartAction
 import org.home.net.action.ConnectionAction
 import org.home.net.action.DefeatAction
 import org.home.net.action.DisconnectAction
@@ -51,12 +48,14 @@ import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
+import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.shuffledKeys
 import org.home.utils.extensions.className
 import org.home.utils.extensions.ln
 import org.home.utils.log
 import org.home.utils.logging
+import tornadofx.FXEvent
 
 class BattleServer : MultiServer<Action, PlayerSocket>() {
 
@@ -68,8 +67,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
 
     private var turnList: MutableList<String>? = null
     private lateinit var turnPlayer: String
-
-    private val currentPlayer = applicationProperties.currentPlayer
 
     override fun process(socket: PlayerSocket, message: Action) {
         val action = message
@@ -118,7 +115,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
             is MissAction -> {
                 val nextTurn = notifyAboutShotAndSendNextTurn(action)
                 fire(ThereWasAMiss(action))
-                fire(PlayerTurnToShootReceived(nextTurn))
+                fire(TurnReceived(nextTurn))
             }
 
             is PlayerToRemoveAction -> sendRemovePlayer(action)
@@ -136,24 +133,35 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
                 turnList!!.remove(player)
             }
 
-            sockets.exclude(player).send(action)
+            eventbus {
+                when (action) {
+                    is DisconnectAction -> removeAndFire(action, ::PlayerWasDisconnected)
+                    is LeaveAction -> removeAndFire(action, ::PlayerLeaved)
+                    is DefeatAction -> fire(PlayerWasDefeated(player))
+                }
 
-            when (action) {
-                is DisconnectAction -> removeAndFire(this, ::PlayerWasDisconnected)
-                is LeaveAction -> removeAndFire(this, ::PlayerLeaved)
-                is DefeatAction -> fire(PlayerWasDefeated(player))
+                sockets.send {
+                    + action
+                    if (action.player == turnPlayer) {
+                        turnPlayer = nextTurn()
+                        turnList!!.remove(action.player)
+                        + TurnAction(turnPlayer)
+                        + TurnReceived(turnPlayer)
+                    }
+                }
             }
-
         }
     }
 
-    private fun removeAndFire(
+    private inline fun DSLContainer<FXEvent>.removeAndFire(
         playerToRemoveAction: PlayerToRemoveAction,
         event: (String) -> PlayerToRemoveReceived,
     ) {
-        val playerToRemove = playerToRemoveAction.player
-        sockets.removeIf { it.player == playerToRemove }
-        fire(event(playerToRemove))
+
+        playerToRemoveAction {
+            sockets.removeIf { socket -> socket.player == player }
+            + event(player)
+        }
     }
 
     private fun onHit(ships: MutableList<Ship>, shotAction: ShotAction) {
@@ -162,15 +170,16 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
         val hitAction = HitAction(shotAction)
 
         sockets.send {
-            ships.ifEmpty { defeat(currentPlayer) }
-            hit(hitAction)
+            + hitAction
+            ships.isEmpty().so { + DefeatAction(currentPlayer) }
         }
 
-        fire(ShipWasHit(hitAction))
-
-        ships.ifEmpty {
-            fire(PlayerWasDefeated(currentPlayer))
+        eventbus {
+            + ShipWasHit(hitAction)
+            ships.isEmpty().so { + PlayerWasDefeated(currentPlayer) }
         }
+
+
     }
 
     private fun onMiss(action: ShotAction) {
@@ -178,12 +187,14 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
         val nextTurn = nextTurn()
 
         sockets.send {
-            miss(missAction)
-            turn(nextTurn)
+            +missAction
+            +TurnAction(nextTurn)
         }
 
-        fire(ThereWasAMiss(missAction))
-        fire(PlayerTurnToShootReceived(nextTurn))
+        eventbus {
+            +ThereWasAMiss(missAction)
+            +TurnReceived(nextTurn)
+        }
     }
 
 
@@ -211,23 +222,24 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
     }
 
     override fun startBattle() {
-        val currentPlayer = applicationProperties.currentPlayer
-
         val shuffled = model.playersAndShips.shuffledKeys()
         val player = shuffled.first()
 
-        log { "server chose $player to shot first" }
         turnList = shuffled
+        log { "turn: $shuffled" }
         turnPlayer = player
+        log { "first turn: $shuffled" }
 
         sockets.send {
-            ready(currentPlayer)
-            battleStarted()
-            turn(player)
+            + ReadyAction(currentPlayer)
+            + BattleStartAction
+            + TurnAction(player)
         }
 
-        fire(BattleStarted)
-        fire(PlayerTurnToShootReceived(turnPlayer))
+        eventbus {
+            + BattleStarted
+            + TurnReceived(turnPlayer)
+        }
     }
 
     override fun send(action: Action) = sockets.send(action)
@@ -236,6 +248,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
         send(LeaveAction(currentPlayer))
 
         if (!model.battleIsEnded && model.playersNames.size != 1) {
+            TODO("${this.className}#leaveBattle has no server transfer logic that tested for correct implementation")
             sockets.send(NewServerAction(turnPlayer))
             conditions.newServerFound.await()
             sockets.exclude(turnPlayer).send(
@@ -247,21 +260,9 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
 
         sockets.forEach { it.close() }
 
-        processor.interruptNow()
-        receiver.interruptNow()
-        accepter.interruptNow()
-    }
-
-    private fun Thread.interruptNow() {
-        while (isAlive) {
-            try {
-                interrupt()
-            } catch (e: Exception) {
-                log { "trying to interrupt $name" }
-            }
-        }
-
-        log { "$name was interrupted" }
+        processor.interrupt()
+        receiver.interrupt()
+        accepter.interrupt()
     }
 
     override fun endGame(winner: String) {
@@ -289,7 +290,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
     }
 
     override fun onWindowClose() {
-        TODO("${this.className}#onWindowClose")
         leaveBattle()
     }
 
@@ -299,7 +299,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>() {
         fire(PlayerWasDisconnected(player))
     }
 
-    private fun nextTurn(): String {
+    fun nextTurn(): String {
         log { "previous turn: $turnPlayer" }
         var nextTurnIndex = turnList!!.indexOf(turnPlayer) + 1
         if (nextTurnIndex > turnList!!.size - 1) {

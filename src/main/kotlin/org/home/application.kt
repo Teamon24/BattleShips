@@ -16,7 +16,6 @@ class MainApp: DiApp<AppView>(AppView::class)
 
 abstract class DiApp<T: View>(view: KClass<T>): App(view, AppStyles::class) {
     init {
-
         importStylesheet("/${AppStyles.playersListView}.css")
 
         Thread.currentThread().name = "UI"
@@ -36,11 +35,9 @@ fun main(args: Array<String>) {
 
 fun startKoin(vararg args: String) {
     startKoin {
-//        logger(PrintLogger(Level.DEBUG))
         val properties = args[0]
         val player = args[1].toInt()
         val players = args[2].toInt()
-
         modules(diModule(properties, player, players))
     }
 }

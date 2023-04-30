@@ -1,5 +1,7 @@
 package org.home.net
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.home.net.InfiniteTry.Companion.infiniteTry
 import org.home.net.InfiniteTryBase.Companion.catch
 import org.home.net.InfiniteTryBase.Companion.handle
@@ -38,17 +40,24 @@ internal fun <T : Message, S : Socket> MultiServer<T, S>.receiver() =
     thread(start = false, name = "receiver") {
         sockets.infiniteTryFor { socket ->
             socket.isNotClosed.so {
-                val receivedMessages = socket.receive<T>()
+                val messages = socket.receive<T>()
                 logReceive(socket) {
-                    logReceive { receivedMessages }
+                    logReceive { messages }
                 }
-                socketMessagesQueue.add(socket to receivedMessages)
+                socketMessagesQueue.add(socket to messages)
             }
         } catch {
             +SocketException::class
             +EOFException::class
+            handle { ex, socket ->
+                sockets.handle(ex, socket)
+                sockets.isEmpty().so { stopLoop() }
+            }
             +InterruptedException::class
-            handle { ex, socket -> sockets.handle(ex, socket) }
+            handle { ex, _ ->
+                logError(ex)
+                stopLoop()
+            }
 
             +SocketTimeoutException::class
             handle { ex, _ -> handleTimeout(ex) }

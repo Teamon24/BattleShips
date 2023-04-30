@@ -1,5 +1,6 @@
 package org.home.utils.extensions
 
+import org.home.utils.threadPrintln
 import kotlin.reflect.KClass
 
 inline val Any.className: String get() = this.javaClass.simpleName
@@ -25,15 +26,10 @@ object AnysExtensions {
             return result
         }
 
-    inline fun <T> T?.isNotUnit(function: (T) -> Unit) = ifNot<T>(this !is Unit, function)
-    inline fun <T> T?.ifNotNull(function: (T) -> Unit) = ifNot<T>(this != null, function)
-    inline fun <T> T?.ifNull(function: () -> Unit) = this ?: function()
-
-    inline fun <T> T?.ifNot(condition: Boolean, function: T.() -> Unit): T? {
-        if (condition) {
-            this!!.function()
+    inline fun <T> T.isNotUnit(function: (T) -> Any) {
+        when (this) {
+            !is Unit -> function(this)
         }
-        return this
     }
 
     inline operator fun <T> T.invoke(body: T.() -> Unit) = this.body()

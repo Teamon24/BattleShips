@@ -41,7 +41,8 @@ class AppView : View("Hello TornadoFX") {
                 }
             }
         }
-        if (appProps.players != null) {
+
+        appProps.players?.also {
             val screenSize = StageUtils.screenSize()
             val shrink = 0.965
             StageUtils.setInitialPosition(this, appProps.player!!, appProps.players!!,

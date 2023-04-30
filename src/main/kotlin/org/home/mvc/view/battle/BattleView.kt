@@ -36,8 +36,6 @@ import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.mvc.view.openAlertWindow
 import org.home.mvc.view.subscriptions
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.ifNotNull
-import org.home.utils.extensions.AnysExtensions.ifNull
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.extensions.BooleansExtensions.no
@@ -139,7 +137,7 @@ class BattleView : View("Battle View") {
         model.playersNames
             .exclude(currentPlayer)
             .firstOrNull()
-            .ifNotNull { player ->
+            ?.also { player ->
                 model.selectedPlayer.value = player
                 val node = playersNodes[player]!!
                 center = node
@@ -233,7 +231,6 @@ class BattleView : View("Battle View") {
                     action {
                         log { "battleController: ${battleController.name}" }
                         battleController.startBattle()
-                        updateStyle()
                     }
                 }.also {
                     battleButton = it
@@ -291,7 +288,7 @@ class BattleView : View("Battle View") {
                         log { "it != old && it != currentPlayer: item = $it" }
                         it != old && it != currentPlayer
                     }
-                    .ifNotNull {
+                    ?.also {
                         log { "changeEnemyFleetOnSelection: selection deleted - $it" }
                         setEnemyToPane(it)
                     }
@@ -359,8 +356,10 @@ class BattleView : View("Battle View") {
     }
 
     fun addSelectedPlayer(player: String) {
-        model.selectedPlayer.value.ifNull { model.selectedPlayer.value = player; return }
-        model.selectedPlayer.value.ifBlank { model.selectedPlayer.value = player }
+        model {
+            selectedPlayer.value ?: run { selectedPlayer.value = player; return }
+            selectedPlayer.value.ifBlank { selectedPlayer.value = player }
+        }
     }
 }
 

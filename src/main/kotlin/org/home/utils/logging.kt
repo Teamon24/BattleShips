@@ -68,7 +68,7 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false) {
 
 inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> Any) {
     if (!disabled) {
-        threadPrintln("<MODEL>" + block())
+        threadPrintln("::: MODEL ::: " + block())
     }
 }
 
@@ -77,9 +77,7 @@ fun View.logEvent(fxEvent: FXEvent, body: () -> Any = {}) {
     val title = "${this::class.simpleName} <- $fxEvent"
     threadPrintln { line(title.length) }
     threadPrintln { add(title) }
-    body().isNotUnit {
-        threadPrintln(it)
-    }
+    body().isNotUnit { threadPrintln(it) }
     threadPrintln { line(title.length) }
 }
 
@@ -142,10 +140,5 @@ fun <T : Event> T.logCoordinate() {
             ln(this)
         }
     }
-}
-
-inline fun logResult(block: () -> Any) {
-    val result = block()
-    result.isNotUnit { log { result } }
 }
 

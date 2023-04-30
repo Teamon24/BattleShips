@@ -1,7 +1,6 @@
 package org.home.mvc.contoller.events
 
 import org.home.net.action.ActionType
-import org.home.net.action.AreReadyAction
 import org.home.net.action.BattleEndAction
 import org.home.net.action.ConnectionAction
 import org.home.net.action.FleetSettingsAction
@@ -38,7 +37,7 @@ class ReadyPlayersReceived(val readyPlayers: Collection<String>): FXEvent() {
     override fun toString() = "Ready($readyPlayers)"
 }
 
-class PlayerTurnToShootReceived(player: String): HasAPlayer(player) {
+class TurnReceived(player: String): HasAPlayer(player) {
     override fun toString() = "Turn($player)"
 }
 
@@ -46,8 +45,9 @@ sealed class ThereWasAShot(val hasAShot: HasAShot): FXEvent() {
     fun isMiss() = hasAShot.type == ActionType.MISS
     fun isHit() = hasAShot.type == ActionType.HIT
 }
-class ShipWasHit(hitAction: HitAction): ThereWasAShot(hitAction) { override fun toString() = "Hit($hasAShot)"}
-class ThereWasAMiss(missAction: MissAction): ThereWasAShot(missAction) { override fun toString() = "Miss($hasAShot)"}
+
+class ShipWasHit(hitAction: HitAction): ThereWasAShot(hitAction)
+class ThereWasAMiss(missAction: MissAction): ThereWasAShot(missAction)
 
 sealed class PlayerToRemoveReceived(val player: String): FXEvent()
 class PlayerWasDefeated(player: String): PlayerToRemoveReceived(player) { override fun toString() = "Defeated($player)"}

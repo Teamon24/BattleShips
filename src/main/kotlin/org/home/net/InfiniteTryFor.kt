@@ -1,5 +1,6 @@
 package org.home.net
 
+import org.home.utils.log
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 
@@ -53,6 +54,7 @@ abstract class InfiniteTryBase<E, H> {
         }
 
         fun <E, H> InfiniteTryBase<E, H>.stopLoop() {
+            log { "stop signal for loop" }
             noSignalToStop = false
         }
     }

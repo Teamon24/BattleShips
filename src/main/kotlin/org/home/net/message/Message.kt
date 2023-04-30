@@ -24,11 +24,6 @@ object MessagesDSL {
 
         companion object {
 
-            fun withInfo(addAll: MutableCollection<Message>.() -> Unit): Messages<Message> {
-                val messages = mutableListOf<Message>().apply(addAll)
-                return Messages(withMessagesInfo(messages))
-            }
-
             fun withInfo(messages: Collection<Message>): Messages<Message> {
                 return Messages(withMessagesInfo(messages))
             }

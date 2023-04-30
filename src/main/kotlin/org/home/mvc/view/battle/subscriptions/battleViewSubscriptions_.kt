@@ -7,7 +7,7 @@ import org.home.mvc.contoller.events.NewServerConnectionReceived
 import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
-import org.home.mvc.contoller.events.PlayerTurnToShootReceived
+import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.ShipWasConstructed
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.model.BattleModel.Companion.invoke
@@ -67,14 +67,19 @@ internal fun BattleView.playerIsNotReadyReceived() {
 }
 
 internal fun BattleView.playerTurnToShoot() {
-    subscribe<PlayerTurnToShootReceived> { event ->
-        logEvent(event)
-        model.turn.value = event.player
-        if (currentPlayer == event.player) {
-            openMessageWindow { "Ваш ход" }
-            enemiesFleetsFleetGrids.excludeAll(model.defeatedPlayers).enable()
-        } else {
-            enemiesFleetsFleetGrids.disable()
+    subscribe<TurnReceived> { event ->
+        model {
+            logEvent(event)
+            turn.value = event.player
+            log { currentPlayer }
+            log { event }
+            if (currentPlayer == event.player) {
+                openMessageWindow { "Ваш ход" }
+                log { defeatedPlayers }
+                enemiesFleetsFleetGrids.excludeAll(defeatedPlayers).enable()
+            } else {
+                enemiesFleetsFleetGrids.disable()
+            }
         }
     }
 }

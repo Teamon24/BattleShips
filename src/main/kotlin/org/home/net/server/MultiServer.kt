@@ -33,15 +33,14 @@ abstract class MultiServer<T : Message, S : Socket> : BattleController() {
     init {
         processor.start()
         receiver.start()
+    }
 
-        thread(start = false) {
-            while (true) {
-                Thread.sleep(10000)
-                println("processor: active/interrupted: ${processor.isAlive}/${processor.isInterrupted}")
-                println("receiver: active/interrupted: ${receiver.isAlive}/${receiver.isInterrupted}")
-                println("accepter: active/interrupted: ${accepter.isAlive}/${accepter.isInterrupted}")
-            }
-        }
+    private fun print() {
+        println("          isActive / isCancelled / isCompleted")
+        println("processor ${processor.isAlive}   / ${processor.isInterrupted}")
+        println("receiver  ${receiver.isAlive}   / ${receiver.isInterrupted}  ")
+        println("accepter  ${accepter.isAlive}   / ${accepter.isInterrupted}  ")
+        println()
     }
 
     fun start(port: Int) {

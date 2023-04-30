@@ -2,6 +2,7 @@ package org.home.mvc.contoller
 
 
 import org.home.mvc.ApplicationProperties
+import org.home.mvc.contoller.events.DSLContainer.Companion.eventbus
 import org.home.mvc.contoller.events.ShipWasConstructed
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.model.BattleModel
@@ -35,7 +36,11 @@ class ShipsTypesController: Controller() {
         ships
             .filter { it.size != 0 }
             .onEach { ship -> map[ship.size] = map[ship.size]?.minus(1) }
-            .forEach { fire(ShipWasConstructed(it.size, applicationProperties.currentPlayer)) }
+            .forEach {
+                eventbus {
+                    +ShipWasConstructed(it.size, applicationProperties.currentPlayer)
+                }
+            }
 
     }
 
@@ -43,7 +48,10 @@ class ShipsTypesController: Controller() {
         ships
             .filter { it.size != 0 }
             .onEach { ship -> map[ship.size] = map[ship.size]?.plus(1) }
-            .forEach { fire(ShipWasDeleted(it.size, applicationProperties.currentPlayer)) }
-
+            .forEach {
+                eventbus {
+                    +ShipWasDeleted(it.size, applicationProperties.currentPlayer)
+                }
+            }
     }
 }

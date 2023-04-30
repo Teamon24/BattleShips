@@ -10,8 +10,10 @@ import tornadofx.Controller
 abstract class BattleController: Controller() {
     protected val applicationProperties: ApplicationProperties by di()
 
+    protected val currentPlayer = applicationProperties.currentPlayer
+
     fun onBattleViewExit() {
-        send(NotReadyAction(applicationProperties.currentPlayer))
+        send(NotReadyAction(currentPlayer))
     }
 
     abstract fun onWindowClose()
@@ -20,7 +22,7 @@ abstract class BattleController: Controller() {
     abstract fun startBattle()
 
     fun shot(enemy: String, shot: Coord) {
-        val shotMessage = ShotAction(shot, applicationProperties.currentPlayer, enemy)
+        val shotMessage = ShotAction(shot, currentPlayer, enemy)
         send(shotMessage)
     }
 

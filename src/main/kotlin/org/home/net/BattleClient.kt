@@ -7,11 +7,16 @@ import kotlinx.coroutines.runBlocking
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.Conditions
 import org.home.mvc.contoller.GameTypeController
+import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleStarted
-import org.home.mvc.contoller.events.FleetsReadinessReceived
-import org.home.mvc.contoller.events.PlayerLeaved
-import org.home.mvc.contoller.events.PlayerTurnToShootReceived
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
+import org.home.mvc.contoller.events.ConnectedPlayersReceived
+import org.home.mvc.contoller.events.DSLContainer.Companion.eventbus
+import org.home.mvc.contoller.events.FleetsReadinessReceived
+import org.home.mvc.contoller.events.NewServerConnectionReceived
+import org.home.mvc.contoller.events.NewServerReceived
+import org.home.mvc.contoller.events.PlayerLeaved
+import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.contoller.events.ReadyPlayersReceived
@@ -19,54 +24,54 @@ import org.home.mvc.contoller.events.ShipWasConstructed
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
-import org.home.mvc.contoller.events.BattleIsEnded
-import org.home.mvc.contoller.events.NewServerConnectionReceived
-import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
 import org.home.mvc.model.hadHit
 import org.home.mvc.model.removeDestroyedDeck
 import org.home.mvc.view.openMessageWindow
 import org.home.net.action.Action
-import org.home.net.action.ActionExtensions.defeat
-import org.home.net.action.ActionExtensions.hit
-import org.home.net.action.ActionType.HIT
-import org.home.net.action.ActionType.SHOT
+import org.home.net.action.ActionType.BATTLE_ENDED
+import org.home.net.action.ActionType.BATTLE_STARTED
 import org.home.net.action.ActionType.CONNECT
+import org.home.net.action.ActionType.DEFEAT
 import org.home.net.action.ActionType.DISCONNECT
-import org.home.net.action.ActionType.SHIP_CREATION
-import org.home.net.action.ActionType.SHIP_DELETION
+import org.home.net.action.ActionType.FLEETS_READINESS
+import org.home.net.action.ActionType.FLEET_SETTINGS
+import org.home.net.action.ActionType.HIT
 import org.home.net.action.ActionType.LEAVE_BATTLE
+import org.home.net.action.ActionType.MISS
 import org.home.net.action.ActionType.NEW_SERVER
 import org.home.net.action.ActionType.NEW_SERVER_CONNECTION
-import org.home.net.action.ActionType.DEFEAT
-import org.home.net.action.ActionType.BATTLE_ENDED
-import org.home.net.action.ActionType.READY
 import org.home.net.action.ActionType.NOT_READY
-import org.home.net.action.ActionType.TURN
 import org.home.net.action.ActionType.PLAYERS
+import org.home.net.action.ActionType.READY
 import org.home.net.action.ActionType.READY_PLAYERS
-import org.home.net.action.ActionType.FLEETS_READINESS
-import org.home.net.action.ActionType.MISS
-import org.home.net.action.ActionType.BATTLE_STARTED
-import org.home.net.action.ActionType.FLEET_SETTINGS
+import org.home.net.action.ActionType.SHIP_CREATION
+import org.home.net.action.ActionType.SHIP_DELETION
+import org.home.net.action.ActionType.SHOT
+import org.home.net.action.ActionType.TURN
 import org.home.net.action.AreReadyAction
+import org.home.net.action.ConnectedPlayersAction
 import org.home.net.action.ConnectionAction
 import org.home.net.action.DefeatAction
-import org.home.net.action.HitAction
-import org.home.net.action.MissAction
-import org.home.net.action.LeaveAction
-import org.home.net.action.ReadyAction
 import org.home.net.action.DisconnectAction
+import org.home.net.action.HitAction
+import org.home.net.action.LeaveAction
+import org.home.net.action.MissAction
 import org.home.net.action.NewServerAction
+import org.home.net.action.ReadyAction
 import org.home.net.action.ShotAction
 import org.home.net.action.TurnAction
 import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.send
 import org.home.utils.extensions.BooleansExtensions.no
+import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
+import org.home.utils.extensions.className
 import org.home.utils.log
+import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
+import tornadofx.FXEvent
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -84,7 +89,6 @@ class BattleClient: BattleController() {
     private lateinit var output: OutputStream
     private lateinit var serverSocket: Socket
 
-    private val currentPlayer = applicationProperties.currentPlayer
     private val receiver = singleThreadScope(currentPlayer)
     private lateinit var receiverJob: Job
 
@@ -112,7 +116,11 @@ class BattleClient: BattleController() {
             while (isActive) {
                 log { "waiting for message ..." }
                 try {
-                    serverSocket.receive<Action>().forEach(::process)
+                    val messages = serverSocket.receive<Action>()
+                    logReceive(serverSocket) {
+                        logReceive { messages }
+                    }
+                    messages.forEach(::process)
                 } catch (e: SocketException) {
                     log { e.message }
                 }
@@ -122,30 +130,38 @@ class BattleClient: BattleController() {
     }
 
     private fun process(action: Action) {
+        val event: FXEvent? = when (action.type) {
+            BATTLE_ENDED -> BattleIsEnded(action.cast())
+            BATTLE_STARTED -> BattleStarted
+            CONNECT -> ConnectedPlayerReceived(action.cast())
+            DEFEAT -> PlayerWasDefeated(action.cast<DefeatAction>().player)
+            DISCONNECT -> PlayerWasDisconnected(action.cast<DisconnectAction>().player)
+            FLEETS_READINESS -> FleetsReadinessReceived(action.cast())
+            HIT -> ShipWasHit(action.cast())
+            LEAVE_BATTLE -> PlayerLeaved(action.cast<LeaveAction>().player)
+            MISS -> ThereWasAMiss(action.cast())
+            NEW_SERVER -> NewServerReceived(action.cast<NewServerAction>().player)
+            NEW_SERVER_CONNECTION -> NewServerConnectionReceived(action.cast())
+            PLAYERS -> ConnectedPlayersReceived(action.cast<ConnectedPlayersAction>().players)
+            READY_PLAYERS -> ReadyPlayersReceived(action.cast<AreReadyAction>().players)
+            SHIP_CREATION -> ShipWasConstructed(action.cast())
+            SHIP_DELETION -> ShipWasDeleted(action.cast())
+            TURN -> TurnReceived(action.cast<TurnAction>().player)
+            else -> null
+        }
+
+        event?.also { fire(it); return }
+
         when (action.type) {
-            CONNECT -> fire(ConnectedPlayerReceived(action.cast()))
             FLEET_SETTINGS -> {
                 conditions
                     .fleetSettingsReceived
-                    .notifyUI {
-                        putSettings(action.cast())
-                    }
+                    .notifyUI { putSettings(action.cast()) }
             }
 
-            READY_PLAYERS -> fire(ReadyPlayersReceived(action.cast<AreReadyAction>().players))
-
-            PLAYERS -> gameController.onPlayers(action.cast())
-
             READY,
-            NOT_READY -> gameController.onReady(action.cast())
-
-            FLEETS_READINESS -> fire(FleetsReadinessReceived(action.cast()))
-            SHIP_CREATION -> fire(ShipWasConstructed(action.cast()))
-            SHIP_DELETION -> fire(ShipWasDeleted(action.cast()))
-            BATTLE_STARTED -> fire(BattleStarted)
-            BATTLE_ENDED -> fire(BattleIsEnded(action.cast()))
-            TURN -> fire(PlayerTurnToShootReceived(action.cast<TurnAction>().player))
-
+            NOT_READY,
+            -> gameController.onReady(action.cast())
             SHOT -> {
                 val shotAction = action.cast<ShotAction>()
                 if (shotAction.target == currentPlayer) {
@@ -160,18 +176,7 @@ class BattleClient: BattleController() {
                         }
                 }
             }
-
-            HIT -> fire(ShipWasHit(action.cast()))
-            MISS -> fire(ThereWasAMiss(action.cast()))
-
-            DEFEAT -> fire(PlayerWasDefeated(action.cast<DefeatAction>().player))
-            LEAVE_BATTLE -> fire(PlayerLeaved(action.cast<LeaveAction>().player))
-            DISCONNECT -> fire(PlayerWasDisconnected(action.cast<DisconnectAction>().player))
-            NEW_SERVER -> fire(NewServerReceived(action.cast<NewServerAction>().player))
-
-            NEW_SERVER_CONNECTION -> fire(NewServerConnectionReceived(action.cast()))
-
-            else -> throw ActionTypeAbsentException(action.type, javaClass.name, "process")
+            else -> throw ActionTypeAbsentException(action.type, javaClass.name, "${this.className}#process")
         }
     }
 
@@ -182,7 +187,6 @@ class BattleClient: BattleController() {
             leaveBattle()
         }
     }
-
 
     override fun onFleetCreationViewExit() {
         leaveBattle()
@@ -218,14 +222,13 @@ class BattleClient: BattleController() {
         val hitAction = HitAction(shotAction)
 
         serverSocket.send {
-            hit(hitAction)
-            ships.ifEmpty { defeat(currentPlayer) }
+            + hitAction
+            ships.isEmpty().so { + DefeatAction(currentPlayer) }
         }
 
-        fire(ShipWasHit(hitAction))
-
-        ships.ifEmpty {
-            fire(PlayerWasDefeated(currentPlayer))
+        eventbus {
+            + ShipWasHit(hitAction)
+            ships.isEmpty().so { + PlayerWasDefeated(currentPlayer) }
         }
     }
 
