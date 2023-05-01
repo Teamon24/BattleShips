@@ -1,7 +1,6 @@
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
 
-import java.util.concurrent.Executors
 import java.util.function.BiConsumer
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -9,7 +8,6 @@ import java.util.stream.Collectors
 buildscript {
     dependencies {
         classpath 'org.codehaus.gpars:gpars:1.2.1'
-        classpath 'org.apache.commons:commons-lang3:3.12.0'
         classpath 'org.apache.commons:commons-lang3:3.12.0'
         classpath 'commons-io:commons-io:2.11.0'
     }
@@ -29,7 +27,7 @@ repositories {
 }
 
 application {
-    mainClassName = 'org.home.ApplicationKt'
+    mainClassName = 'org.home.Application_devKt'
 }
 
 test {
@@ -39,27 +37,36 @@ test {
 sourceSets {
     main.kotlin.srcDirs = ['src/main/kotlin']
     main.resources.srcDirs = ['src/main/resources']
+    test.kotlin.srcDirs = ['src/main/kotlin']
+    test.resources.srcDirs = ['src/main/resources']
 }
 
+def koin_version = "3.2.0-beta-1"
+
 dependencies {
+    implementation("io.insert-koin:koin-core:$koin_version")
     implementation 'no.tornado:tornadofx:1.7.20'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta'
-    implementation 'io.insert-koin:koin-core:3.3.3'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'com.google.guava:guava-collections:r03'
     implementation 'com.google.guava:guava:13.0'
+
+
+
+    testImplementation("io.insert-koin:koin-test:$koin_version")
+    testImplementation("io.insert-koin:koin-test-junit5:$koin_version")
+    testImplementation 'org.mockito:mockito-core:5.2.0'
+
+    testImplementation 'org.testfx:testfx-core:4.0.13-alpha'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+
+    testImplementation 'net.bytebuddy:byte-buddy:1.14.2'
 }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = '17'
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = '17'
-}
+compileKotlin { kotlinOptions.jvmTarget = '16' }
+compileTestKotlin { kotlinOptions.jvmTarget = '16' }
 
 javafx {
     version = '19'
@@ -85,9 +92,6 @@ ext {
 
 def sl = rootProject.ext.sl
 def application = "application"
-def playersNumber = 6
-
-def propsList = concat(application, toString(createProperties(playersNumber)))
 
 String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
 
@@ -97,8 +101,8 @@ def javaCp =
 def javaJar =
 [java, "-jar", "${project.path}\\build\\libs\\${project.name}-${project.version}.jar", mainClassName]
 
-def pidsFile = createFile("$projectDir${sl}pids.txt")
-
+def playersNumber = 4
+def propsList = concat(application, toString(createProperties(playersNumber)))
 
 task createProperties {
     deleteProperties()
@@ -124,6 +128,8 @@ def runApp(List<String> command, Object... args) {
     exec { commandLine concat(command, toString(args)) }
 }
 
+def pidsFile = createFile("$projectDir${sl}pids.txt")
+
 task runPlayers {
     doLast {
         def propsNumber = propsList.size()
@@ -143,8 +149,8 @@ task runPlayers {
         writer.close()
     }
 }
-tasks.runPlayers.dependsOn(build)
 
+tasks.runPlayers.dependsOn(build)
 
 task killPlayers {
     doLast {

@@ -5,12 +5,12 @@ import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.mvc.contoller.Conditions
-import org.home.mvc.view.AppView
+import org.home.mvc.view.app.AppView
 import org.home.mvc.view.components.backTransitButton
-import org.home.mvc.view.components.cell
-import org.home.mvc.view.components.centerGrid
-import org.home.mvc.view.components.col
-import org.home.mvc.view.components.row
+import org.home.mvc.view.components.GridPaneExtensions.cell
+import org.home.mvc.view.components.GridPaneExtensions.centerGrid
+import org.home.mvc.view.components.GridPaneExtensions.col
+import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.slide
 import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.openAlertWindow

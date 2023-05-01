@@ -17,7 +17,7 @@ import org.home.mvc.ApplicationProperties.Companion.delayTime
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
-import org.home.mvc.view.components.getCell
+import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.style.AppStyles

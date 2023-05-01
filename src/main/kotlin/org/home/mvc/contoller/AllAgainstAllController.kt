@@ -1,15 +1,10 @@
 package org.home.mvc.contoller
 
-import org.home.mvc.contoller.events.ConnectedPlayerReceived
-import org.home.mvc.contoller.events.DSLContainer.Companion.eventbus
-import org.home.mvc.contoller.events.FleetSettingsReceived
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
-import org.home.mvc.model.BattleModel
-import org.home.mvc.model.thoseAreReady
+import org.home.mvc.contoller.events.eventbus
 import org.home.net.PlayerSocket
 import org.home.net.action.Action
-import org.home.net.action.AreReadyAction
 import org.home.net.action.BattleEndAction
 import org.home.net.action.ConnectedPlayersAction
 import org.home.net.action.ConnectionAction
@@ -17,20 +12,16 @@ import org.home.net.action.DefeatAction
 import org.home.net.action.DisconnectAction
 import org.home.net.action.EmptyAction
 import org.home.net.action.FleetSettingsAction
-import org.home.net.action.FleetsReadinessAction
 import org.home.net.action.HitAction
 import org.home.net.action.MissAction
 import org.home.net.action.PlayerReadinessAction
 import org.home.net.action.ShotAction
 import org.home.net.action.TurnAction
 import org.home.utils.PlayersSockets
-import org.home.utils.PlayersSocketsExtensions.get
-import org.home.utils.SocketUtils.send
-import org.home.utils.extensions.AnysExtensions.excludeFrom
 import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.className
-import org.home.utils.log
+import kotlin.collections.Collection
+import kotlin.collections.set
 
 
 class AllAgainstAllController : GameTypeController() {
@@ -66,40 +57,7 @@ class AllAgainstAllController : GameTypeController() {
         sockets: PlayersSockets,
         connectionAction: ConnectionAction,
     ) {
-        connectionAction.also {
-            eventbus {
-                +ConnectedPlayerReceived(it)
-            }
-
-            val connectedSocket = sockets[it.player]
-
-            connectedSocket {
-                model.also {
-                    send {
-                        +FleetSettingsAction(it)
-                        +ConnectedPlayersAction(it.playersNames.exclude(player!!))
-                        +fleetsReadinessExcept(player!!, it)
-                        +AreReadyAction(it.playersReadiness.thoseAreReady)
-                    }
-                }
-
-                excludeFrom(sockets).send(it)
-            }
-        }
-    }
-
-    private fun fleetsReadinessExcept(
-        connectedPlayer: String,
-        model: BattleModel,
-    ): FleetsReadinessAction {
-        val states = model.fleetsReadiness
-            .exclude(connectedPlayer)
-            .map { (player, state) ->
-                player to state.map { (shipType, number) -> shipType to number.value }.toMap()
-            }
-            .toMap()
-
-        return FleetsReadinessAction(states)
+        TODO("onConnect")
     }
 
     override fun onMessage(action: Action) {
@@ -124,7 +82,7 @@ class AllAgainstAllController : GameTypeController() {
     }
 
     override fun onFleetSettings(action: FleetSettingsAction) {
-        fire(FleetSettingsReceived(action))
+        TODO("${this.className}#onFleetSettings")
     }
 
     override fun onPlayers(action: ConnectedPlayersAction) {

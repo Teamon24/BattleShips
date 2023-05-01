@@ -17,20 +17,21 @@ object IOUtils {
     }
 
     @JvmName("readMessages")
-    fun <T: Message> InputStream.read(): Collection<T> {
+    fun InputStream.readBatch(): Collection<Message> {
         return DataInputStream(this).readBatch()
     }
 
-    private fun <T: Message> DataInputStream.readBatch(): Collection<T> {
-        val messages = mutableListOf<T>()
-        val messagesInfo = readOne<T>() as MessagesInfo
+    private fun DataInputStream.readBatch(): Collection<Message> {
+        val messages = mutableListOf<Message>()
+        val messagesInfo = readOne() as MessagesInfo
+        messages.add(messagesInfo)
         messagesInfo.number.repeat {
             messages.add(readOne())
         }
         return messages
     }
 
-    private fun <T : Message> DataInputStream.readOne(): T {
+    private fun DataInputStream.readOne(): Message {
         val size = readInt()
         val bytes = readNBytes(size)
         return SerializationUtils.deserialize(bytes)
@@ -43,7 +44,7 @@ object IOUtils {
         }
     }
 
-    private fun <T: Message> DataOutputStream.writeOne(t: T) {
+    private fun DataOutputStream.writeOne(t: Message) {
         val dataInBytes: ByteArray = SerializationUtils.serialize(t)
         writeInt(dataInBytes.size)
         write(dataInBytes)

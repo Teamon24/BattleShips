@@ -4,75 +4,90 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.model.BattleModel.Companion.invoke
+import org.home.mvc.model.battleIsEnded
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.or
+import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.then
+import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.addClass
 
-
 internal fun BattleView.playerWasDisconnected() {
     subscribe<PlayerWasDisconnected> { event ->
-        logEvent(event)
+        logEvent(event, model)
         removePlayer(event.player)
         openMessageWindow { "${event.player} отключился" }
     }
 }
 
 internal fun BattleView.playerLeaved() {
-    subscribe<PlayerLeaved> { event ->
-        event {
-            logEvent(this)
-            removePlayer(player)
-            openMessageWindow { "$player покинул ${model.battleIsEnded then "поле боя" or "бой"}" }
-        }
+    subscribe<PlayerLeaved> {
+        logEvent(it, model)
+        removePlayer(it.player)
+        openMessageWindow { "${it.player} покинул ${model.battleIsEnded then "поле боя" or "бой"}" }
     }
 }
 
 internal fun BattleView.playerWasDefeated() {
     subscribe<PlayerWasDefeated> { event ->
-        logEvent(event)
+        logEvent(event, model)
         val defeated = event.player
+        model.defeatedPlayers.add(defeated)
         val shots = model.getShots(defeated)
-        if (defeated != currentPlayer) {
-            enemiesFleetsFleetGrids[defeated]!!.onEachFleetCells {
-                if (it.coord !in shots) {
-                    it.addClass(AppStyles.defeatedCell)
-                }
-            }
-            enemiesFleetsFleetGrids[defeated]!!.disable()
-        } else {
-            currentPlayerFleetGrid.onEachFleetCells {
-                if (it.coord !in model.getShots(currentPlayer)) {
-                    it.addClass(AppStyles.defeatedCell)
-                }
-            }
+
+        val fleetGrid = when(defeated != currentPlayer) {
+            true -> enemiesFleetsFleetGrids[defeated]!!.disable()
+            else -> currentPlayerFleetGrid
         }
 
-        model.defeatedPlayers.add(defeated)
+        fleetGrid
+            .addTitleCellClass(AppStyles.defeatedTitleCell)
+            .onEachFleetCells {
+                if (it.coord !in shots) { it.addClass(AppStyles.defeatedCell) }
+            }
+
+        val fleetReadiness = when(defeated != currentPlayer) {
+            true -> enemiesFleetsReadinessPanes[defeated]!!
+            else -> currentPlayerFleetReadiness
+        }
+
+        fleetReadiness.getTypeLabels().forEach { it.addClass(AppStyles.defeatedTitleCell) }
 
         openMessageWindow {
-            val whoDefeated = if (defeated == currentPlayer) "Вы" else defeated
-            "$whoDefeated проиграл"
+            val args = when (defeated) {
+                currentPlayer -> listOf("Вы", "и").asIterator()
+                else -> listOf(defeated, "").asIterator()
+            }
+            "${args.next()} проиграл${args.next()}"
         }
 
-        model {
-            when {
-                battleIsEnded -> battleController.endGame(getWinner())
-                onePlayerLeft -> battleController.endGame(playersNames.first())
-            }
+        if (defeated == currentPlayer)
+            battleViewExitButton.text = "Покинуть поле боя"
+
+        model.battleIsEnded.so { battleController.endBattle() }
+        if (model.playersNames.size == 1) {
+            battleController.disconnect()
         }
     }
 }
 
-
 private fun BattleView.removePlayer(player: String) {
-    model.playersAndShips.remove(player)
-    removeEnemy(player)
-    if (model.playersNames.size == 1 && model.playersNames.first() == currentPlayer) {
-        battleController.endGame(model.playersNames.first())
+    model {
+        log { "players = $playersNames" }
+        log { "defeated = $defeatedPlayers" }
+        lastButNotDefeated(player).so { battleController.endBattle() }
+        playersAndShips.remove(player)
+        removeEnemy(player)
+        if (playersNames.size == 1) {
+            battleController.disconnect()
+        }
     }
+}
+
+fun <E> List<E>.asIterator(): Iterator<E> {
+    var count = 0
+    return generateSequence { this[count++] }.iterator()
 }

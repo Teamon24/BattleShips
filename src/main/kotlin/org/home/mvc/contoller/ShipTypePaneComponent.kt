@@ -6,10 +6,12 @@ import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
 import org.home.mvc.model.BattleModel
-import org.home.mvc.view.components.getCell
-import org.home.mvc.view.components.removeColumn
+import org.home.mvc.view.components.GridPaneExtensions.getCell
+import org.home.mvc.view.components.GridPaneExtensions.removeColumn
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
+import org.home.mvc.view.fleet.ShipTypeLabel
+import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
 import org.home.utils.RomansDigits
 import org.home.utils.extensions.AnysExtensions.name
@@ -74,7 +76,7 @@ class ShipTypePaneComponent: Controller() {
     }
 
     fun shipTypeLabel(gridPane: GridPane, column: Int) =
-        FleetCellLabel(RomansDigits.arabicToRoman(column))
+        ShipTypeLabel(column)
             .addClass(
                 AppStyles.shipTypeLabel,
                 AppStyles.chosenFleetCell
@@ -84,10 +86,10 @@ class ShipTypePaneComponent: Controller() {
             }
 
     fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: Int) =
-        FleetCellLabel("$shipsNumber").also {
-                gridPane.add(it, shipType, 1)
-                gridPane.minWidth = Region.USE_PREF_SIZE
-            }
+        ShipsNumberLabel(shipsNumber).also {
+            gridPane.add(it, shipType, 1)
+            gridPane.minWidth = Region.USE_PREF_SIZE
+        }
 
     fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: SimpleIntegerProperty): FleetCellLabel {
         return FleetCellLabel(shipsNumber.value.toString()).apply {
@@ -96,7 +98,7 @@ class ShipTypePaneComponent: Controller() {
             gridPane.add(this, shipType, 1)
             gridPane.minWidth = Region.USE_PREF_SIZE
             textProperty.onChange {
-                when  {
+                when {
                     it == "0" -> addClass(AppStyles.titleCell)
                     0 < it!!.toInt() && it.toInt() <= model.battleShipsTypes[shipType]!! -> removeAnyColor()
                     else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")

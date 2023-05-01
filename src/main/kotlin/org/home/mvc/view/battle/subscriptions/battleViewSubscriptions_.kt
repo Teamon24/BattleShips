@@ -11,7 +11,8 @@ import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.ShipWasConstructed
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.model.BattleModel.Companion.invoke
-import org.home.mvc.view.AppView
+import org.home.mvc.model.allAreReady
+import org.home.mvc.view.app.AppView
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.backSlide
@@ -30,7 +31,7 @@ import tornadofx.hide
 
 internal fun BattleView.playerWasConnected() {
     subscribe<ConnectedPlayerReceived> {
-        logEvent(it)
+        logEvent(it, model)
         val connectedPlayer = it.player
         val ships = model.playersAndShips[connectedPlayer]
         if (ships == null) {
@@ -45,37 +46,33 @@ internal fun BattleView.playerWasConnected() {
 
 internal fun BattleView.playerIsReadyReceived() {
     subscribe<PlayerIsReadyReceived> {
-        logEvent(it)
+        logEvent(it, model)
 
         if (model.allAreReady && appProps.isServer) {
             battleButton.isDisable = false
             battleButton.addClass(AppStyles.readyButton)
         }
 
-        model.log { playersReadiness }
+        model.log { "ready = $playersReadiness" }
     }
 }
 
 internal fun BattleView.playerIsNotReadyReceived() {
     subscribe<PlayerIsNotReadyReceived> {
-        logEvent(it)
-
+        logEvent(it, model)
         if (appProps.isServer) battleButton.updateStyle()
-
-        model.log { playersReadiness }
+        model.log { "ready = $playersReadiness" }
     }
 }
 
 internal fun BattleView.playerTurnToShoot() {
     subscribe<TurnReceived> { event ->
         model {
-            logEvent(event)
+            logEvent(event, model)
             turn.value = event.player
-            log { currentPlayer }
-            log { event }
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
-                log { defeatedPlayers }
+                log { "defeated = $defeatedPlayers" }
                 enemiesFleetsFleetGrids.excludeAll(defeatedPlayers).enable()
             } else {
                 enemiesFleetsFleetGrids.disable()
@@ -87,21 +84,21 @@ internal fun BattleView.playerTurnToShoot() {
 
 internal fun BattleView.shipWasConstructed() {
     subscribe<ShipWasConstructed> {
-        logEvent(it)
+        logEvent(it, model)
         model.updateFleetsReadiness(it)
     }
 }
 
 internal fun BattleView.shipWasDeleted() {
     subscribe<ShipWasDeleted> {
-        logEvent(it)
+        logEvent(it, model)
         model.updateFleetsReadiness(it)
     }
 }
 
 internal fun BattleView.battleIsStarted() {
     subscribe<BattleStarted> {
-        logEvent(it)
+        logEvent(it, model)
         battleViewExitButton.text = "Покинуть бой"
         battleViewExitButton.action {
             battleController.leaveBattle()
@@ -121,7 +118,7 @@ internal fun BattleView.battleIsStarted() {
 
 internal fun BattleView.battleIsEnded() {
     subscribe<BattleIsEnded> {
-        logEvent(it)
+        logEvent(it, model)
         openMessageWindow {
             if (it.player == currentPlayer) "Вы победили" else "Победил \"${it.player}\""
         }
@@ -132,7 +129,7 @@ internal fun BattleView.battleIsEnded() {
 
 internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> {
-        logEvent(it)
+        logEvent(it, model)
         if (currentPlayer == it.player) {
             replaceWith(tornadofx.find(NewServerView::class), backSlide)
             battleController.disconnect()
@@ -149,7 +146,7 @@ internal fun BattleView.serverTransferReceived() {
 
 internal fun NewServerView.serverTransferClientsReceived() {
     subscribe<NewServerConnectionReceived> {
-        logEvent(it)
+        logEvent(it, model)
         battleController.disconnect()
         battleController.connectAndSend(it.action.ip, it.action.port)
         replaceWith(tornadofx.find(BattleView::class), slide)

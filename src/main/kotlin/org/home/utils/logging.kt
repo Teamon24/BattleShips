@@ -4,6 +4,7 @@ import javafx.event.Event
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.coord
+import org.home.net.message.Message
 import org.home.utils.extensions.AnysExtensions.isNotUnit
 import org.home.utils.extensions.LogBuilder
 import org.home.utils.extensions.add
@@ -73,8 +74,8 @@ inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> A
 }
 
 @JvmName("logEvent")
-fun View.logEvent(fxEvent: FXEvent, body: () -> Any = {}) {
-    val title = "${this::class.simpleName} <- $fxEvent"
+fun View.logEvent(fxEvent: FXEvent, model: BattleModel, body: () -> Any = {}) {
+    val title = "${this::class.simpleName}[${model.currentPlayer}] <- $fxEvent"
     threadPrintln { line(title.length) }
     threadPrintln { add(title) }
     body().isNotUnit { threadPrintln(it) }
@@ -109,6 +110,12 @@ inline fun logSend(disabled: Boolean = false, crossinline block: () -> Any) {
 }
 
 inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "<$it" }, block)
+
+fun <S: Socket> logReceive(socket: S, messages: Collection<Message>) {
+    logReceive(socket) {
+        messages.forEach { logReceive { it } }
+    }
+}
 inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it>" }, block)
 
 inline fun <T> logComLogic(socket: Socket, comLine: (String) -> String, block: () -> T) {

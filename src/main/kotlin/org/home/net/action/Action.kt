@@ -5,6 +5,7 @@ import org.home.net.action.ActionType.*
 import org.home.mvc.model.Coord
 import org.home.net.message.Message
 import org.home.utils.RomansDigits
+import org.home.utils.extensions.BooleansExtensions.then
 
 enum class ActionType {
     HIT,
@@ -85,10 +86,10 @@ class FleetsReadinessAction(val states: Map<String, Map<Int, Int>>): Action(FLEE
 
 class TurnAction(player: String): PlayerAction(TURN, player = player)
 
-abstract class HasAShot(actionType: ActionType, val shooter: String): PlayerAction(actionType, shooter) {
+abstract class HasAShot(actionType: ActionType, shooter: String): PlayerAction(actionType, shooter) {
     abstract val shot: Coord
     abstract val target: String
-    override fun toString() = "$type: '$shooter' --$shot->> '$target'"
+    override fun toString() = "$type: '$player' --$shot->> '$target'"
 }
 
 class ShotAction(override val shot: Coord,
@@ -99,7 +100,7 @@ class HitAction(hit: Coord,
                 player: String,
                 override val target: String): HasAShot(HIT, player)
 {
-    constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.shooter, shotAction.target)
+    constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
     override val shot: Coord = hit
 }
 
@@ -107,15 +108,17 @@ class MissAction(miss: Coord,
                  player: String,
                  override val target: String): HasAShot(MISS, player)
 {
-    constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.shooter, shotAction.target)
+    constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
     override val shot: Coord = miss
 }
 
-sealed class PlayerToRemoveAction(type: ActionType, player: String): PlayerAction(type, player)
+sealed class PlayerToRemoveAction(type: ActionType, player: String): PlayerAction(type, player) {
+    val isDefeat get() = (this is DefeatAction).then { this as DefeatAction }
+}
 
 class LeaveAction(player: String): PlayerToRemoveAction(LEAVE_BATTLE, player = player)
 class DisconnectAction(player: String): PlayerToRemoveAction(DISCONNECT, player = player)
-class DefeatAction(defeated: String): PlayerToRemoveAction(DEFEAT, player = defeated)
+class DefeatAction(val shooter: String, defeated: String): PlayerToRemoveAction(DEFEAT, player = defeated)
 
 class NewServerAction(player: String) : PlayerAction(NEW_SERVER, player)
 

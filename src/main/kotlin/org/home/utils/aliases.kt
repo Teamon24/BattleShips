@@ -5,8 +5,8 @@ import tornadofx.Dimension
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 
-typealias SocketMessages<T, S> = Pair<S, Collection<T>>
-typealias SocketsMessages<T, S> = LinkedBlockingQueue<SocketMessages<T, S>>
+typealias SocketMessages<M, S> = Pair<S, Collection<M>>
+typealias SocketsMessages<M, S> = LinkedBlockingQueue<SocketMessages<M, S>>
 
 typealias LinearUnits = Dimension<Dimension.LinearUnits>
 

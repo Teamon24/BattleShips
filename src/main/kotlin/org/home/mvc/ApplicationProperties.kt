@@ -1,13 +1,14 @@
 package org.home.mvc
 
 import org.home.utils.extensions.ln
+import org.home.utils.log
 import org.home.utils.logEach
 import org.home.utils.logging
 import java.util.*
 
 
 class ApplicationProperties(
-    private val appPropsFileName: String,
+    private val appPropsFileName: String = "application",
     val player: Int? = null,
     val players: Int? = null
 ) {
@@ -18,10 +19,10 @@ class ApplicationProperties(
 
     init {
         try {
-            val s = "/${appPropsFileName}.properties"
-
-            val resourceAsStream = Companion::class.java.getResourceAsStream(s)
-            resourceAsStream.use { stream -> props.load(stream) }
+            val propertiesName = "/${appPropsFileName}.properties"
+             Companion::class.java
+                    .getResourceAsStream(propertiesName)
+                    .use { stream -> props.load(stream) }
 
             props[portProperty] = (props[portProperty] as String).toInt()
             props[isToNotifyAllProperty] = (props[isToNotifyAllProperty] as String).toBoolean()
@@ -42,7 +43,11 @@ class ApplicationProperties(
     val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty] as Boolean
 
     var isServer: Boolean = false
-        set(value) { props[isServerProperty] = value; field = value }
+        set(value) {
+            props[isServerProperty] = value; field = value
+            log { "$isServerProperty = $value" }
+
+        }
         get() { return props[isServerProperty] as Boolean }
 
     private operator fun get(propName: String) =

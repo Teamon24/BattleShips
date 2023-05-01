@@ -4,7 +4,7 @@ import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.ThereWasAShot
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.getCell
+import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.openMessageWindow
@@ -18,7 +18,7 @@ import tornadofx.addClass
 
 internal fun BattleView.shipWasHit() {
     subscribe<ShipWasHit> { event ->
-        logEvent(event)
+        logEvent(event, model)
         model.addShot(event.hasAShot)
         processShot(event) { markHit(it) }
     }
@@ -26,7 +26,7 @@ internal fun BattleView.shipWasHit() {
 
 internal fun BattleView.thereWasAMiss() {
     subscribe<ThereWasAMiss> { event ->
-        logEvent(event)
+        logEvent(event, model)
         model.addShot(event.hasAShot)
         processShot(event) { markMiss(it) }
     }
@@ -50,7 +50,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
                 markShot(currentPlayerFleetGrid)
                 openMessageWindow {
                     val part = isMiss() then "не " or ""
-                    "По вам ${part}попал \"${shooter}\""
+                    "По вам ${part}попал \"${player}\""
                 }
             } else {
                 markShot(enemiesFleetsFleetGrids[target]!!)

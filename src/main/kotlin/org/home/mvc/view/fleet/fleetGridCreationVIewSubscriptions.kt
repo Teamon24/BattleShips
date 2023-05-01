@@ -19,19 +19,19 @@ internal fun FleetGridCreationView.playerWasConnected() {
         if (ships == null) {
             model.playersAndShips[connectedPlayer] = mutableListOf()
         }
-        logEvent(event)
+        logEvent(event, model)
     }
 }
 
 internal fun FleetGridCreationView.playerIsReadyReceived() {
     subscribe<PlayerIsReadyReceived> { event ->
-        logEvent(event)
+        logEvent(event, model)
     }
 }
 
 internal fun FleetGridCreationView.playerIsNotReadyReceived() {
     subscribe<PlayerIsNotReadyReceived> { event ->
-        logEvent(event)
+        logEvent(event, model)
     }
 }
 
@@ -40,7 +40,7 @@ internal fun FleetGridCreationView.shipWasConstructed() {
         if (it.player == currentPlayer) {
             val shipType = it.shipType
             model.fleetsReadiness[currentPlayer]!![shipType]!!.apply(it.operation)
-            logEvent(it)
+            logEvent(it, model)
             battleController.send(ShipConstructionAction(shipType, currentPlayer))
         } else {
             model.updateFleetsReadiness(it)
@@ -54,7 +54,7 @@ internal fun FleetGridCreationView.shipWasDeleted() {
         if (it.player == currentPlayer) {
             val shipType = it.shipType
             model.fleetsReadiness[currentPlayer]!![shipType]!!.apply(it.operation)
-            logEvent(it)
+            logEvent(it, model)
             battleController.send(ShipDeletionAction(shipType, currentPlayer))
         } else {
             model.updateFleetsReadiness(it)

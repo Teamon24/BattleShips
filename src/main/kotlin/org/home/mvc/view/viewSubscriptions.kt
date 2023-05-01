@@ -7,7 +7,6 @@ import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.contoller.events.ReadyPlayersReceived
 import org.home.mvc.model.BattleModel
 import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.View
 
@@ -21,14 +20,14 @@ internal inline fun View.refreshers(body: View.() -> Unit) {
 
 fun View.playerWasDisconnected(model: BattleModel) {
     subscribe<PlayerWasDisconnected> {
-        logEvent(it)
+        logEvent(it, model)
         model.playersAndShips.remove(it.player)
     }
 }
 
 fun View.readyPlayersReceived(model: BattleModel, playersListView: ListView<String>) {
     subscribe<ReadyPlayersReceived> { event ->
-        logEvent(event)
+        logEvent(event, model)
         val playersReadiness = model.playersReadiness
         val players = event.readyPlayers
 
@@ -43,7 +42,7 @@ fun View.readyPlayersReceived(model: BattleModel, playersListView: ListView<Stri
 
 fun View.connectedPlayersReceived(model: BattleModel) {
     subscribe<ConnectedPlayersReceived> { event ->
-        logEvent(event)
+        logEvent(event, model)
         event.players.forEach { player ->
             model.playersAndShips[player] = mutableListOf()
         }

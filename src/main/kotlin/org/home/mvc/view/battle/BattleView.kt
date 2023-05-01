@@ -12,6 +12,7 @@ import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.model.BattleModel
+import org.home.mvc.model.notAllReady
 import org.home.mvc.view.battle.subscriptions.battleIsEnded
 import org.home.mvc.view.battle.subscriptions.battleIsStarted
 import org.home.mvc.view.battle.subscriptions.playerIsNotReadyReceived
@@ -25,17 +26,19 @@ import org.home.mvc.view.battle.subscriptions.shipWasConstructed
 import org.home.mvc.view.battle.subscriptions.shipWasDeleted
 import org.home.mvc.view.battle.subscriptions.shipWasHit
 import org.home.mvc.view.battle.subscriptions.thereWasAMiss
+import org.home.mvc.view.components.GridPaneExtensions.cell
+import org.home.mvc.view.components.GridPaneExtensions.centerGrid
+import org.home.mvc.view.components.GridPaneExtensions.col
+import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
-import org.home.mvc.view.components.cell
-import org.home.mvc.view.components.centerGrid
-import org.home.mvc.view.components.col
-import org.home.mvc.view.components.row
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.mvc.view.openAlertWindow
 import org.home.mvc.view.subscriptions
 import org.home.style.AppStyles
+import org.home.style.StyleUtils.leftPadding
+import org.home.style.StyleUtils.rightPadding
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.extensions.BooleansExtensions.no
@@ -68,10 +71,16 @@ class BattleView : View("Battle View") {
     internal val currentPlayer = appProps.currentPlayer
 
     internal lateinit var currentPlayerFleetGrid: FleetGrid
-    private val currentPlayerFleetReadiness = shipsTypesPaneController.shipTypesPane(currentPlayer)
+    internal val currentPlayerFleetReadiness = fleetReadinessPane(currentPlayer)
+
+    private fun fleetReadinessPane(player: String) =
+        shipsTypesPaneController.shipTypesPane(player).transpose().apply { leftPadding(10) }
+
+    private fun enemyFleetReadinessPane(player: String) =
+        shipsTypesPaneController.shipTypesPane(player).transpose().flip().apply { rightPadding(10) }
 
     internal val enemiesFleetsFleetGrids = hashMapOf<String, FleetGrid>()
-    private val enemiesFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
+    internal val enemiesFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
 
     private val selectedEnemyFleetReadinessPane = BorderPane()
 
@@ -79,9 +88,7 @@ class BattleView : View("Battle View") {
     private val selectedEnemyFleetPane = BorderPane().apply { center = emptyFleetGrid }
 
     internal lateinit var playersListView: ListView<String>
-
     internal lateinit var battleViewExitButton: Button
-
     internal lateinit var battleButton: Button
 
     private fun createEmptyFleetGreed() = fleetGridCreator
@@ -112,7 +119,7 @@ class BattleView : View("Battle View") {
 
         title = currentPlayer.uppercase()
 
-        model.log { "playersNames: $playersNames" }
+        model.log { "players = $playersNames" }
 
         model.playersNames
             .exclude(currentPlayer)
@@ -130,7 +137,7 @@ class BattleView : View("Battle View") {
         }
     }
 
-    private inline fun <N: Node> BorderPane.initByFirstIfPresent(
+    private inline fun <N : Node> BorderPane.initByFirstIfPresent(
         playersNodes: Map<String, N>,
         afterInit: N.() -> Unit = {},
     ) {
@@ -168,14 +175,9 @@ class BattleView : View("Battle View") {
             addClass(AppStyles.debugClass)
             row(0) {
                 col(0) {
-                    gridpane {
-                        cell(0, 0) {
-                            flowpane {
-                                alignment = Pos.BASELINE_LEFT
-                                label(currentPlayer)
-                            }
-                        }
-                        cell(0, 1) { currentPlayerFleetReadiness.also { add(it) } }
+                    flowpane {
+                        alignment = Pos.BASELINE_LEFT
+                        label(currentPlayer)
                     }
                 }
                 col(1) {
@@ -186,32 +188,26 @@ class BattleView : View("Battle View") {
                 }
 
                 col(2) {
-                    gridpane {
-                        cell(0, 0) { selectedEnemyFleetReadinessPane.also { add(it) } }
-                        cell(0, 1) {
-                            flowpane {
-                                alignment = Pos.BASELINE_RIGHT
-                                label(model.selectedPlayer)
-                            }
-                        }
+                    flowpane {
+                        alignment = Pos.BASELINE_RIGHT
+                        label(model.selectedPlayer)
                     }
                 }
             }
 
             row(1) {
                 col(0) {
-                    currentPlayerFleetGrid(model).apply { currentPlayerFleetGrid = this }
-                }
-                col(1) {
-                    listview<String>(model.playersNames).also {
-                        playersListView = it
-                        it.cellFactory = MarkReadyPlayers(model)
-                        it.changeEnemyFleetOnSelection()
-                        it.id = AppStyles.playersListView
+                    gridpane {
+                        cell(0, 0) { currentPlayerFleet(model).apply { currentPlayerFleetGrid = this } }
+                        cell(0, 1) { currentPlayerFleetReadiness() }
                     }
                 }
+                col(1) { playersListview() }
                 col(2) {
-                    selectedEnemyFleetPane.also { add(it) }
+                    gridpane {
+                        cell(0, 1) { selectedEnemyFleet() }
+                        cell(0, 0) { selectedEnemyFleetReadiness() }
+                    }
                 }
             }
 
@@ -239,13 +235,34 @@ class BattleView : View("Battle View") {
         }
     }
 
+    private fun EventTarget.playersListview(): ListView<String> {
+        return listview<String>(model.playersNames).also {
+            playersListView = it
+            it.cellFactory = MarkReadyPlayers(model)
+            it.changeEnemyFleetOnSelection()
+            it.id = AppStyles.playersListView
+        }
+    }
+
+    private fun EventTarget.currentPlayerFleetReadiness(): ShipsTypesPane {
+        return currentPlayerFleetReadiness.also { add(it) }
+    }
+
+    private fun EventTarget.selectedEnemyFleetReadiness(): BorderPane {
+        return selectedEnemyFleetReadinessPane.also { add(it) }
+    }
+
+    private fun EventTarget.selectedEnemyFleet(): BorderPane {
+        return selectedEnemyFleetPane.also { add(it) }
+    }
+
     internal fun Button.updateStyle() {
         if (appProps.isServer) {
-                isDisable = model.notAllReady.yes {
-                    removeClass(AppStyles.readyButton)
-                } no {
-                    addClass(AppStyles.readyButton)
-                }
+            isDisable = model.notAllReady.yes {
+                removeClass(AppStyles.readyButton)
+            } no {
+                addClass(AppStyles.readyButton)
+            }
         } else {
             if (model.playersReadiness[currentPlayer]!!) {
                 addClass(AppStyles.readyButton)
@@ -267,31 +284,27 @@ class BattleView : View("Battle View") {
     }
 
     internal fun addEnemyFleetReadinessPane(enemy: String) {
-        enemiesFleetsReadinessPanes[enemy] = shipsTypesPaneController
-            .shipTypesPane(enemy).apply {
+        enemiesFleetsReadinessPanes[enemy] =
+            enemyFleetReadinessPane(enemy).apply {
                 selectedEnemyFleetReadinessPane.center ?: run {
-                    selectedEnemyFleetReadinessPane.center =  this@apply
+                    selectedEnemyFleetReadinessPane.center = this@apply
                 }
-        }
+            }
     }
 
-    private fun ListView<String>. changeEnemyFleetOnSelection() {
+    private fun ListView<String>.changeEnemyFleetOnSelection() {
         selectionModel.selectedItemProperty().addListener { _, old, new ->
-            if (new == currentPlayer) { return@addListener }
+            if (new == currentPlayer) {
+                return@addListener
+            }
             log { "changeEnemyFleetOnSelection: $old -> $new" }
 
             val playerWasRemoved = new == null
             if (playerWasRemoved) {
                 log { "selectedItem == old" }
                 items
-                    .firstOrNull {
-                        log { "it != old && it != currentPlayer: item = $it" }
-                        it != old && it != currentPlayer
-                    }
-                    ?.also {
-                        log { "changeEnemyFleetOnSelection: selection deleted - $it" }
-                        setEnemyToPane(it)
-                    }
+                    .firstOrNull { it != old && it != currentPlayer }
+                    ?.also { setEnemyToPane(it) }
             } else {
                 setEnemyToPane(new)
             }
@@ -301,6 +314,7 @@ class BattleView : View("Battle View") {
     }
 
     private fun setEnemyToPane(name: String) {
+        log { "set to panes: $name" }
         model.selectedPlayer.value = name
         selectedEnemyFleetPane.center = enemiesFleetsFleetGrids[name]
         selectedEnemyFleetReadinessPane.center = enemiesFleetsReadinessPanes[name]
@@ -309,13 +323,14 @@ class BattleView : View("Battle View") {
     internal fun removeEnemy(player: String) {
         enemiesFleetsReadinessPanes.remove(player)
         enemiesFleetsFleetGrids.remove(player)
+        log { "removed from panes: $player" }
 
         if (enemiesFleetsFleetGrids.size == 0 && enemiesFleetsReadinessPanes.size == 0) {
             selectedEnemyFleetPane.center = emptyFleetGrid
         }
     }
 
-    private fun EventTarget.currentPlayerFleetGrid(model: BattleModel) =
+    private fun EventTarget.currentPlayerFleet(model: BattleModel) =
         fleetGrid(currentPlayer, model, AppStyles.currentPlayerCell).also { add(it) }
 
     private fun enemyFleetGrid(enemy: String, model: BattleModel) =

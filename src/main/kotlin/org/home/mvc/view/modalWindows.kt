@@ -2,8 +2,8 @@ package org.home.mvc.view
 
 import javafx.geometry.Pos
 import javafx.stage.Modality.APPLICATION_MODAL
-import org.home.mvc.view.components.cell
-import org.home.mvc.view.components.centerGrid
+import org.home.mvc.view.components.GridPaneExtensions.cell
+import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.style.AppStyles
 import tornadofx.UIComponent
 import tornadofx.action

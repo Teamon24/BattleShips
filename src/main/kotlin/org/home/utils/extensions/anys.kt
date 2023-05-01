@@ -1,6 +1,5 @@
 package org.home.utils.extensions
 
-import org.home.utils.threadPrintln
 import kotlin.reflect.KClass
 
 inline val Any.className: String get() = this.javaClass.simpleName

@@ -46,18 +46,23 @@ abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
 
     fun shouldNotifyAll(action: KClass<out HasAShot>) { map[action] = false }
 
-    fun createNotifications(action: HasAShot): HashMap<String, MutableList<Action>> {
-        val toNotifyShooter = map[action::class]
+    fun notifiactions(hasAShot: HasAShot): HashMap<String, MutableList<Action>> {
+        val toNotifyShooter = map[hasAShot::class]
 
         toNotifyShooter ?: throw RuntimeException(
-            "There is no boolean flag for ${HasAShot::className}'s descendant: ${action.className}"
+            "There is no boolean flag for ${HasAShot::className}'s descendant: ${hasAShot.className}"
         )
 
         val toSend = hashMapOf<String, MutableList<Action>>()
         if(toNotifyShooter) {
-            toSend[action.shooter] = mutableListOf(action)
+            toSend[hasAShot.player] = mutableListOf(hasAShot)
         } else {
-            toSend.putAll(sockets.map { it.player!! }.exclude(action.target).associateWith { mutableListOf(action) })
+            toSend.putAll(
+                sockets
+                    .map { it.player!! }
+                    .exclude(hasAShot.target)
+                    .associateWith { mutableListOf(hasAShot) }
+            )
         }
 
         return toSend

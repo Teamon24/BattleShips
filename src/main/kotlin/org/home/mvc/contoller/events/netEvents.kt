@@ -9,6 +9,8 @@ import org.home.net.action.HasAShot
 import org.home.net.action.HitAction
 import org.home.net.action.MissAction
 import org.home.net.action.NewServerConnectionAction
+import org.home.utils.DSLContainer
+import tornadofx.Component
 import tornadofx.FXEvent
 
 sealed class HasAPlayer(val player: String): FXEvent()
@@ -44,6 +46,10 @@ class TurnReceived(player: String): HasAPlayer(player) {
 sealed class ThereWasAShot(val hasAShot: HasAShot): FXEvent() {
     fun isMiss() = hasAShot.type == ActionType.MISS
     fun isHit() = hasAShot.type == ActionType.HIT
+    override fun toString(): String {
+        return "Shot($hasAShot)"
+    }
+
 }
 
 class ShipWasHit(hitAction: HitAction): ThereWasAShot(hitAction)
@@ -56,8 +62,14 @@ class PlayerWasDisconnected(player: String) : PlayerToRemoveReceived(player) {
     override fun toString() = "Disconnected($player)"
 }
 
-object BattleStarted: FXEvent()
+object BattleStarted: FXEvent() { override fun toString() = "BattleStarted" }
 class BattleIsEnded(battleEndAction: BattleEndAction): HasAPlayer(battleEndAction.player)
 
 class NewServerReceived(player: String): HasAPlayer(player)
 class NewServerConnectionReceived(val action: NewServerConnectionAction): FXEvent()
+
+inline fun Component.eventbus(addEvents: DSLContainer<FXEvent>.() -> Unit) {
+    val dslContainer = DSLContainer<FXEvent>()
+    dslContainer.addEvents()
+    dslContainer.elements.onEach { fire(it) }.clear()
+}

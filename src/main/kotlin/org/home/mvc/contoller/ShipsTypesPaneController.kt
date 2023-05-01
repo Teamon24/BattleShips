@@ -4,7 +4,6 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.scene.layout.GridPane
 import org.home.mvc.model.BattleModel
-import org.home.mvc.view.components.transpose
 import org.home.utils.extensions.BooleansExtensions.yes
 import tornadofx.Controller
 
@@ -13,26 +12,12 @@ class ShipsTypesPaneController: Controller() {
     private val model: BattleModel by di()
     private val component: ShipTypePaneComponent by di()
 
-    fun init(player: String, pane: ShipsTypesPane) {
-        model.fleetsReadiness[player]!!.forEach { (shipType, number) ->
-            pane.transposed
-                .yes {
-
-                }
-        }
-    }
-
     fun shipTypesPaneControl(): ShipsTypesPane {
         return ShipsTypesPane().apply {
                 component.addShipTypeButton(this)
                 component.removeShipTypeButton(this)
                 addLabels(model.battleShipsTypes)
             }
-    }
-
-    fun shipTypesPaneTransposed(player: String): ShipsTypesPane {
-        val shipsTypes = model.fleetsReadiness[player]!!
-        return ShipsTypesPane(true).apply { addLabels(shipsTypes) }.transpose()
     }
 
     fun shipTypesPane(player: String): ShipsTypesPane {

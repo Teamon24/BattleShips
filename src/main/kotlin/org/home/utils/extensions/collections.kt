@@ -8,6 +8,7 @@ object CollectionsExtensions {
     fun <K, V> Map<K, V>.excludeAll(exceptions: Collection<K>) = filter { it.key !in exceptions }
 
     fun <K> Collection<K>.exclude(exception: K) = filter { it != exception }
+    fun <K> Collection<K>.exclude(vararg exceptions: K) = filter { it !in exceptions }
 
     fun <K, V> Map<K, V>.shuffledKeys() = keys.toMutableList().shuffled().toMutableList()
 
@@ -18,4 +19,6 @@ object CollectionsExtensions {
         return this.toMutableList()
     }
 
+    val <T> Collection<T>.hasElements get() = size > 1
+    val <T> Collection<T>.hasElement get() = size == 1
 }

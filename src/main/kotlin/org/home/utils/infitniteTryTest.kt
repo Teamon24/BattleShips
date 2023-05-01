@@ -1,9 +1,9 @@
-package org.home.net
+package org.home.utils
 
-import org.home.net.InfiniteTryBase.Companion.catch
-import org.home.net.InfiniteTryBase.Companion.handle
-import org.home.net.InfiniteTryBase.Companion.start
-import org.home.net.InfiniteTryFor.Companion.infiniteTryFor
+import org.home.utils.InfiniteTryBase.Companion.catch
+import org.home.utils.InfiniteTryBase.Companion.handle
+import org.home.utils.InfiniteTryBase.Companion.start
+import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
 import org.home.utils.extensions.AtomicBooleansExtensions.atomic
 import org.home.utils.extensions.AtomicBooleansExtensions.toggleAfter
 import java.io.EOFException

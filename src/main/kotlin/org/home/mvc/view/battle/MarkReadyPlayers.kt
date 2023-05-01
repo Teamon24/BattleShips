@@ -10,7 +10,6 @@ import org.home.style.AppStyles.Companion.currentPlayerListViewColors
 import org.home.style.AppStyles.Companion.enemyListViewColors
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
-import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
 import tornadofx.style
 
@@ -34,13 +33,15 @@ class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, List
                         .no { enemyListViewColors.setStyle(model) }
             }
 
-            private fun AppStyles.PlayerListViewColors.setStyle(battleModel: BattleModel) {
+            private fun AppStyles.PlayerListViewColors.setStyle(model: BattleModel) {
                 style {
-                    textFill = when {
-                        battleModel.turn.value == text -> turn
-                        text in battleModel.defeatedPlayers -> defeated
-                        text in battleModel.playersReadiness.thoseAreReady -> ready
-                        else -> default
+                    model {
+                        textFill = when {
+                            turn.value == text -> turnColor
+                            text in defeatedPlayers -> defeatedColor
+                            text in thoseAreReady -> readyColor
+                            else -> defaultColor
+                        }
                     }
                 }
             }

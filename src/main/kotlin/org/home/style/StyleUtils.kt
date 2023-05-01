@@ -1,14 +1,15 @@
 package org.home.style
 
+import javafx.css.Styleable
 import javafx.geometry.Pos
 import javafx.scene.Node
 import javafx.scene.Parent
-import javafx.scene.layout.Pane
-import org.home.style.StyleUtils.addAllChildrenClass
 import org.home.utils.NodeUtils
 import tornadofx.CssRule
 import tornadofx.addClass
+import tornadofx.box
 import tornadofx.getChildList
+import tornadofx.px
 import tornadofx.style
 
 object StyleUtils {
@@ -50,5 +51,17 @@ object StyleUtils {
             }
         }
         return this
+    }
+
+    fun Styleable.rightPadding(dimension: Int) {
+        style {
+            padding = box(0.px, dimension.px, 0.px, 0.px)
+        }
+    }
+
+    fun Styleable.leftPadding(dimension: Int) {
+        style {
+            padding = box(0.px, 0.px, 0.px, dimension.px)
+        }
     }
 }

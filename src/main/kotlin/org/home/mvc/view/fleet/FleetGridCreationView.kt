@@ -11,20 +11,18 @@ import org.home.mvc.model.BattleModel.Companion.fleetReadiness
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.battle.MarkReadyPlayers
+import org.home.mvc.view.components.GridPaneExtensions.centerGrid
+import org.home.mvc.view.components.GridPaneExtensions.col
+import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
-import org.home.mvc.view.components.centerGrid
-import org.home.mvc.view.components.col
-import org.home.mvc.view.components.row
 import org.home.mvc.view.components.transitButton
-import org.home.mvc.view.playerWasDisconnected
 import org.home.mvc.view.connectedPlayersReceived
+import org.home.mvc.view.playerWasDisconnected
 import org.home.mvc.view.readyPlayersReceived
 import org.home.mvc.view.subscriptions
 import org.home.net.action.ReadyAction
 import org.home.style.AppStyles
 import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.extensions.ln
-import org.home.utils.logging
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
@@ -36,6 +34,7 @@ class FleetGridCreationView : View("Создание флота") {
 
     internal val model: BattleModel by di()
     internal val applicationProperties: ApplicationProperties by di()
+    
     internal val currentPlayer = applicationProperties.currentPlayer
 
     private val fleetGridCreationController: FleetGridCreationController by di()
@@ -126,7 +125,7 @@ class FleetGridCreationView : View("Создание флота") {
     private fun EventTarget.currentPlayerFleetGrid() = fleetGridCreationController.root.also { add(it) }
 
     private fun EventTarget.currentPlayerShipsTypesInfoPane() =
-        shipsTypesPaneController.shipTypesPaneTransposed(currentPlayer).also {
+        shipsTypesPaneController.shipTypesPane(currentPlayer).transpose().also {
             add(it)
             it.addClass(AppStyles.shipsTypesInfoPane)
         }

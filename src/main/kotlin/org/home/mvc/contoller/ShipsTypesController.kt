@@ -2,13 +2,13 @@ package org.home.mvc.contoller
 
 
 import org.home.mvc.ApplicationProperties
-import org.home.mvc.contoller.events.DSLContainer.Companion.eventbus
 import org.home.mvc.contoller.events.ShipWasConstructed
 import org.home.mvc.contoller.events.ShipWasDeleted
+import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
-import org.home.mvc.model.Ship
-import org.home.mvc.model.copy
 import org.home.mvc.model.Coord
+import org.home.mvc.model.Ship
+import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import tornadofx.Controller
 
 class ShipsTypesController: Controller() {
@@ -30,7 +30,6 @@ class ShipsTypesController: Controller() {
     }
 
     private fun shipMaxLength() = map.maxOf { it.key }
-
 
     fun count(vararg ships: Ship) {
         ships

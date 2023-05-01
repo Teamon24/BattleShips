@@ -3,7 +3,19 @@ package org.home.style
 import javafx.geometry.Pos
 import javafx.scene.Cursor
 import javafx.scene.paint.Color
-import javafx.scene.paint.Color.*
+import javafx.scene.paint.Color.BLACK
+import javafx.scene.paint.Color.DARKCYAN
+import javafx.scene.paint.Color.DARKGREEN
+import javafx.scene.paint.Color.DARKRED
+import javafx.scene.paint.Color.GREY
+import javafx.scene.paint.Color.LIGHTSLATEGRAY
+import javafx.scene.paint.Color.MEDIUMSEAGREEN
+import javafx.scene.paint.Color.ORANGERED
+import javafx.scene.paint.Color.PINK
+import javafx.scene.paint.Color.RED
+import javafx.scene.paint.Color.WHITE
+import javafx.scene.paint.Color.rgb
+import javafx.scene.paint.Color.valueOf
 import javafx.scene.paint.Paint
 import org.home.utils.LinearUnits
 import tornadofx.CssRule
@@ -22,29 +34,20 @@ import java.net.URL
 class AppStyles : Stylesheet() {
 
     class PlayerListViewColors(
-        val turn: Color,
-        val defeated: Color,
-        val ready: Color,
-        val default: Color,
+        val turnColor: Color,
+        val defeatedColor: Color,
+        val readyColor: Color,
+        val defaultColor: Color,
     )
 
     companion object {
+        private const val targetIconPath = "/icons/target-3699.svg"
 
-        val chosenCellColor = valueOf("#085191")
-        val readyPlayerCellColor = MEDIUMSEAGREEN!!
+        val chosenCellColor: Color = valueOf("#085191")
+        val readyPlayerCellColor: Color = MEDIUMSEAGREEN
 
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
         val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyPlayerCellColor, BLACK)
-
-        val String.resource: URL? get() =
-            ClassLoader.getSystemResource(this)
-
-        val String.resourceFile: File
-            get() =
-                resource
-                    ?.let { File(it.file) }
-                    ?: throw RuntimeException("Resource (\"${this}\") was not found")
-
 
         private const val fontName = "JetBrainsMono-Light.ttf"
 
@@ -94,6 +97,8 @@ class AppStyles : Stylesheet() {
 
         val debugClass by cssclass()
         val defeatedCell by cssclass()
+        val defeatedTitleCell by cssclass()
+
         val centerGrid by cssclass()
 
         val shipsTypesInfoPane by cssclass()
@@ -104,6 +109,7 @@ class AppStyles : Stylesheet() {
 
         const val playersListView = "players-list-view"
     }
+
 
     init {
         errorLabel + padding(20.px)
@@ -124,7 +130,7 @@ class AppStyles : Stylesheet() {
         centerGrid + center
 
         readyButton {
-            backgroundColor += AppStyles.readyPlayerCellColor
+            backgroundColor += readyPlayerCellColor
             textFill = WHITE
         }
 
@@ -135,7 +141,7 @@ class AppStyles : Stylesheet() {
         }
 
         (missCell + border) {
-            backgroundColor += DIMGREY
+            backgroundColor += Paint.valueOf("A4A5A6FF")
         }
 
         (hitCell + border) {
@@ -160,12 +166,16 @@ class AppStyles : Stylesheet() {
             and(hover) {
                 cursor = Cursor.CROSSHAIR
                 backgroundColor += rgb(231, 64, 67, 0.5)
-                backgroundImage += URI("/icons/target-3699.svg")
+                backgroundImage += URI(targetIconPath)
             }
         }
 
         (defeatedCell + border) {
             backgroundColor += PINK
+        }
+
+        defeatedTitleCell {
+            backgroundColor += Paint.valueOf("A93638F4")
         }
 
         (shipsTypesInfoPane + margin(10.px)) {

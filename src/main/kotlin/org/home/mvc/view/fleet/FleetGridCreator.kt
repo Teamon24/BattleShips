@@ -2,7 +2,7 @@ package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
 import org.home.mvc.model.BattleModel
-import org.home.mvc.view.components.cell
+import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.style.AppStyles
 import tornadofx.Controller
 import tornadofx.addChildIfPossible

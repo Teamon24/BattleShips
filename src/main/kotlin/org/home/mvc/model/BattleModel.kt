@@ -1,22 +1,20 @@
 package org.home.mvc.model
 
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
-import javafx.collections.FXCollections
 import javafx.collections.MapChangeListener
 import org.home.mvc.ApplicationProperties
 import org.home.net.action.FleetSettingsAction
 import org.home.net.action.HasAShot
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
+import org.home.utils.extensions.CollectionsExtensions.exclude
+import org.home.utils.extensions.ObservablePropertiesExtensions.ObservableValueMap
+import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
+import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
 import org.home.utils.log
 import tornadofx.ViewModel
-import tornadofx.toObservable
-import java.beans.PropertyChangeListener
-import java.beans.PropertyChangeSupport
-
 
 class BattleModel : ViewModel() {
 
@@ -43,11 +41,6 @@ class BattleModel : ViewModel() {
         height.value = width.value
     }
 
-    private fun <K, V> emptySimpleMapProperty() =
-        SimpleMapProperty<K, V>(FXCollections.observableHashMap())
-
-    private fun <E> emptySimpleListProperty() =
-        SimpleListProperty<E>(FXCollections.observableList(mutableListOf()))
 
     private val widthProp = SimpleIntegerProperty(size)
     private val heightProp = SimpleIntegerProperty(size)
@@ -84,17 +77,16 @@ class BattleModel : ViewModel() {
         return this
     }
 
-    val battleIsEnded: Boolean get() = playersNames.size - defeatedPlayers.size == 1
-    val onePlayerLeft: Boolean = playersNames.size == 1
     fun getWinner(): String = playersNames.first { it !in defeatedPlayers }
+    fun lastButNotDefeated(player: String): Boolean {
+        return player !in defeatedPlayers &&
+                defeatedPlayers.containsAll(playersNames.exclude(player, currentPlayer))
+    }
 
     private fun SimpleMapProperty<Int, Int>.putInitials(): SimpleMapProperty<Int, Int> {
         (0 until shipsTypes).forEach { this[it + 1] = shipsTypes - it }
         return this
     }
-
-    val allAreReady get() = playersReadiness.all(::isReady) && playersReadiness.size == playersNumber.value
-    val notAllReady get() = playersReadiness.any(::isNotReady) || (playersReadiness.size != playersNumber.value)
 
     private val statistics = mutableListOf<HasAShot>()
 
@@ -137,26 +129,17 @@ class BattleModel : ViewModel() {
     fun addShot(hasAShot: HasAShot) {
         statistics.add(hasAShot)
     }
+
+    fun registersAHit(shot: Coord): Boolean {
+        return playersAndShips[currentPlayer]!!.hadHit(shot)
+    }
 }
 
-fun <K, V> SimpleMapProperty<K, V>.copy() = toMutableMap().toObservable()
+val BattleModel.notAllReady get() = playersReadiness.any(::isNotReady) || (playersReadiness.size != playersNumber.value)
+val BattleModel.allAreReady get() = playersReadiness.all(::isReady) && playersReadiness.size == playersNumber.value
+val BattleModel.battleIsEnded get() = playersNames.size - defeatedPlayers.size == 1
+val BattleModel.thoseAreReady get() = playersReadiness.filter(::isReady).keys.toSet()
 
 private fun isReady(it: Map.Entry<String, Boolean>) = it.value
 private fun isNotReady(it: Map.Entry<String, Boolean>) = !it.value
 
-val Map<String, Boolean>.thoseAreReady get() = filter(::isReady).keys.toSet()
-
-
-class ObservableValueMap<K, V: Comparable<V>> : HashMap<K, V>() {
-    private val ps = PropertyChangeSupport(this)
-
-    fun addValueListener(pcl: PropertyChangeListener) = ps.addPropertyChangeListener(pcl)
-
-    override fun put(key: K, value: V): V? {
-        if (get(key) != value) {
-            val ret = super.put(key, value)
-            ps.firePropertyChange("map", ret, value)
-        }
-        return value
-    }
-}
