@@ -15,7 +15,7 @@ import org.home.mvc.view.components.slide
 import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.openAlertWindow
 import org.home.net.BattleClient
-import org.home.net.action.ConnectionAction
+import org.home.net.action.PlayerConnectionAction
 import org.home.style.AppStyles
 import tornadofx.View
 import tornadofx.action
@@ -56,7 +56,6 @@ class BattleJoinView : View("Присоединиться к битве") {
                         battleClient.connect(ip, port)
                         battleClient.listen()
                         battleClient.send(connectMessage())
-
                         conditions.fleetSettingsReceived.await()
                         currentView.replaceWith(fleetGridCreationView, slide)
                     } catch (e: Exception) {
@@ -74,7 +73,7 @@ class BattleJoinView : View("Присоединиться к битве") {
         }
     }
 
-    private fun connectMessage() = ConnectionAction(applicationProperties.currentPlayer)
+    private fun connectMessage() = PlayerConnectionAction(applicationProperties.currentPlayer)
 
     private fun extract(): Pair<String, Int> {
         val split = ipAddress.value.split(":")

@@ -7,16 +7,19 @@ import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
-import org.home.utils.extensions.className
+import org.home.mvc.contoller.events.FleetEditEvent
+import org.home.mvc.contoller.events.HasAPlayer
+import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
+import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerToRemoveReceived
-import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
-import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
+import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.battleIsEnded
@@ -27,8 +30,8 @@ import org.home.net.action.Action
 import org.home.net.action.AreReadyAction
 import org.home.net.action.BattleEndAction
 import org.home.net.action.BattleStartAction
-import org.home.net.action.ConnectedPlayersAction
-import org.home.net.action.ConnectionAction
+import org.home.net.action.PlayersConnectionsAction
+import org.home.net.action.PlayerConnectionAction
 import org.home.net.action.DefeatAction
 import org.home.net.action.DisconnectAction
 import org.home.net.action.FleetSettingsAction
@@ -40,10 +43,12 @@ import org.home.net.action.MissAction
 import org.home.net.action.NewServerAction
 import org.home.net.action.NewServerConnectionAction
 import org.home.net.action.NotReadyAction
+import org.home.net.action.PlayerAction
 import org.home.net.action.PlayerReadinessAction
 import org.home.net.action.PlayerToRemoveAction
 import org.home.net.action.ReadyAction
-import org.home.net.action.ShipConstructionAction
+import org.home.net.action.ShipAction
+import org.home.net.action.ShipAdditionAction
 import org.home.net.action.ShipDeletionAction
 import org.home.net.action.ShotAction
 import org.home.net.action.TurnAction
@@ -59,9 +64,8 @@ import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.CollectionsExtensions.hasElements
 import org.home.utils.extensions.CollectionsExtensions.shuffledKeys
-import org.home.utils.extensions.ln
+import org.home.utils.extensions.className
 import org.home.utils.log
-import org.home.utils.logging
 import tornadofx.FXEvent
 
 
@@ -90,7 +94,7 @@ class BattleServer(
     override fun process(socket: PlayerSocket, message: Action) {
         val action = message
         when (action) {
-            is ConnectionAction -> {
+            is PlayerConnectionAction -> {
                 permitToAccept(sockets.size + 1 < model.playersNumber.value)
                 action.also {
                     val connected = it.player
@@ -104,33 +108,20 @@ class BattleServer(
                     sockets.exclude(connected).send(it)
                     sockets[connected].send {
                         +FleetSettingsAction(model)
-                        +ConnectedPlayersAction(model.playersNames.exclude(connected))
+                        +PlayersConnectionsAction(model.playersNames.exclude(connected))
                         +fleetsReadinessExcept(connected, model)
                         +AreReadyAction(model.thoseAreReady)
                     }
                 }
             }
 
-            is ReadyAction,
-            is NotReadyAction -> processReadiness(action as PlayerReadinessAction)
-
-            is ShipConstructionAction -> {
-                sockets.exclude(action.player).send(action)
-                eventbus {
-                    + ShipWasConstructed(action)
-                }
-            }
-
-            is ShipDeletionAction -> {
-                sockets.exclude(action.player).send(action)
-                eventbus {
-                    + ShipWasDeleted(action)
-                }
-            }
+            is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
+            is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
+            is ShipAdditionAction -> processFleetEdit(action, ::ShipWasAdded)
+            is ShipDeletionAction -> processFleetEdit(action, ::ShipWasDeleted)
 
             is ShotAction -> {
                 val target = action.target
-
                 val serverIsTarget = target == currentPlayer
                 if (serverIsTarget) {
                     val shot = action.shot
@@ -160,7 +151,7 @@ class BattleServer(
 
                 eventbus {
                     +ThereWasAMiss(action)
-                    +TurnReceived(nextTurn)
+                    +TurnReceived(TurnAction(nextTurn))
                 }
             }
 
@@ -173,39 +164,47 @@ class BattleServer(
         }
     }
 
+    private fun processFleetEdit(action: ShipAction, event: (ShipAction) -> FleetEditEvent) {
+        sockets.exclude(action.player).send(action)
+        eventbus {
+            + event(action)
+        }
+    }
+
     private val battleIsStarted get() = turnList.isNotEmpty()
     private val battleIsNotEnded get() = turnList.hasElements
 
     private fun sendRemovePlayer(action: PlayerToRemoveAction) {
         val removedPlayer = action.player
-        sockets.exclude(removedPlayer).send(action)
+        sockets
+            .exclude(removedPlayer)
+            .send(action)
 
         eventbus {
+
             when (action) {
-                is DisconnectAction -> removeAndFire(removedPlayer, ::PlayerWasDisconnected)
-                is LeaveAction -> removeAndFire(removedPlayer, ::PlayerLeaved)
+                is DisconnectAction -> removeAndFire(action, ::PlayerWasDisconnected)
+                is LeaveAction -> removeAndFire(action, ::PlayerLeaved)
                 is DefeatAction -> Unit
             }
 
             battleIsStarted.so {
                 turnList.remove(removedPlayer)
+                log { "<${action.className}> turn = $turnList" }
+
+                removedPlayer.hasTurn and battleIsNotEnded so {
+                    turnPlayer = nextTurn()
+                    +TurnReceived(TurnAction(turnPlayer))
+                    send(TurnAction(turnPlayer))
+                }
 
                 action.isDefeat?.apply {
-                    +PlayerWasDefeated(removedPlayer)
-                    battleIsNotEnded.so {
-
-                        removedPlayer.hasTurn.so {
-                            turnPlayer = nextTurn()
-                            +TurnReceived(turnPlayer)
-                            send(TurnAction(turnPlayer))
-                        }
-
-                        currentPlayer.hasTurn.yes {
-                            +TurnReceived(currentPlayer)
-                        } no {
-                            action {
-                                sockets[shooter].send(TurnAction(shooter))
-                            }
+                    +PlayerWasDefeated(action)
+                    currentPlayer.hasTurn and battleIsNotEnded yes {
+                        +TurnReceived(TurnAction(currentPlayer))
+                    } no {
+                        action {
+                            sockets[shooter].send(TurnAction(shooter))
                         }
                     }
                 }
@@ -213,9 +212,9 @@ class BattleServer(
         }
     }
 
-    private fun DSLContainer<FXEvent>.removeAndFire(removedPlayer: String, event: (String) -> PlayerToRemoveReceived) {
-        sockets.removeIf { it.player == removedPlayer }
-        + event(removedPlayer)
+    private fun DSLContainer<FXEvent>.removeAndFire(playerToRemovedAction: PlayerAction, event: (PlayerAction) -> PlayerToRemoveReceived) {
+        sockets.removeIf { it.player == playerToRemovedAction.player }
+        + event(playerToRemovedAction)
     }
 
     private fun onMiss(action: ShotAction) {
@@ -229,10 +228,9 @@ class BattleServer(
 
         eventbus {
             +ThereWasAMiss(missAction)
-            +TurnReceived(nextTurn)
+            +TurnReceived(TurnAction(nextTurn))
         }
     }
-
 
     private fun notifyAboutShotAndSendNextTurn(action: HasAShot): String {
         val playersAndShotMessages = shotNotifier.notifiactions(action)
@@ -247,13 +245,11 @@ class BattleServer(
         return nextTurn
     }
 
-    private fun processReadiness(action: PlayerReadinessAction) {
+    private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         sockets.exclude(action.player).send(action)
-        gameController.onReady(action)
-        logging {
-            model.playersReadiness.forEach {
-                ln("${it.key}: ${it.value}")
-            }
+        action {
+            model.playersReadiness[player] = isReady
+            eventbus { + event(this@action) }
         }
     }
 
@@ -273,7 +269,7 @@ class BattleServer(
 
         eventbus {
             +BattleStarted
-            +TurnReceived(turnPlayer)
+            +TurnReceived(TurnAction(turnPlayer))
         }
     }
 
@@ -333,9 +329,11 @@ class BattleServer(
 
     override fun onDisconnect(socket: PlayerSocket) {
         val player = socket.player!!
-        send(DisconnectAction(player))
-        eventbus {
-            +PlayerWasDisconnected(player)
+        DisconnectAction(player).also {
+            send(it)
+            eventbus {
+                +PlayerWasDisconnected(it)
+            }
         }
 
     }

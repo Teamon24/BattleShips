@@ -5,11 +5,11 @@ import org.home.mvc.contoller.events.FleetsReadinessReceived
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
-import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.view.updateFleetsReadiness
 import org.home.net.action.ShipDeletionAction
-import org.home.net.action.ShipConstructionAction
+import org.home.net.action.ShipAdditionAction
 import org.home.utils.logEvent
 
 internal fun FleetGridCreationView.playerWasConnected() {
@@ -36,12 +36,12 @@ internal fun FleetGridCreationView.playerIsNotReadyReceived() {
 }
 
 internal fun FleetGridCreationView.shipWasConstructed() {
-    subscribe<ShipWasConstructed> {
+    subscribe<ShipWasAdded> {
         if (it.player == currentPlayer) {
             val shipType = it.shipType
             model.fleetsReadiness[currentPlayer]!![shipType]!!.apply(it.operation)
             logEvent(it, model)
-            battleController.send(ShipConstructionAction(shipType, currentPlayer))
+            battleController.send(ShipAdditionAction(shipType, currentPlayer))
         } else {
             model.updateFleetsReadiness(it)
         }

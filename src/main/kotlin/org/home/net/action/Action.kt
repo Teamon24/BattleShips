@@ -1,104 +1,117 @@
 package org.home.net.action
 
+import org.home.mvc.contoller.events.BattleIsEnded
+import org.home.mvc.contoller.events.BattleStarted
+import org.home.mvc.contoller.events.ConnectedPlayerReceived
+import org.home.mvc.contoller.events.ConnectedPlayersReceived
+import org.home.mvc.contoller.events.FleetsReadinessReceived
+import org.home.mvc.contoller.events.NewServerConnectionReceived
+import org.home.mvc.contoller.events.NewServerReceived
+import org.home.mvc.contoller.events.PlayerLeaved
+import org.home.mvc.contoller.events.PlayerWasDefeated
+import org.home.mvc.contoller.events.PlayerWasDisconnected
+import org.home.mvc.contoller.events.ReadyPlayersReceived
+import org.home.mvc.contoller.events.ShipWasAdded
+import org.home.mvc.contoller.events.ShipWasDeleted
+import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ThereWasAMiss
+import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.BattleModel
-import org.home.net.action.ActionType.*
 import org.home.mvc.model.Coord
+import org.home.net.BattleClient.ActionTypeAbsentException
 import org.home.net.message.Message
 import org.home.utils.RomansDigits
 import org.home.utils.extensions.BooleansExtensions.then
 
-enum class ActionType {
-    HIT,
-    SHOT,
-    CONNECT,
-    DISCONNECT,
-    SHIP_CREATION,
-    SHIP_DELETION,
-    LEAVE_BATTLE,
-    NEW_SERVER,
-    NEW_SERVER_ESTABLISHED,
-    NEW_SERVER_CONNECTION,
-    DEFEAT,
-    BATTLE_ENDED,
-    READY,
-    NOT_READY,
-    TURN,
-    PLAYERS,
-    READY_PLAYERS,
-    FLEETS_READINESS,
-    MISS,
-    EMPTY,
-    BATTLE_STARTED,
-    FLEET_SETTINGS
+sealed class Action: Message {
+    override fun toString(): String {
+        return when(this) {
+            is PlayerConnectionAction -> "Connection($player)"
+            is PlayersConnectionsAction -> "Connections($players)"
+            is ReadyAction -> "Ready($player)"
+            is NotReadyAction -> "NotReady($player)"
+            is FleetsReadinessAction -> "FleetsReadiness${states})"
+            is AreReadyAction -> "AreReady(${players})"
+            is TurnAction -> "Turn($player)"
+            is ShotAction -> "Shot($this)"
+            is HitAction -> "Hit($this)"
+            is MissAction -> "Miss($this)"
+            is DefeatAction -> "Defeat(${player})"
+            is LeaveAction -> "Leave(${player})"
+            is DisconnectAction -> "Disconnect(${player})"
+            is BattleStartAction -> "BattleStart"
+            is BattleEndAction -> "BattleEnd(winner=$player)"
+            is NewServerAction -> "NewServer(${player})"
+            is NewServerConnectionAction -> run { "NewServerConnection($player $ip:$port)" }
+            is ShipAdditionAction -> "ShipAddition[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
+            is ShipDeletionAction -> "ShipDeletion[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
+            is FleetSettingsAction -> buildString {
+                append("FleetSettings(width=").append(width)
+                append("height=").append(height)
+                append("types=").append(shipsTypes)
+                append(")")
+            }
+        }
+    }
 }
 
-interface HasText { val text: String }
-abstract class Action(val type: ActionType): Message
 
-open class TextAction(type: ActionType, override val text: String): Action(type), HasText {
-    override fun toString() = "TextAction($type, $text)"
+sealed class PlayerAction(val player: String): Action()
+
+class PlayerConnectionAction(player: String): PlayerAction(player = player)
+
+sealed class ShipAction(val shipType: Int, player: String): PlayerAction(player) {
+    abstract val op: String
 }
 
-abstract class PlayerAction(type: ActionType, val player: String): Action(type) {
-    override fun toString() = "PlayerAction($type, '$player')"
+class ShipDeletionAction(shipType: Int, player: String): ShipAction(shipType, player) {
+    override val op get() = "-"
 }
 
-class ConnectionAction(player: String): PlayerAction(CONNECT, player = player)
-
-class ShipDeletionAction(val shipType: Int, player: String): PlayerAction(SHIP_DELETION, player){
-    override fun toString() = "ShipCountAction($player: -${RomansDigits.arabicToRoman(shipType)})"
-}
-
-class ShipConstructionAction(val shipType: Int, player: String): PlayerAction(SHIP_CREATION, player){
-    override fun toString() = "ShipDiscountAction($player: +${RomansDigits.arabicToRoman(shipType)})"
+class ShipAdditionAction(shipType: Int, player: String): ShipAction(shipType, player) {
+    override val op get() = "+"
 }
 
 class FleetSettingsAction(
-    val height: Int, val width: Int, val shipsTypes: Map<Int, Int>): Action(FLEET_SETTINGS)
+    val height: Int,
+    val width: Int,
+    val shipsTypes: Map<Int, Int>): Action()
 {
     constructor(model: BattleModel) : this(
         model.height.value,
         model.width.value,
         model.battleShipsTypes.value.toMutableMap()
     )
-
-    override fun toString() = "FleetSettingsAction(height=$height, width=$width, shipsTypes=$shipsTypes)"
 }
 
-open class ConnectedPlayersAction(val players: Collection<String>): Action(PLAYERS) {
-    override fun toString() = "PlayersAction($type, players=$players)"
+open class PlayersConnectionsAction(val players: Collection<String>): Action()
+
+sealed class PlayerReadinessAction(player: String): PlayerAction(player = player) {
+    val isReady get() = this is ReadyAction
 }
 
-abstract class PlayerReadinessAction(type: ActionType, player: String): PlayerAction(type, player = player) {
-    val isReady get() = type == READY
-}
+class ReadyAction(readyPlayer: String): PlayerReadinessAction(player = readyPlayer)
+class NotReadyAction(readyPlayer: String): PlayerReadinessAction(player = readyPlayer)
 
-class ReadyAction(readyPlayer: String): PlayerReadinessAction(READY, player = readyPlayer)
-class NotReadyAction(readyPlayer: String): PlayerReadinessAction(NOT_READY, player = readyPlayer)
+class AreReadyAction(val players: Collection<String>): Action()
 
-class AreReadyAction(val players: Collection<String>): Action(READY_PLAYERS) {
-    override fun toString() = "ReadyPlayersAction($type, players=$players)"
-}
+class FleetsReadinessAction(val states: Map<String, Map<Int, Int>>): Action()
 
-class FleetsReadinessAction(val states: Map<String, Map<Int, Int>>): Action(FLEETS_READINESS) {
-    override fun toString() = "FleetsReadinessAction($states)"
-}
+class TurnAction(player: String): PlayerAction(player = player)
 
-class TurnAction(player: String): PlayerAction(TURN, player = player)
-
-abstract class HasAShot(actionType: ActionType, shooter: String): PlayerAction(actionType, shooter) {
+sealed class HasAShot(shooter: String): PlayerAction(shooter) {
     abstract val shot: Coord
     abstract val target: String
-    override fun toString() = "$type: '$player' --$shot->> '$target'"
+    override fun toString() = "$player' --$shot->> '$target'"
 }
 
 class ShotAction(override val shot: Coord,
                  player: String,
-                 override val target: String): HasAShot(SHOT, player)
+                 override val target: String): HasAShot(player)
 
 class HitAction(hit: Coord,
                 player: String,
-                override val target: String): HasAShot(HIT, player)
+                override val target: String): HasAShot(player)
 {
     constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
     override val shot: Coord = hit
@@ -106,29 +119,47 @@ class HitAction(hit: Coord,
 
 class MissAction(miss: Coord,
                  player: String,
-                 override val target: String): HasAShot(MISS, player)
+                 override val target: String): HasAShot(player)
 {
     constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
     override val shot: Coord = miss
 }
 
-sealed class PlayerToRemoveAction(type: ActionType, player: String): PlayerAction(type, player) {
+sealed class PlayerToRemoveAction(player: String): PlayerAction(player) {
     val isDefeat get() = (this is DefeatAction).then { this as DefeatAction }
 }
 
-class LeaveAction(player: String): PlayerToRemoveAction(LEAVE_BATTLE, player = player)
-class DisconnectAction(player: String): PlayerToRemoveAction(DISCONNECT, player = player)
-class DefeatAction(val shooter: String, defeated: String): PlayerToRemoveAction(DEFEAT, player = defeated)
+class LeaveAction(player: String): PlayerToRemoveAction(player = player)
+class DisconnectAction(player: String): PlayerToRemoveAction(player = player)
+class DefeatAction(val shooter: String, defeated: String): PlayerToRemoveAction(player = defeated)
 
-class NewServerAction(player: String) : PlayerAction(NEW_SERVER, player)
+class NewServerAction(player: String) : PlayerAction(player)
 
-class NewServerConnectionAction(player: String, val ip: String, val port: Int): PlayerAction(NEW_SERVER_CONNECTION, player)
-object EmptyAction: Action(EMPTY) { override fun toString() = "EmptyAction($type)" }
-object BattleStartAction: Action(BATTLE_STARTED) { override fun toString() = "BattleStartedAction($type)" }
+class NewServerConnectionAction(player: String, val ip: String, val port: Int):
+    PlayerAction(player)
+object BattleStartAction: Action()
 
-class BattleEndAction(winner: String): PlayerAction(BATTLE_ENDED, player = winner)
+class BattleEndAction(winner: String): PlayerAction(player = winner)
 
-
+val Action.event get() = when (this) {
+    is BattleEndAction -> BattleIsEnded(this)
+    is BattleStartAction -> BattleStarted
+    is PlayerConnectionAction -> ConnectedPlayerReceived(this)
+    is DefeatAction -> PlayerWasDefeated(this)
+    is DisconnectAction -> PlayerWasDisconnected(this)
+    is FleetsReadinessAction -> FleetsReadinessReceived(this)
+    is HitAction -> ShipWasHit(this)
+    is LeaveAction -> PlayerLeaved(this)
+    is MissAction -> ThereWasAMiss(this)
+    is NewServerAction -> NewServerReceived(this)
+    is NewServerConnectionAction -> NewServerConnectionReceived(this)
+    is PlayersConnectionsAction -> ConnectedPlayersReceived(this)
+    is AreReadyAction -> ReadyPlayersReceived(this)
+    is ShipAdditionAction -> ShipWasAdded(this)
+    is ShipDeletionAction -> ShipWasDeleted(this)
+    is TurnAction -> TurnReceived(this)
+    else -> null
+}
 
 
 

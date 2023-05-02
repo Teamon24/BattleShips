@@ -1,6 +1,5 @@
 package org.home.mvc.view
 
-import javafx.scene.control.ListView
 import org.home.mvc.contoller.events.ConnectedPlayersReceived
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.PlayerWasDisconnected
@@ -25,11 +24,11 @@ fun View.playerWasDisconnected(model: BattleModel) {
     }
 }
 
-fun View.readyPlayersReceived(model: BattleModel, playersListView: ListView<String>) {
+fun View.readyPlayersReceived(model: BattleModel) {
     subscribe<ReadyPlayersReceived> { event ->
         logEvent(event, model)
         val playersReadiness = model.playersReadiness
-        val players = event.readyPlayers
+        val players = event.players
 
         playersReadiness {
             when {

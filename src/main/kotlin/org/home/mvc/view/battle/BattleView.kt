@@ -297,7 +297,6 @@ class BattleView : View("Battle View") {
             if (new == currentPlayer) {
                 return@addListener
             }
-            log { "changeEnemyFleetOnSelection: $old -> $new" }
 
             val playerWasRemoved = new == null
             if (playerWasRemoved) {

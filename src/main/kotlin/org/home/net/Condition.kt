@@ -8,7 +8,7 @@ class Condition<A>(val name: String, private val accepter: A) {
 
 
     private val state = AtomicBoolean(false)
-    fun isNotDone() = !state()
+    private fun isNotDone() = !state()
 
     private var afterNotify: A.() -> Unit = {}
 
@@ -20,7 +20,7 @@ class Condition<A>(val name: String, private val accepter: A) {
 
     fun await() {
         log { "awaiting for $this" }
-        while (isNotDone()) { Thread.sleep(10L) }
+        while (this.isNotDone()) { Thread.sleep(50L) }
         accepter.afterNotify()
     }
 

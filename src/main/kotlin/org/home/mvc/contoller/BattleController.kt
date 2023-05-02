@@ -39,14 +39,16 @@ abstract class BattleController(applicationProperties: ApplicationProperties): C
         ships.removeDestroyedDeck(shotAction.shot)
         val hitAction = HitAction(shotAction)
 
+        val defeatAction = DefeatAction(shotAction.player, currentPlayer)
+
         send {
             + hitAction
-            ships.isEmpty().so { + DefeatAction(shotAction.player, currentPlayer) }
+            ships.isEmpty().so { + defeatAction }
         }
 
         eventbus {
             + ShipWasHit(hitAction)
-            ships.isEmpty().so { + PlayerWasDefeated(currentPlayer) }
+            ships.isEmpty().so { + PlayerWasDefeated(defeatAction) }
         }
     }
 

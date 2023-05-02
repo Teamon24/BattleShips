@@ -10,48 +10,25 @@ import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.Conditions
 import org.home.mvc.contoller.GameTypeController
-import org.home.mvc.contoller.events.BattleIsEnded
-import org.home.mvc.contoller.events.BattleStarted
-import org.home.mvc.contoller.events.ConnectedPlayerReceived
-import org.home.mvc.contoller.events.ConnectedPlayersReceived
-import org.home.mvc.contoller.events.FleetsReadinessReceived
-import org.home.mvc.contoller.events.NewServerConnectionReceived
-import org.home.mvc.contoller.events.NewServerReceived
-import org.home.mvc.contoller.events.PlayerLeaved
-import org.home.mvc.contoller.events.PlayerWasDefeated
-import org.home.mvc.contoller.events.PlayerWasDisconnected
-import org.home.mvc.contoller.events.ReadyPlayersReceived
-import org.home.mvc.contoller.events.ShipWasConstructed
-import org.home.mvc.contoller.events.ShipWasDeleted
-import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.HasAPlayer
+import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
+import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.ThereWasAMiss
-import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.view.openMessageWindow
 import org.home.net.action.Action
-import org.home.net.action.AreReadyAction
-import org.home.net.action.BattleEndAction
-import org.home.net.action.BattleStartAction
-import org.home.net.action.ConnectedPlayersAction
-import org.home.net.action.ConnectionAction
-import org.home.net.action.DefeatAction
-import org.home.net.action.DisconnectAction
+import org.home.net.action.PlayerConnectionAction
 import org.home.net.action.FleetSettingsAction
-import org.home.net.action.FleetsReadinessAction
-import org.home.net.action.HitAction
 import org.home.net.action.LeaveAction
 import org.home.net.action.MissAction
-import org.home.net.action.NewServerAction
-import org.home.net.action.NewServerConnectionAction
 import org.home.net.action.NotReadyAction
 import org.home.net.action.PlayerReadinessAction
 import org.home.net.action.ReadyAction
-import org.home.net.action.ShipConstructionAction
-import org.home.net.action.ShipDeletionAction
 import org.home.net.action.ShotAction
-import org.home.net.action.TurnAction
+import org.home.net.action.event
 import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.send
+import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
 import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
@@ -59,7 +36,6 @@ import org.home.utils.extensions.className
 import org.home.utils.log
 import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
-import tornadofx.FXEvent
 import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
@@ -79,8 +55,8 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
     private val receiver = singleThreadScope(currentPlayer)
     private lateinit var receiverJob: Job
 
-    class ActionTypeAbsentException(any: Any, source: String, method: String):
-    RuntimeException("There is no when-branch for $any in $source#$method")
+    class ActionTypeAbsentException(any: Any, className: String, method: String):
+    RuntimeException("There is no when-branch for $any in $className#$method")
 
     @Throws(UnknownHostException::class, IOException::class)
     fun connect(ip: String, port: Int) {
@@ -92,7 +68,7 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
 
     override fun connectAndSend(ip: String, port: Int) {
         connect(ip, port)
-        send(ConnectionAction(currentPlayer))
+        send(PlayerConnectionAction(currentPlayer))
     }
 
     @Throws(IOException::class)
@@ -117,27 +93,7 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
     }
 
     private fun process(action: Action) {
-        val event: FXEvent? = when (action) {
-            is BattleEndAction -> BattleIsEnded(action)
-            is BattleStartAction -> BattleStarted
-            is ConnectionAction -> ConnectedPlayerReceived(action)
-            is DefeatAction -> PlayerWasDefeated(action.player)
-            is DisconnectAction -> PlayerWasDisconnected(action.player)
-            is FleetsReadinessAction -> FleetsReadinessReceived(action)
-            is HitAction -> ShipWasHit(action)
-            is LeaveAction -> PlayerLeaved(action.player)
-            is MissAction -> ThereWasAMiss(action)
-            is NewServerAction -> NewServerReceived(action.player)
-            is NewServerConnectionAction -> NewServerConnectionReceived(action)
-            is ConnectedPlayersAction -> ConnectedPlayersReceived(action.players)
-            is AreReadyAction -> ReadyPlayersReceived(action.players)
-            is ShipConstructionAction -> ShipWasConstructed(action)
-            is ShipDeletionAction -> ShipWasDeleted(action)
-            is TurnAction -> TurnReceived(action.player)
-            else -> null
-        }
-
-        event?.also { fire(it); return }
+        action.event?.also { fire(it); return }
 
         when (action) {
             is FleetSettingsAction -> {
@@ -146,13 +102,14 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
                     .notifyUI { putSettings(action) }
             }
 
-            is ReadyAction,
-            is NotReadyAction -> gameController.onReady(action as PlayerReadinessAction)
+            is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
+            is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
             is ShotAction -> {
                 val target = action.target
                 val serverIsTarget = target == currentPlayer
                 if (serverIsTarget) {
-                    model.registersAHit(action.shot)
+                    model
+                        .registersAHit(action.shot)
                         .yes { onHit(action) }
                         .no {
                             MissAction(action).also {
@@ -164,12 +121,15 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
                         }
                 }
             }
-            else -> throw ActionTypeAbsentException(action.type, javaClass.name, "${this.className}#process")
+            else -> throw ActionTypeAbsentException(action.className, this.className, "process")
         }
     }
 
-    override fun send(action: Action) = serverSocket.isNotClosed.so { serverSocket.send(action) }
-    override fun send(actions: Collection<Action>) = serverSocket.isNotClosed.so { serverSocket.send(actions) }
+    override fun send(action: Action) =
+        serverSocket.isNotClosed.so { serverSocket.send(action) }
+
+    override fun send(actions: Collection<Action>) =
+        serverSocket.isNotClosed.so { serverSocket.send(actions) }
 
     override fun onBattleViewExit() {
         send(NotReadyAction(currentPlayer))
@@ -206,6 +166,14 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
             receiver.cancel()
             receiverJob.cancel()
             log { "${this.javaClass }#receiver is canceled" }
+        }
+    }
+
+
+    private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
+        action {
+            model.playersReadiness[player] = isReady
+            eventbus { + event(this@action) }
         }
     }
 }

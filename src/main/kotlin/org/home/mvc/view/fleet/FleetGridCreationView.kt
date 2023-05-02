@@ -89,7 +89,7 @@ class FleetGridCreationView : View("Создание флота") {
                         playersListView = it
                         it.cellFactory = MarkReadyPlayers(model)
                         subscriptions {
-                            readyPlayersReceived(model, it)
+                            readyPlayersReceived(model)
                         }
                     }
                 }

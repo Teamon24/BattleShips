@@ -8,7 +8,7 @@ import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.TurnReceived
-import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.model.BattleModel.Companion.invoke
 import org.home.mvc.model.allAreReady
@@ -83,7 +83,7 @@ internal fun BattleView.playerTurnToShoot() {
 
 
 internal fun BattleView.shipWasConstructed() {
-    subscribe<ShipWasConstructed> {
+    subscribe<ShipWasAdded> {
         logEvent(it, model)
         model.updateFleetsReadiness(it)
     }

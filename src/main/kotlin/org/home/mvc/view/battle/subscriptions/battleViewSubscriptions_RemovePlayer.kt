@@ -61,7 +61,7 @@ internal fun BattleView.playerWasDefeated() {
                 currentPlayer -> listOf("Вы", "и").asIterator()
                 else -> listOf(defeated, "").asIterator()
             }
-            "${args.next()} проиграл${args.next()}"
+            args.run { "${next()} проиграл${next()}" }
         }
 
         if (defeated == currentPlayer)

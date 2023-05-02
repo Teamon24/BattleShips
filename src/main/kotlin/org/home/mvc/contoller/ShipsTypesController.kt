@@ -2,7 +2,7 @@ package org.home.mvc.contoller
 
 
 import org.home.mvc.ApplicationProperties
-import org.home.mvc.contoller.events.ShipWasConstructed
+import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
@@ -37,7 +37,7 @@ class ShipsTypesController: Controller() {
             .onEach { ship -> map[ship.size] = map[ship.size]?.minus(1) }
             .forEach {
                 eventbus {
-                    +ShipWasConstructed(it.size, applicationProperties.currentPlayer)
+                    +ShipWasAdded(it.size, applicationProperties.currentPlayer)
                 }
             }
 

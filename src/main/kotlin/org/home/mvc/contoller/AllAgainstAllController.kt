@@ -1,16 +1,12 @@
 package org.home.mvc.contoller
 
-import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
-import org.home.mvc.contoller.events.PlayerIsReadyReceived
-import org.home.mvc.contoller.events.eventbus
 import org.home.net.PlayerSocket
 import org.home.net.action.Action
 import org.home.net.action.BattleEndAction
-import org.home.net.action.ConnectedPlayersAction
-import org.home.net.action.ConnectionAction
+import org.home.net.action.PlayersConnectionsAction
+import org.home.net.action.PlayerConnectionAction
 import org.home.net.action.DefeatAction
 import org.home.net.action.DisconnectAction
-import org.home.net.action.EmptyAction
 import org.home.net.action.FleetSettingsAction
 import org.home.net.action.HitAction
 import org.home.net.action.MissAction
@@ -18,10 +14,8 @@ import org.home.net.action.PlayerReadinessAction
 import org.home.net.action.ShotAction
 import org.home.net.action.TurnAction
 import org.home.utils.PlayersSockets
-import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.className
 import kotlin.collections.Collection
-import kotlin.collections.set
 
 
 class AllAgainstAllController : GameTypeController() {
@@ -35,10 +29,6 @@ class AllAgainstAllController : GameTypeController() {
 
     override fun onMiss(sockets: Collection<PlayerSocket>, action: MissAction) {
         TODO("onMiss")
-    }
-
-    override fun onEmpty(action: EmptyAction) {
-        TODO("onEmpty")
     }
 
     override fun onDefeat(action: DefeatAction) {
@@ -55,7 +45,7 @@ class AllAgainstAllController : GameTypeController() {
 
     override fun onConnect(
         sockets: PlayersSockets,
-        connectionAction: ConnectionAction,
+        playerConnectionAction: PlayerConnectionAction,
     ) {
         TODO("onConnect")
     }
@@ -69,23 +59,14 @@ class AllAgainstAllController : GameTypeController() {
     }
 
     override fun onReady(action: PlayerReadinessAction) {
-        action {
-            model.playersReadiness[player] = isReady
-            eventbus {
-                if (isReady) {
-                    + PlayerIsReadyReceived(player)
-                } else {
-                    + PlayerIsNotReadyReceived(player)
-                }
-            }
-        }
+        TODO("onReady")
     }
 
     override fun onFleetSettings(action: FleetSettingsAction) {
         TODO("${this.className}#onFleetSettings")
     }
 
-    override fun onPlayers(action: ConnectedPlayersAction) {
+    override fun onPlayers(action: PlayersConnectionsAction) {
         TODO("${this.className}#onPlayers")
     }
 }
