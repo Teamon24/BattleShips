@@ -81,7 +81,9 @@ fun View.logEvent(fxEvent: FXEvent, model: BattleModel, body: () -> Any = {}) {
     val title = "${this::class.simpleName}[${model.currentPlayer}] <- $fxEvent"
     threadPrintln { line(title.length) }
     threadPrintln { add(title) }
-    body().isNotUnit { threadPrintln(it) }
+    body().isNotUnit {
+        threadPrintln(it)
+    }
     threadPrintln { line(title.length) }
 }
 

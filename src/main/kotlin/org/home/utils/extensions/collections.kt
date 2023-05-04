@@ -20,5 +20,4 @@ object CollectionsExtensions {
     }
 
     val <T> Collection<T>.hasElements get() = size > 1
-    val <T> Collection<T>.hasElement get() = size == 1
 }

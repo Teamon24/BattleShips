@@ -69,6 +69,7 @@ import tornadofx.FXEvent
 import kotlin.concurrent.thread
 
 
+
 class BattleServer(
     notifierStrategies: ShotNotifierStrategies,
     private val conditions: Conditions,
@@ -78,6 +79,7 @@ class BattleServer(
     appProps: ApplicationProperties,
 ) : MultiServer<Action, PlayerSocket>(processor, receiver, accepter, appProps) {
 
+    private val <E> Collection<E>.hasPlayers get() = hasElements
     private val String.hasTurn get() = this == turnPlayer
 
     private val shotNotifier = notifierStrategies.create(sockets)
@@ -163,7 +165,7 @@ class BattleServer(
     private fun processFleetEdit(action: ShipAction, event: (ShipAction) -> FleetEditEvent) {
         sockets.exclude(action.player).send(action)
         eventbus {
-            + event(action)
+            +event(action)
         }
     }
 
@@ -182,19 +184,24 @@ class BattleServer(
             }
 
             turnList.isNotEmpty().so {
-                turnList.remove(removedPlayer)
                 log { "<${action.className}> turn = $turnList" }
 
-                removedPlayer.hasTurn and turnList.hasElements so {
-                    turnPlayer = nextTurn()
-                    +TurnReceived(TurnAction(turnPlayer))
-                    send(TurnAction(turnPlayer))
+                removedPlayer.hasTurn.so {
+                    val nextTurn = nextTurn()
+                    turnList.remove(removedPlayer)
+                    turnList.hasPlayers.so {
+                        TurnAction(nextTurn).also {
+                            +TurnReceived(it)
+                            send(it)
+                        }
+                    }
                 }
 
-                action.asDefeat?.apply {
+
+                action.asDefeat {
                     +PlayerWasDefeated(this)
                     currentPlayer.hasTurn yes {
-                        turnList.hasElements so { +TurnReceived(TurnAction(currentPlayer)) }
+                        turnList.hasPlayers so { +TurnReceived(TurnAction(currentPlayer)) }
                     } no {
                         sockets[shooter].send(TurnAction(shooter))
                     }
@@ -203,11 +210,14 @@ class BattleServer(
         }
     }
 
-    private fun DSLContainer<FXEvent>.removeAndFire(toRemovedAction: PlayerAction,
-                                                    event: (PlayerAction) -> PlayerToRemoveReceived
+    private fun DSLContainer<FXEvent>.removeAndFire(
+        toRemovedAction: PlayerAction,
+        event: (PlayerAction) -> PlayerToRemoveReceived,
     ) {
-        sockets.removeIf { it.player == toRemovedAction.player }
-        + event(toRemovedAction)
+        sockets.removeIf {
+            it.player == toRemovedAction.player
+        }
+        +event(toRemovedAction)
     }
 
     private fun onMiss(action: ShotAction) {
@@ -242,7 +252,7 @@ class BattleServer(
         sockets.exclude(action.player).send(action)
         action {
             model.playersReadiness[player] = isReady
-            eventbus { + event(this@action) }
+            eventbus { +event(this@action) }
         }
     }
 
@@ -277,7 +287,7 @@ class BattleServer(
 
         log { "interrupting ${receiver.name}" }
         thread {
-            while (canReceive()) {
+            while (receiver.canProceed()) {
                 receiver.interrupt()
             }
         }
@@ -321,12 +331,12 @@ class BattleServer(
     }
 
     override fun onBattleViewExit() {
-        canAccept(false)
+        accepter.canProceed(false)
         leaveBattle()
     }
 
     override fun onWindowClose() {
-        canAccept(false)
+        accepter.canProceed(false)
         leaveBattle()
     }
 

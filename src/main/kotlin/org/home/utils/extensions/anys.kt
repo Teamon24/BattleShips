@@ -6,7 +6,6 @@ inline val Any.className: String get() = this.javaClass.simpleName
 
 object AnysExtensions {
 
-
     inline val KClass<*>.name: String
         get() {
             var result = this.toString().replace("class", "").trim()
@@ -25,15 +24,15 @@ object AnysExtensions {
             return result
         }
 
-    inline fun <T> T.isNotUnit(function: (T) -> Any) {
+    inline fun <T> T.isNotUnit(function: (T) -> Unit) {
         when (this) {
             !is Unit -> function(this)
         }
     }
 
-    inline operator fun <T> T.invoke(body: T.() -> Unit) = this.body()
+    inline operator fun <T> T?.invoke(body: T.() -> Unit) = if (this != null) this.body() else Unit
 
-    fun <T> Int.repeat(n: () -> T) = repeat(this) { n() }
+    fun <T> Int.repeat(function: () -> T) = repeat(this) { function() }
 
     operator fun <T> T.plus(messages: MutableList<in T>) = messages.also { it.add(0, this) }
 

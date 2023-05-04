@@ -1,16 +1,17 @@
 package org.home.utils
 
+import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 
 sealed class InfiniteTryBase<E, H> {
     private val handlers = mutableMapOf<H, List<KClass<out Exception>>>()
     private val exceptions = mutableListOf<KClass<out Exception>>()
-    protected var noSignalToStop = true
-    abstract val stopHandler: H
+    abstract val emptyHandler: H
 
-    operator fun KClass<out Exception>.unaryPlus() {
+    operator fun KClass<out Exception>.unaryPlus(): KClass<out Exception> {
         exceptions.add(this)
+        return this
     }
 
     operator fun Collection<KClass<out Exception>>.unaryPlus() {
@@ -34,28 +35,23 @@ sealed class InfiniteTryBase<E, H> {
 
     companion object {
         infix fun <E, H> InfiniteTryBase<E, H>.doWhile(condition: AtomicBoolean) {
-            while (condition.get() && noSignalToStop) { loopBody() }
+            while (condition()) { loopBody() }
             log { "i'm done" }
         }
 
-        infix fun <E, H> InfiniteTryBase<E, H>.doWhile(boolean: Boolean) {
-            while (boolean && noSignalToStop) { loopBody() }
+        infix fun <E, H> InfiniteTryBase<E, H>.handle(handler: H) {
+            putHandler(handler)
         }
 
-        infix fun <E, H> InfiniteTryBase<E, H>.handle(b: H) {
-            this.putHandler(b)
+        inline fun <E, H> InfiniteTryBase<E, H>.noHandle() {
+            putHandler(emptyHandler)
         }
 
         inline infix fun <E, H> InfiniteTryBase<E, H>.catch(
             function: InfiniteTryBase<E, H>.() -> Unit
         ): InfiniteTryBase<E, H> {
-            this.function()
+            function()
             return this
-        }
-
-        fun <E, H> InfiniteTryBase<E, H>.stopLoop() {
-            log { "stop signal for loop" }
-            noSignalToStop = false
         }
     }
 
@@ -65,7 +61,7 @@ sealed class InfiniteTryBase<E, H> {
 class InfiniteTryFor<E>(
     val elements: Collection<E>,
     val body: (E) -> Unit): InfiniteTryBase<E, (Exception, E) -> Unit>() {
-    override val stopHandler = { ex: Exception, e: E -> }
+    override val emptyHandler = { _: Exception, _: E -> }
 
     override fun loopBody() {
         elements.forEach { element ->
@@ -85,7 +81,7 @@ class InfiniteTryFor<E>(
 
 
 class InfiniteTry(val body: () -> Unit): InfiniteTryBase<Unit, (Exception) -> Unit>() {
-    override val stopHandler = { ex: Exception -> }
+    override val emptyHandler = { _: Exception -> }
 
     override fun loopBody() {
         try {

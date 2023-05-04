@@ -6,11 +6,13 @@ import org.home.utils.InfiniteTry.Companion.infiniteTry
 import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.handle
 import org.home.utils.InfiniteTryBase.Companion.doWhile
+import org.home.utils.InfiniteTryBase.Companion.noHandle
 import org.home.utils.InfiniteTryFor
 import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
 import org.home.utils.SocketUtils.receive
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
+import org.home.utils.extensions.AtomicBooleansExtensions.atomic
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.log
@@ -23,12 +25,14 @@ import java.io.IOException
 import java.net.Socket
 import java.net.SocketException
 import java.net.SocketTimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     abstract val name: String
     protected val multiServer: MultiServer<M, S> by di()
     lateinit var thread: Thread
+    internal val canProceed = true.atomic
     abstract fun run()
 
     fun start() {
@@ -56,11 +60,10 @@ class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
                 +IOException::class
                 +SocketException::class
                 handle { logError(it) }
+
                 +InterruptedException::class
-                handle {
-                    stopToAccept()
-                }
-            } doWhile canAccept
+                handle { canProceed(false) }
+            } doWhile canProceed
         }
     }
 }
@@ -72,11 +75,12 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
     override fun run() {
         multiServer {
             sockets.infiniteReceive { socket, received ->
+                Thread.sleep(10)
                 logReceive(socket, received)
                 socketsMessages.add(socket to received.drop(1) as Collection<M>)
             } catch {
                 +SocketTimeoutException::class
-                handle { ex, _ -> handleTimeout(ex) }
+                noHandle()
 
                 +SocketException::class
                 +EOFException::class
@@ -84,24 +88,14 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
                     logError(ex)
                     socket {
                         removeFrom(sockets)
-                        isNotClosed.so { socket.close() }
+                        isNotClosed.so { close() }
                     }
-                    sockets.isEmpty().so { stopToReceive() }
+                    sockets.isEmpty().so { canProceed(false) }
                 }
 
                 +InterruptedException::class
-                handle { ex, _ ->
-                    logError(ex)
-                    stopToReceive()
-                }
-
-                +IOException::class
-                handle { ex, _ ->
-                    logError(ex)
-                    canNotProcess.so { stopToReceive() }
-                }
-
-            } doWhile canReceive
+                handle { _, _ -> canProceed(false) }
+            } doWhile canProceed
         }
     }
 }
@@ -116,19 +110,9 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
                 messages.forEach { process(socket, it) }
             } catch {
                 +InterruptedException::class
-                handle { ex ->
-                    logError(ex)
-                    stopToProcess()
-                }
-            } doWhile canProcess
+                handle { canProceed(false) }
+            } doWhile canProceed
         }
-    }
-}
-
-
-private fun handleTimeout(ex: Exception) {
-    log(disabled = true) {
-        "socket has not sent any message: trying the next one"
     }
 }
 

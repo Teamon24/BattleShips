@@ -63,7 +63,6 @@ import tornadofx.removeClass
 import tornadofx.selectedItem
 import kotlin.collections.set
 
-
 class BattleView : View("Battle View") {
     internal val model: BattleModel by di()
     internal val battleController: BattleController by di()
@@ -310,20 +309,16 @@ class BattleView : View("Battle View") {
 
     private fun ListView<String>.changeEnemyFleetOnSelection() {
         selectionModel.selectedItemProperty().addListener { _, old, new ->
-            if (new == currentPlayer) {
-                return@addListener
-            }
+            if (new == currentPlayer) return@addListener
 
             val playerWasRemoved = new == null
             if (playerWasRemoved) {
-                log { "selectedItem == old" }
                 items
                     .firstOrNull { it != old && it != currentPlayer }
                     ?.also { setEnemyToPane(it) }
             } else {
                 setEnemyToPane(new)
             }
-
         }
         log { "selected: $selectedItem" }
     }

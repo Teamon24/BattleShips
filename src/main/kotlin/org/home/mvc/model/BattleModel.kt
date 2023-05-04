@@ -126,7 +126,7 @@ class BattleModel : ViewModel() {
                             removeFrom(defeatedPlayers)
                         }
 
-                        log { " removed \"$player\"" }
+                        log { "removed \"$player\"" }
                     }
                 }
             })
