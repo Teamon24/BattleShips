@@ -84,16 +84,24 @@ private inline fun EventTarget.transitLogic(
 //----------------------------------------------------------------------------------------------------------------------
 
 fun <T: UIComponent> EventTarget.transferButton(from: UIComponent, toClass: KClass<T>, text: String, body: () -> Unit = {}) =
-    transferLogic(Scope(), from, toClass, text, body)
+    transferLogic(Scope(), from, toClass, text, slide, body)
 
 fun EventTarget.backTransferButton(from: UIComponent, toClass: KClass<out UIComponent>, text: String = "Назад") =
-    transferLogic(Scope(), from, toClass, text)
+    transferLogic(Scope(), from, toClass, text, slide)
+
+fun EventTarget.backTransferButton(from: UIComponent,
+                                   toClass: KClass<out UIComponent>,
+                                   text: String = "Назад",
+                                   body: () -> Unit = {}
+) =
+    transferLogic(Scope(), from, toClass, text, backSlide, body)
 
 private  fun <T: UIComponent> EventTarget.transferLogic(
-    scope: Scope ,
+    scope: Scope,
     from: UIComponent,
     toClass: KClass<T>,
     text: String,
+    slide: Slide,
     body: () -> Unit = {},
 ) =
     button(text) {

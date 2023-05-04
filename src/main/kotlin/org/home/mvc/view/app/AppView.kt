@@ -5,11 +5,11 @@ import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.creationButtonText
 import org.home.mvc.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.StageUtils
-import org.home.mvc.model.BattleModel
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
+import org.home.mvc.view.components.ZoomableScrollPane
 import org.home.mvc.view.components.transitButton
 import org.home.style.AppStyles
 import tornadofx.View
@@ -19,13 +19,10 @@ import kotlin.math.roundToInt
 
 class AppView : View("Hello TornadoFX") {
 
-    private val model: BattleModel by di()
     private val appProps: ApplicationProperties by di()
-    override val root = VBox()
+    override val root = ZoomableScrollPane(VBox())
 
     init {
-
-        model.playersAndShips[appProps.currentPlayer] = mutableListOf()
 
         with(root) {
             addClass(AppStyles.form)

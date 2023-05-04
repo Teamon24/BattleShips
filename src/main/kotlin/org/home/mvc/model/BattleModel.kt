@@ -9,6 +9,7 @@ import org.home.net.action.FleetSettingsAction
 import org.home.net.action.HasAShot
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
+import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.ObservablePropertiesExtensions.ObservableValueMap
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
@@ -41,6 +42,17 @@ class BattleModel : ViewModel() {
         height.value = width.value
     }
 
+    var battleIsEnded = false
+        set(value) {
+            value.so { battleIsStarted = false }
+            field = value
+        }
+
+    var battleIsStarted = false
+        set(value) {
+            value.so { battleIsEnded = false }
+            field = value
+        }
 
     private val widthProp = SimpleIntegerProperty(size)
     private val heightProp = SimpleIntegerProperty(size)
@@ -101,7 +113,7 @@ class BattleModel : ViewModel() {
                 when {
                     change.wasAdded() -> {
                         playersNames.add(player)
-                        playersReadiness[player] = false
+                        setNotReady(player)
                         fleetsReadiness[player] = fleetReadiness(battleShipsTypes)
                         log { "added \"$player\"" }
                     }
@@ -113,6 +125,7 @@ class BattleModel : ViewModel() {
                             removeFrom(fleetsReadiness)
                             removeFrom(defeatedPlayers)
                         }
+
                         log { " removed \"$player\"" }
                     }
                 }
@@ -133,11 +146,31 @@ class BattleModel : ViewModel() {
     fun registersAHit(shot: Coord): Boolean {
         return playersAndShips[currentPlayer]!!.hadHit(shot)
     }
+
+    fun hasNo(enemyToHit: String, hitCoord: Coord): Boolean {
+        return hitCoord !in statistics
+            .asSequence()
+            .filter { it.player == currentPlayer }
+            .filter { it.target == enemyToHit }
+            .map { it.shot }
+    }
+
+    fun hasAllShips(player: String): Boolean {
+        val decks = playersAndShips[player]!!.flatten().count()
+        val shouldBe = battleShipsTypes.entries.sumOf { it.key * it.value }
+        log { "hasAllShips [decks == shouldBe; $decks ? $shouldBe"}
+        return decks == shouldBe
+    }
+
+    fun hasReady(player: String) = playersReadiness[player]!!
+    fun setReady(player: String) { playersReadiness[player] = true }
+    fun setNotReady(player: String) { playersReadiness[player] = false }
 }
 
-val BattleModel.notAllReady get() = playersReadiness.any(::isNotReady) || (playersReadiness.size != playersNumber.value)
+val BattleModel.notAllReady get() =
+    playersReadiness.any(::isNotReady) || (playersReadiness.size != playersNumber.value)
+
 val BattleModel.allAreReady get() = playersReadiness.all(::isReady) && playersReadiness.size == playersNumber.value
-val BattleModel.battleIsEnded get() = playersNames.size - defeatedPlayers.size == 1
 val BattleModel.thoseAreReady get() = playersReadiness.filter(::isReady).keys.toSet()
 
 private fun isReady(it: Map.Entry<String, Boolean>) = it.value

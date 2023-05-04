@@ -1,7 +1,7 @@
 package org.home.net.action
 
 import org.home.mvc.contoller.events.BattleIsEnded
-import org.home.mvc.contoller.events.BattleStarted
+import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.ConnectedPlayersReceived
 import org.home.mvc.contoller.events.FleetsReadinessReceived
@@ -18,7 +18,6 @@ import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
-import org.home.net.BattleClient.ActionTypeAbsentException
 import org.home.net.message.Message
 import org.home.utils.RomansDigits
 import org.home.utils.extensions.BooleansExtensions.then
@@ -33,9 +32,9 @@ sealed class Action: Message {
             is FleetsReadinessAction -> "FleetsReadiness${states})"
             is AreReadyAction -> "AreReady(${players})"
             is TurnAction -> "Turn($player)"
-            is ShotAction -> "Shot($this)"
-            is HitAction -> "Hit($this)"
-            is MissAction -> "Miss($this)"
+            is ShotAction -> "Shot(${this.toStr})"
+            is HitAction -> "Hit(${this.toStr})"
+            is MissAction -> "Miss(${this.toStr})"
             is DefeatAction -> "Defeat(${player})"
             is LeaveAction -> "Leave(${player})"
             is DisconnectAction -> "Disconnect(${player})"
@@ -99,34 +98,23 @@ class FleetsReadinessAction(val states: Map<String, Map<Int, Int>>): Action()
 
 class TurnAction(player: String): PlayerAction(player = player)
 
-sealed class HasAShot(shooter: String): PlayerAction(shooter) {
-    abstract val shot: Coord
+sealed class HasAShot(shooter: String, val shot: Coord): PlayerAction(shooter) {
     abstract val target: String
-    override fun toString() = "$player' --$shot->> '$target'"
+    val toStr get() = "$player' --$shot->> '$target'"
 }
 
-class ShotAction(override val shot: Coord,
-                 player: String,
-                 override val target: String): HasAShot(player)
+class ShotAction(shot: Coord, player: String, override val target: String): HasAShot(player, shot)
 
-class HitAction(hit: Coord,
-                player: String,
-                override val target: String): HasAShot(player)
-{
+class HitAction(hit: Coord, player: String, override val target: String): HasAShot(player, hit) {
     constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
-    override val shot: Coord = hit
 }
 
-class MissAction(miss: Coord,
-                 player: String,
-                 override val target: String): HasAShot(player)
-{
+class MissAction(miss: Coord, player: String, override val target: String): HasAShot(player, miss) {
     constructor(shotAction: ShotAction): this(shotAction.shot, shotAction.player, shotAction.target)
-    override val shot: Coord = miss
 }
 
 sealed class PlayerToRemoveAction(player: String): PlayerAction(player) {
-    val isDefeat get() = (this is DefeatAction).then { this as DefeatAction }
+    val asDefeat get() = (this is DefeatAction).then { this as DefeatAction }
 }
 
 class LeaveAction(player: String): PlayerToRemoveAction(player = player)
@@ -143,7 +131,7 @@ class BattleEndAction(winner: String): PlayerAction(player = winner)
 
 val Action.event get() = when (this) {
     is BattleEndAction -> BattleIsEnded(this)
-    is BattleStartAction -> BattleStarted
+    is BattleStartAction -> BattleIsStarted
     is PlayerConnectionAction -> ConnectedPlayerReceived(this)
     is DefeatAction -> PlayerWasDefeated(this)
     is DisconnectAction -> PlayerWasDisconnected(this)

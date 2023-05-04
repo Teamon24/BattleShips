@@ -47,7 +47,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
     event {
         hasAShot {
             if (target == currentPlayer) {
-                markShot(currentPlayerFleetGrid)
+                markShot(currentPlayerFleetGridPane.center as FleetGrid)
                 openMessageWindow {
                     val part = isMiss() then "не " or ""
                     "По вам ${part}попал \"${player}\""

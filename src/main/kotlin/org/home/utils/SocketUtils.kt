@@ -11,6 +11,7 @@ import java.net.Socket
 object SocketUtils {
 
     fun Socket.receive() = getInputStream().readBatch()
+    fun Socket.receive(onRead: (Collection<Message>) -> Unit) = onRead(getInputStream().readBatch())
     fun <T: Message> Socket.send(messages: Messages<T>) = logSend(this) { getOutputStream().write(messages) }
 
     fun <T: Message> Socket.send(message: T) = send(withInfo(message))

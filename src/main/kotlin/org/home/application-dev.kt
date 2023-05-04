@@ -1,5 +1,6 @@
 package org.home
 
+import org.home.mvc.di.diDev
 import org.home.mvc.view.app.MainApp
 import org.koin.core.context.GlobalContext.startKoin
 import tornadofx.launch

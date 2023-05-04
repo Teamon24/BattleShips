@@ -1,14 +1,16 @@
 package org.home.mvc.view.fleet
 
+import javafx.event.EventHandler
+import javafx.event.EventType
+import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseDragEvent
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
 import org.home.mvc.ApplicationProperties.Companion.delayTime
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
-import org.home.mvc.model.addIfAbsent
-import org.home.mvc.model.logShips
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
 import org.home.mvc.view.components.GridPaneExtensions.getCell
@@ -20,8 +22,10 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
+import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.log
-import org.home.utils.singleThreadScope
+import org.home.utils.logCoordinate
+import org.home.utils.threadScopeLaunch
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FleetGridHandlers(
@@ -31,6 +35,12 @@ class FleetGridHandlers(
     private val ships: Ships,
     private val shipsTypesController: ShipsTypesController
 ) {
+
+    private val backingHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
+
+    fun getHandlers(): Map<EventType<out MouseEvent>, EventHandler<in MouseEvent>> {
+        return backingHandlers
+    }
 
     fun addDragEnteredHandler(currentCell: FleetCell, gridPane: GridPane) {
         currentCell.leftClickHandler(MouseDragEvent.MOUSE_DRAG_ENTERED) {
@@ -120,7 +130,7 @@ class FleetGridHandlers(
                     gridPane.getCell(it).addIncorrectColor()
                 }
 
-                singleThreadScope {
+                threadScopeLaunch {
                     delay(delayTime)
                     toRemove.forEach { gridPane.getCell(it).removeIncorrectColor() }
                     gridPane.removeIncorrectColor(beingConstructed)
@@ -131,14 +141,14 @@ class FleetGridHandlers(
             }
 
             if (shipsTypesController.validates(beingConstructed)) {
-                shipsTypesController.count(beingConstructed)
-                ships.addIfAbsent(beingConstructed.copy())
+                shipsTypesController.add(beingConstructed)
                 gridPane.removeIncorrectColor(beingConstructed)
             } else {
                 gridPane.removeAnyColor(beingConstructed)
             }
+
             beingConstructed.clear()
-            log { "ships: $ships" }
+
         }
     }
 
@@ -156,26 +166,22 @@ class FleetGridHandlers(
                     gridPane.removeSelectionColor(beingDeletedShip)
                 }
 
-                ships.remove(beingDeletedShip)
-                shipsTypesController.discount(beingDeletedShip)
-                logShips(ships, "after deleting")
+                shipsTypesController.remove(beingDeletedShip)
                 return@rightClickHandler
             }
         }
     }
 
     fun addLeftMouseClickHandler(currentCell: FleetCell, gridPane: GridPane) {
-        currentCell.leftClickHandler(MouseDragEvent.MOUSE_CLICKED) {
 
+        currentCell.leftClickHandler(MouseDragEvent.MOUSE_CLICKED) {
             if (withinBorder(currentCell, gridPane)) return@leftClickHandler
 
             val ship = currentCell.coord.toShip()
 
             if (shipsTypesController.validates(ship)) {
-                shipsTypesController.count(ship)
-                ships.addIfAbsent(ship)
+                shipsTypesController.add(ship)
                 currentCell.addSelectionColor()
-                logShips(ships, "after adding")
             }
 
             return@leftClickHandler
@@ -189,7 +195,7 @@ class FleetGridHandlers(
             else -> true.also {
                 beingConstructed.addIfAbsent(currentCell.coord)
                 startWithinBorder(true)
-                singleThreadScope {
+                threadScopeLaunch {
                     val filter = beingConstructed.filter { it !in ships.flatten() }
 
                     val border = first.border(
@@ -212,4 +218,36 @@ class FleetGridHandlers(
 
     private fun Ship.secondLast() = this[size - 2]
 
+    private inline fun FleetCell.leftClickHandler(eventType: EventType<out MouseEvent>,
+                                                  crossinline handle: FleetCell.() -> Unit
+    ) {
+        val handler = EventHandler<MouseEvent> { event ->
+            event.isPrimary().so {
+                event.logCoordinate()
+                this.handle()
+            }
+        }
+
+        this.addEventHandler(eventType, handler)
+        backingHandlers[eventType] = handler
+    }
+
+    private inline fun FleetCell.rightClickHandler(eventType: EventType<out MouseEvent>,
+                                                   crossinline handle: FleetCell.() -> Unit
+    ) {
+        val handler = EventHandler<MouseEvent> { event ->
+            event.isSecondary().so {
+                event.logCoordinate()
+                this.handle()
+            }
+        }
+        this.addEventHandler(eventType, handler)
+        backingHandlers[eventType] = handler
+    }
 }
+
+
+fun MouseEvent.isPrimary() = this.button == MouseButton.PRIMARY
+fun MouseEvent.isSecondary() = this.button == MouseButton.SECONDARY
+
+

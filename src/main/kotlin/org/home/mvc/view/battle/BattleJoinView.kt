@@ -6,17 +6,17 @@ import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.mvc.contoller.Conditions
 import org.home.mvc.view.app.AppView
-import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.row
+import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.slide
-import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.openAlertWindow
 import org.home.net.BattleClient
 import org.home.net.action.PlayerConnectionAction
 import org.home.style.AppStyles
+import tornadofx.Scope
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
@@ -33,7 +33,6 @@ class BattleJoinView : View("Присоединиться к битве") {
         value = "${applicationProperties.ip}:${applicationProperties.port}"
     }
 
-    private val fleetGridCreationView = FleetGridCreationView::class
     private val currentView = this@BattleJoinView
 
     init {
@@ -57,7 +56,7 @@ class BattleJoinView : View("Присоединиться к битве") {
                         battleClient.listen()
                         battleClient.send(connectMessage())
                         conditions.fleetSettingsReceived.await()
-                        currentView.replaceWith(fleetGridCreationView, slide)
+                        currentView.replaceWith(tornadofx.find(BattleView::class, Scope()), slide)
                     } catch (e: Exception) {
                         e.printStackTrace()
                         openAlertWindow {

@@ -18,17 +18,17 @@ object ObservablePropertiesExtensions {
     fun <K, V> SimpleMapProperty<K, V>.copy() = toMutableMap().toObservable()
 
 
-    open class ObservableValueMap<K, V> : HashMap<K, V>() {
+    class ObservableValueMap<K, V> : HashMap<K, V>() {
         private val ps = PropertyChangeSupport(this)
 
         fun addValueListener(pcl: PropertyChangeListener) = ps.addPropertyChangeListener(pcl)
 
-        override fun put(key: K, value: V): V? {
-            if (get(key) != value) {
-                val ret = super.put(key, value)
-                ps.firePropertyChange("map", ret, value)
+        override fun put(key: K, new: V): V? {
+            if (get(key) != new) {
+                val old = super.put(key, new)
+                ps.firePropertyChange("map", old, new)
             }
-            return value
+            return new
         }
     }
 }

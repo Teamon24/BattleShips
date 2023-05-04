@@ -1,4 +1,4 @@
-package org.home
+package org.home.mvc.di
 
 import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.AllAgainstAllController
@@ -11,8 +11,8 @@ import org.home.mvc.model.BattleModel
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.contoller.ShipTypePaneComponent
-import org.home.mvc.view.fleet.FleetGridCreationController
-import org.home.mvc.view.fleet.FleetGridCreationView
+import org.home.mvc.view.fleet.FleetGridController
+import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.net.BattleClient
 import org.home.net.PlayerSocket
 import org.home.net.action.Action
@@ -31,6 +31,9 @@ val diDev = { props: String, player: Int, players: Int ->
         single { BattleModel() }
         single { BattleCreationView() }
 
+        single { FleetGridController() }
+        single { FleetGridCreator() }
+
         single { ShipsTypesPaneController() }
         single { ShipTypePaneComponent() }
         single { ShipsTypesController() }
@@ -38,7 +41,7 @@ val diDev = { props: String, player: Int, players: Int ->
 
         factory<GameTypeController> { AllAgainstAllController() }
 
-        single { BattleServer(get(), get(), get(), get(), get(), get(), get()) }
+        single { BattleServer(get(), get(), get(), get(), get(), get())  }
         single { BattleClient(get()) }
 
         single { ShotNotifierStrategies }
@@ -53,12 +56,11 @@ val diDev = { props: String, player: Int, players: Int ->
 
         single<MultiServer<Action, PlayerSocket>> { get<BattleServer>() }
 
-        factory { FleetGridCreationView() }
-        factory { FleetGridCreationController() }
+
 
         factory { BattleView() }
-        factory { ConnectionsListener<Action, PlayerSocket>() }
-        factory { MessageReceiver<Action, PlayerSocket>() }
-        factory { MessageProcessor<Action, PlayerSocket>() }
+        single { ConnectionsListener<Action, PlayerSocket>() }
+        single { MessageReceiver<Action, PlayerSocket>() }
+        single { MessageProcessor<Action, PlayerSocket>() }
     }
 }

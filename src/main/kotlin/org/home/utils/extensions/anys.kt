@@ -37,11 +37,9 @@ object AnysExtensions {
 
     operator fun <T> T.plus(messages: MutableList<in T>) = messages.also { it.add(0, this) }
 
-    fun <T> T.removeFrom(c: MutableCollection<T>) = c.remove(this)
-    fun <T> T.excludeFrom(c: MutableCollection<T>) = c.filter { it != this }
-    fun <T> T.removeFrom(c: MutableMap<T, *>) = c.remove(this)
-
-    val Thread.isNotInterrupted get() = !isInterrupted
+    fun <T> T.removeFrom(collection: MutableCollection<T>) = this.also { collection.remove(it) }
+    fun <T> T.excludeFrom(collection: MutableCollection<T>) = collection.filter { it != this }
+    fun <T> T.removeFrom(collection: MutableMap<T, *>) = collection.remove(this)
 }
 
 

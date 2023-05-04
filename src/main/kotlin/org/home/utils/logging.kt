@@ -3,9 +3,10 @@ package org.home.utils
 import javafx.event.Event
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
-import org.home.mvc.view.fleet.coord
 import org.home.net.message.Message
 import org.home.utils.extensions.AnysExtensions.isNotUnit
+import org.home.utils.extensions.BooleansExtensions.or
+import org.home.utils.extensions.BooleansExtensions.then
 import org.home.utils.extensions.LogBuilder
 import org.home.utils.extensions.add
 import org.home.utils.extensions.className
@@ -57,11 +58,13 @@ inline fun log(disabled: Boolean = false, block: () -> Any?) {
 fun logError(throwable: Throwable, stackTrace: Boolean = false) {
     val dot = "."
     val dots = dot.repeat(5)
-    val ttl = listOf(dots, "handled", throwable.className, dots)
+    val ttl = listOf(dots, throwable.className, dots)
 
     val title = ttl.joinToString(" ")
     threadPrintln()
+    threadPrintln(dot.repeat(title.length))
     threadPrintln(title)
+    threadPrintln(dot.repeat(title.length))
     threadPrintln(if (stackTrace) { throwable.stackTraceToString() } else {throwable.message} )
     threadPrintln(dot.repeat(ttl.sumOf { it.length } + ttl.size - 1))
     threadPrintln()
@@ -82,15 +85,18 @@ fun View.logEvent(fxEvent: FXEvent, model: BattleModel, body: () -> Any = {}) {
     threadPrintln { line(title.length) }
 }
 
-inline fun logTitle(titleContent: String, disabled: Boolean = false, block: () -> Any) {
+inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block: () -> Any = {}) {
     if (!disabled) {
-        val dot = "="
-        val dots = dot.repeat(5)
+        val titleSign = "="
+        val dots = titleSign.repeat(5)
         val ttl = listOf(dots, titleContent, dots)
 
-        val title = ttl.joinToString(" ")
+        val any = block()
+        val title = titleContent.isNotEmpty() then  ttl.joinToString(" ") or titleSign.repeat(any.toString().length)
         threadPrintln(title)
-        threadPrintln(block())
+        any.isNotUnit {
+            threadPrintln(it)
+        }
         threadPrintln(title)
     }
 }
@@ -149,3 +155,4 @@ fun <T : Event> T.logCoordinate() {
     }
 }
 
+private fun coord(it: Event) = (it.source as FleetCell).coord

@@ -1,5 +1,6 @@
 package org.home.utils.extensions
 
+import org.home.utils.threadPrintln
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
@@ -7,11 +8,11 @@ object AtomicBooleansExtensions {
     inline val Boolean.atomic get() = AtomicBoolean(this)
 
     fun AtomicBoolean.toggleAfter(time: Long): AtomicBoolean {
-        thread {
+        thread(name = "TOGGLER") {
             val start = System.currentTimeMillis()
             while (System.currentTimeMillis() - start < time) {}
-            val toggledValue = !this.get()
-            this.set(toggledValue)
+            set(!get())
+            threadPrintln("Toggled")
         }
         return this
     }

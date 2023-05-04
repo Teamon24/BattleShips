@@ -10,6 +10,7 @@ import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.Conditions
 import org.home.mvc.contoller.GameTypeController
+import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
@@ -17,6 +18,7 @@ import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.view.openMessageWindow
 import org.home.net.action.Action
+import org.home.net.action.BattleEndAction
 import org.home.net.action.PlayerConnectionAction
 import org.home.net.action.FleetSettingsAction
 import org.home.net.action.LeaveAction
@@ -36,6 +38,7 @@ import org.home.utils.extensions.className
 import org.home.utils.log
 import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
+import tornadofx.Scope
 import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
@@ -132,19 +135,16 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
         serverSocket.isNotClosed.so { serverSocket.send(actions) }
 
     override fun onBattleViewExit() {
-        send(NotReadyAction(currentPlayer))
+        leaveBattle()
     }
 
     override fun onWindowClose() {
         serverSocket.isNotClosed.so { leaveBattle() }
     }
 
-    override fun onFleetCreationViewExit() { leaveBattle() }
-
     override fun startBattle() {
-        val readyPlayer = currentPlayer
-        model.playersReadiness[readyPlayer] = true
-        send(ReadyAction(readyPlayer))
+        model.setReady(currentPlayer)
+        send(ReadyAction(currentPlayer))
     }
 
     override fun leaveBattle() {
@@ -155,7 +155,9 @@ class BattleClient(applicationProperties: ApplicationProperties): BattleControll
     }
 
     override fun endBattle() {
-        openMessageWindow { "Победитель: ${model.getWinner()}" }
+        eventbus {
+            +BattleIsEnded(BattleEndAction(model.getWinner()))
+        }
     }
 
     override fun disconnect() {

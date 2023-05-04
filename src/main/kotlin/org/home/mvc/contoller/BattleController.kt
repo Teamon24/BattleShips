@@ -60,6 +60,5 @@ abstract class BattleController(applicationProperties: ApplicationProperties): C
 
     abstract fun onBattleViewExit()
     abstract fun onWindowClose()
-    abstract fun onFleetCreationViewExit()
 }
 

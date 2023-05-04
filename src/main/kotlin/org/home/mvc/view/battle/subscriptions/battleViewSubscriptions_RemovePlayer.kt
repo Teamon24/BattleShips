@@ -4,8 +4,8 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.model.BattleModel.Companion.invoke
-import org.home.mvc.model.battleIsEnded
 import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles
 import org.home.utils.extensions.BooleansExtensions.or
@@ -13,6 +13,7 @@ import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.then
 import org.home.utils.log
 import org.home.utils.logEvent
+import org.home.utils.threadPrintln
 import tornadofx.addClass
 
 internal fun BattleView.playerWasDisconnected() {
@@ -40,7 +41,7 @@ internal fun BattleView.playerWasDefeated() {
 
         val fleetGrid = when(defeated != currentPlayer) {
             true -> enemiesFleetsFleetGrids[defeated]!!.disable()
-            else -> currentPlayerFleetGrid
+            else -> currentPlayerFleetGridPane.center as FleetGrid
         }
 
         fleetGrid
@@ -58,16 +59,21 @@ internal fun BattleView.playerWasDefeated() {
 
         openMessageWindow {
             val args = when (defeated) {
-                currentPlayer -> listOf("Вы", "и").asIterator()
-                else -> listOf(defeated, "").asIterator()
+                currentPlayer -> listOf("Вы", "и")
+                else -> listOf(defeated, "")
             }
-            args.run { "${next()} проиграл${next()}" }
+            "${args[0]} проиграл${args[1]}"
         }
 
         if (defeated == currentPlayer)
             battleViewExitButton.text = "Покинуть поле боя"
 
-        model.battleIsEnded.so { battleController.endBattle() }
+        model {
+            if (playersNames.size - defeatedPlayers.size == 1) {
+                battleController.endBattle()
+            }
+        }
+
         if (model.playersNames.size == 1) {
             battleController.disconnect()
         }
@@ -78,16 +84,15 @@ private fun BattleView.removePlayer(player: String) {
     model {
         log { "players = $playersNames" }
         log { "defeated = $defeatedPlayers" }
-        lastButNotDefeated(player).so { battleController.endBattle() }
+
+        lastButNotDefeated(player)
+            .and(currentPlayer !in defeatedPlayers)
+            .so { battleController.endBattle() }
+
         playersAndShips.remove(player)
         removeEnemy(player)
         if (playersNames.size == 1) {
             battleController.disconnect()
         }
     }
-}
-
-fun <E> List<E>.asIterator(): Iterator<E> {
-    var count = 0
-    return generateSequence { this[count++] }.iterator()
 }

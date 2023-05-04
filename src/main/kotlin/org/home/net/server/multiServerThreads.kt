@@ -5,11 +5,13 @@ import org.home.net.message.Message
 import org.home.utils.InfiniteTry.Companion.infiniteTry
 import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.handle
-import org.home.utils.InfiniteTryBase.Companion.start
-import org.home.utils.InfiniteTryBase.Companion.stopLoop
+import org.home.utils.InfiniteTryBase.Companion.doWhile
+import org.home.utils.InfiniteTryFor
 import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
 import org.home.utils.SocketUtils.receive
 import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.removeFrom
+import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.log
 import org.home.utils.logError
@@ -23,95 +25,104 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import kotlin.concurrent.thread
 
-class ConnectionsListener<M: Message, S: Socket>: Controller() {
-    private val multiServer: MultiServer<M, S> by di()
-    private lateinit var thread: Thread
+sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
+    abstract val name: String
+    protected val multiServer: MultiServer<M, S> by di()
+    lateinit var thread: Thread
+    abstract fun run()
 
-    fun start() { thread = createThread().apply { start() } }
-    fun interrupt() { thread.interrupt() }
-
-    private fun createThread() = thread(start = false, name = "ACCEPTER") {
-        multiServer {
-            while (canAccept.get()) {
-                try {
-                    val socket = accept().withTimeout(readTimeout)
-                    sockets.add(socket)
-                    acceptNextConnection.await()
-                    log { "canAccept: ${canAccept.get()}" }
-                } catch (e: IOException) {
-                    logError(e)
-                }
+    fun start() {
+        thread = thread(start = false, name = name, block = this::run)
+            .apply {
+                start()
+                logTitle("$name is STARTED")
             }
+    }
+    fun interrupt() {
+        thread.interrupt()
+    }
+}
+
+
+class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
+    override val name get() = "connections-listener"
+
+    override fun run() {
+        multiServer {
+            infiniteTry {
+                sockets.add(accept().withTimeout(readTimeout))
+                acceptNextConnection().await()
+            } catch {
+                +IOException::class
+                +SocketException::class
+                handle { logError(it) }
+                +InterruptedException::class
+                handle {
+                    stopToAccept()
+                }
+            } doWhile canAccept
         }
-        logTitle("ACCEPTER") { "IM DONE" }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class MessageReceiver<M: Message, S: Socket>: Controller() {
-    private val multiServer: MultiServer<M, S> by di()
-    private lateinit var thread: Thread
+class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
+    override val name get() = "receiver"
 
-    fun start() { thread = createThread().apply { start() } }
-    fun interrupt() { thread.interrupt() }
-
-    private fun createThread() = thread(start = false, name = "receiver") {
+    override fun run() {
         multiServer {
-            sockets.infiniteTryFor { socket ->
-                socket.isNotClosed.so {
-                    val messages = socket.receive()
-                    logReceive(socket, messages)
-                    socketsMessages.add(socket to messages.drop(1) as Collection<M>)
-                }
+            sockets.infiniteReceive { socket, received ->
+                logReceive(socket, received)
+                socketsMessages.add(socket to received.drop(1) as Collection<M>)
             } catch {
+                +SocketTimeoutException::class
+                handle { ex, _ -> handleTimeout(ex) }
+
                 +SocketException::class
                 +EOFException::class
                 handle { ex, socket ->
-                    sockets.handle(ex, socket)
-                    sockets.isEmpty().so { stopLoop() }
+                    logError(ex)
+                    socket {
+                        removeFrom(sockets)
+                        isNotClosed.so { socket.close() }
+                    }
+                    sockets.isEmpty().so { stopToReceive() }
                 }
+
                 +InterruptedException::class
                 handle { ex, _ ->
                     logError(ex)
-                    stopLoop()
+                    stopToReceive()
                 }
 
-                +SocketTimeoutException::class
-                handle { ex, _ -> handleTimeout(ex) }
-            } start true
+                +IOException::class
+                handle { ex, _ ->
+                    logError(ex)
+                    canNotProcess.so { stopToReceive() }
+                }
+
+            } doWhile canReceive
         }
     }
 }
 
-class MessageProcessor<M: Message, S: Socket>: Controller() {
-    private val multiServer: MultiServer<M, S> by di()
-    private lateinit var thread: Thread
+class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
+    override val name get() = "processor"
 
-    fun start() { thread = createThread().apply { start() } }
-    fun interrupt() { thread.interrupt() }
-
-    private fun createThread() = thread(start = false, name = "processor") {
-        infiniteTry {
-            multiServer {
+    override fun run() {
+        multiServer {
+            infiniteTry {
                 val (socket, messages) = socketsMessages.take()
                 messages.forEach { process(socket, it) }
-            }
-        } catch {
-            +InterruptedException::class
-            handle { ex ->
-                logError(ex, false)
-                stopLoop()
-            }
-        } start true
+            } catch {
+                +InterruptedException::class
+                handle { ex ->
+                    logError(ex)
+                    stopToProcess()
+                }
+            } doWhile canProcess
+        }
     }
-
-
-}
-
-private fun <S : Socket> MutableCollection<S>.handle(e: Throwable, socket: S) {
-    logError(e)
-    remove(socket)
-    socket.close()
 }
 
 
@@ -124,6 +135,14 @@ private fun handleTimeout(ex: Exception) {
 private fun <S : Socket> S.withTimeout(readTimeout: Int): S {
     soTimeout = readTimeout
     return this
+}
+
+infix fun <S: Socket> Collection<S>.infiniteReceive(forEach: (S, Collection<Message>) -> Unit): InfiniteTryFor<S> {
+    return infiniteTryFor { socket ->
+        socket.receive {
+            forEach(socket, it)
+        }
+    }
 }
 
 

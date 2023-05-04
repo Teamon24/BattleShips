@@ -2,10 +2,9 @@ package org.home.net.server
 
 import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.Conditions
-import org.home.mvc.contoller.GameTypeController
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.BattleIsEnded
-import org.home.mvc.contoller.events.BattleStarted
+import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.HasAPlayer
@@ -22,7 +21,6 @@ import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
-import org.home.mvc.model.battleIsEnded
 import org.home.mvc.model.thoseAreReady
 import org.home.net.BattleClient.ActionTypeAbsentException
 import org.home.net.PlayerSocket
@@ -59,6 +57,7 @@ import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
+import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.exclude
@@ -67,10 +66,10 @@ import org.home.utils.extensions.CollectionsExtensions.shuffledKeys
 import org.home.utils.extensions.className
 import org.home.utils.log
 import tornadofx.FXEvent
+import kotlin.concurrent.thread
 
 
 class BattleServer(
-    private val gameController: GameTypeController,
     notifierStrategies: ShotNotifierStrategies,
     private val conditions: Conditions,
     processor: MessageProcessor<Action, PlayerSocket>,
@@ -79,12 +78,9 @@ class BattleServer(
     appProps: ApplicationProperties,
 ) : MultiServer<Action, PlayerSocket>(processor, receiver, accepter, appProps) {
 
-    private val Collection<String>.haveNoTurn get() = all { it != turnPlayer }
     private val String.hasTurn get() = this == turnPlayer
-    private val String.hasNoTurn get() = this != turnPlayer
 
     private val shotNotifier = notifierStrategies.create(sockets)
-
     private val turnList: MutableList<String> = mutableListOf()
     private lateinit var turnPlayer: String
 
@@ -171,50 +167,47 @@ class BattleServer(
         }
     }
 
-    private val battleIsStarted get() = turnList.isNotEmpty()
-    private val battleIsNotEnded get() = turnList.hasElements
-
     private fun sendRemovePlayer(action: PlayerToRemoveAction) {
         val removedPlayer = action.player
+
         sockets
             .exclude(removedPlayer)
             .send(action)
 
         eventbus {
-
             when (action) {
                 is DisconnectAction -> removeAndFire(action, ::PlayerWasDisconnected)
                 is LeaveAction -> removeAndFire(action, ::PlayerLeaved)
                 is DefeatAction -> Unit
             }
 
-            battleIsStarted.so {
+            turnList.isNotEmpty().so {
                 turnList.remove(removedPlayer)
                 log { "<${action.className}> turn = $turnList" }
 
-                removedPlayer.hasTurn and battleIsNotEnded so {
+                removedPlayer.hasTurn and turnList.hasElements so {
                     turnPlayer = nextTurn()
                     +TurnReceived(TurnAction(turnPlayer))
                     send(TurnAction(turnPlayer))
                 }
 
-                action.isDefeat?.apply {
-                    +PlayerWasDefeated(action)
-                    currentPlayer.hasTurn and battleIsNotEnded yes {
-                        +TurnReceived(TurnAction(currentPlayer))
+                action.asDefeat?.apply {
+                    +PlayerWasDefeated(this)
+                    currentPlayer.hasTurn yes {
+                        turnList.hasElements so { +TurnReceived(TurnAction(currentPlayer)) }
                     } no {
-                        action {
-                            sockets[shooter].send(TurnAction(shooter))
-                        }
+                        sockets[shooter].send(TurnAction(shooter))
                     }
                 }
             }
         }
     }
 
-    private fun DSLContainer<FXEvent>.removeAndFire(playerToRemovedAction: PlayerAction, event: (PlayerAction) -> PlayerToRemoveReceived) {
-        sockets.removeIf { it.player == playerToRemovedAction.player }
-        + event(playerToRemovedAction)
+    private fun DSLContainer<FXEvent>.removeAndFire(toRemovedAction: PlayerAction,
+                                                    event: (PlayerAction) -> PlayerToRemoveReceived
+    ) {
+        sockets.removeIf { it.player == toRemovedAction.player }
+        + event(toRemovedAction)
     }
 
     private fun onMiss(action: ShotAction) {
@@ -268,7 +261,7 @@ class BattleServer(
         }
 
         eventbus {
-            +BattleStarted
+            +BattleIsStarted
             +TurnReceived(TurnAction(turnPlayer))
         }
     }
@@ -276,26 +269,38 @@ class BattleServer(
 
     override fun disconnect() {
         sockets.forEach { it.close() }
-        processor.interrupt()
-        receiver.interrupt()
+        log { "interrupting ${accepter.name}" }
         accepter.interrupt()
+
+        log { "interrupting ${processor.name}" }
+        processor.interrupt()
+
+        log { "interrupting ${receiver.name}" }
+        thread {
+            while (canReceive()) {
+                receiver.interrupt()
+            }
+        }
         serverSocket.close()
     }
 
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
-
-        if (!model.battleIsEnded) {
-            TODO("${this.className}#leaveBattle has no server transfer logic that tested for correct implementation")
-            sockets.send(NewServerAction(turnPlayer))
-            conditions.newServerFound.await()
-            sockets.exclude(turnPlayer).send(
-                NewServerConnectionAction(
-                    turnPlayer,
-                    model.newServer.first,
-                    model.newServer.second))
+        log { "server is leaving battle" }
+        model {
+            log { "model.battleIsEnded = $battleIsEnded" }
+            log { "model.battleIsStarted = $battleIsStarted" }
+            if ((!battleIsEnded || battleIsStarted) && playersNames.size > 1) {
+                TODO("${this.className}#leaveBattle has no server transfer logic that tested for correct implementation")
+                sockets.send(NewServerAction(turnPlayer))
+                conditions.newServerFound.await()
+                sockets.exclude(turnPlayer).send(
+                    NewServerConnectionAction(
+                        turnPlayer,
+                        newServer.first,
+                        newServer.second))
+            }
         }
-
         disconnect()
     }
 
@@ -309,10 +314,6 @@ class BattleServer(
         throw UnsupportedOperationException("${this.className}#connectAndSend")
     }
 
-    override fun onFleetCreationViewExit() {
-        leaveBattle()
-    }
-
     override fun accept(): PlayerSocket {
         val socket = PlayerSocket(serverSocket.accept())
         log { "client has been connected" }
@@ -320,10 +321,12 @@ class BattleServer(
     }
 
     override fun onBattleViewExit() {
-        send(NotReadyAction(currentPlayer))
+        canAccept(false)
+        leaveBattle()
     }
 
     override fun onWindowClose() {
+        canAccept(false)
         leaveBattle()
     }
 
@@ -335,7 +338,6 @@ class BattleServer(
                 +PlayerWasDisconnected(it)
             }
         }
-
     }
 
     private fun nextTurn(): String {
@@ -362,7 +364,6 @@ class BattleServer(
 
         return FleetsReadinessAction(states)
     }
-
 }
 
 

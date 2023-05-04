@@ -31,12 +31,12 @@ sealed class BattleEvent: FXEvent() {
             is FleetsReadinessReceived -> "GotFleetsReadiness$states"
             is ReadyPlayersReceived -> "Ready($players)"
             is TurnReceived -> "GotATurn($player)"
-            is ShipWasHit -> "GotHit($hasAShot)"
-            is ThereWasAMiss -> "Missed($hasAShot)"
+            is ShipWasHit -> "GotHit(${hasAShot.toStr})"
+            is ThereWasAMiss -> "Missed(${hasAShot.toStr})"
             is PlayerWasDefeated -> "Defeated($player)"
             is PlayerLeaved -> "Leaved($player)"
             is PlayerWasDisconnected -> "Disconnected($player)"
-            is BattleStarted -> "BattleStarted"
+            is BattleIsStarted -> "BattleStarted"
             is BattleIsEnded -> "BattleIsEnded(winner=$player)"
             is NewServerReceived -> "GotNewServer($player)"
             is NewServerConnectionReceived -> action.run { "GotNewServerConnection($player $ip:$port)" }
@@ -84,7 +84,7 @@ class PlayerWasDefeated(action: PlayerAction): PlayerToRemoveReceived(action)
 class PlayerLeaved(action: PlayerAction): PlayerToRemoveReceived(action)
 class PlayerWasDisconnected(action: PlayerAction) : PlayerToRemoveReceived(action)
 
-object BattleStarted: BattleEvent()
+object BattleIsStarted: BattleEvent()
 class BattleIsEnded(battleEndAction: BattleEndAction): HasAPlayer(battleEndAction.player)
 
 class NewServerReceived(action: PlayerAction): HasAPlayer(action.player)

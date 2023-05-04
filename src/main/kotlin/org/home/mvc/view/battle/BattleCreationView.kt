@@ -27,12 +27,12 @@ import org.home.mvc.view.components.GridPaneExtensions.marginGrid
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.slide
-import org.home.mvc.view.fleet.FleetGridCreationView
 import org.home.mvc.view.openAlertWindow
 import org.home.net.server.BattleServer
 import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
+import tornadofx.Scope
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
@@ -106,7 +106,7 @@ class BattleCreationView : View("Настройки боя") {
                 try {
                     applicationProperties.isServer = true
                     battleServer.start(freePort)
-                    view.replaceWith(FleetGridCreationView::class, slide)
+                    view.replaceWith(tornadofx.find(BattleView::class, Scope()), slide)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     openAlertWindow {

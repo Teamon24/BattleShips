@@ -76,7 +76,7 @@ class ApplicationProperties(
         const val ipAddressFieldLabel = "ip"
         const val creationButtonText = "Создать поле боя"
         const val joinButtonText = "Присоединиться"
-        const val delayTime = 300L
+        const val delayTime = 100L
     }
 }
 
