@@ -7,7 +7,7 @@ import org.home.net.message.MessagesDSL.Messages
 import org.home.net.message.MessagesDSL.Messages.Companion.withInfo
 import org.home.utils.IOUtils.readBatch
 import org.home.utils.IOUtils.write
-import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.BooleansExtensions.invoke
 import java.net.Socket
 
 object SocketUtils {
@@ -15,12 +15,12 @@ object SocketUtils {
     fun Socket.receive() = getInputStream().readBatch()
 
     fun Socket.receive(onRead: (Collection<Message>) -> Unit) =
-        isNotClosed.so {
+        isNotClosed {
             onRead(getInputStream().readBatch())
         }
 
     fun <T: Message> Socket.send(messages: Messages<T>) =
-        isNotClosed.so {
+        isNotClosed {
             logSend(this) {
                 getOutputStream().write(messages)
             }

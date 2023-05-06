@@ -176,6 +176,7 @@ class AppStyles : Stylesheet() {
 
         defeatedTitleCell {
             backgroundColor += Paint.valueOf("A93638F4")
+            textFill = WHITE
         }
 
         (shipsTypesInfoPane + margin(10.px)) {

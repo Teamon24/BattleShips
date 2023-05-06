@@ -10,6 +10,8 @@ import org.home.net.message.HasAShot
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
 import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.BooleansExtensions.invoke
+import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.ObservablePropertiesExtensions.ObservableValueMap
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
@@ -21,8 +23,8 @@ import tornadofx.onChange
 class BattleModel : ViewModel {
 
     companion object {
-        const val size = 5
-        const val shipsTypes = 4
+        const val size = 2
+        const val shipsTypes = 1
         const val initialPlayersNumber = 3
 
         fun fleetReadiness(battleShipsTypes: Map<Int, Int>): MutableMap<Int, SimpleIntegerProperty> {
@@ -73,17 +75,15 @@ class BattleModel : ViewModel {
 
     var battleIsEnded = false
         set(value) {
-            value.so { battleIsStarted = false }
-            field = value
+            field = value.yes { battleIsStarted = false }
         }
 
     var battleIsStarted = false
         set(value) {
-            value.so { battleIsEnded = false }
-            field = value
+            field = value.yes { battleIsEnded = false }
         }
 
-
+    val battleIsNotStarted get() = !battleIsStarted
 
     val selectedPlayer = SimpleStringProperty()
     val turn = SimpleStringProperty()
@@ -197,8 +197,9 @@ class BattleModel : ViewModel {
 
     fun hasReady(player: String) = playersReadiness[player]!!
     fun setReady(player: String) { playersReadiness[player] = true }
+    fun setReady(player: String, ready: Boolean) { playersReadiness[player] = ready }
     fun setNotReady(player: String) { playersReadiness[player] = false }
-    fun hasOnePlayerLeft() = playersNames.size == 1
+    fun hasOnePlayerLeft() = playersNames.size == 1 && battleIsEnded
     fun hasAWinner() = playersNames.size - defeatedPlayers.size == 1
     fun currentPlayerIs(player: String) = currentPlayer == player
     fun shipsOf(player: String) = playersAndShips[player]!!

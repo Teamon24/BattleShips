@@ -4,8 +4,8 @@ import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.AwaitConditions
+import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
@@ -23,13 +23,18 @@ import org.home.net.message.PlayerReadinessAction
 import org.home.net.message.ReadyAction
 import org.home.net.message.ShotAction
 import org.home.net.message.event
+import org.home.utils.InfiniteTry.Companion.loop
+import org.home.utils.InfiniteTryBase.Companion.doWhile
+import org.home.utils.InfiniteTryBase.Companion.stopOnAll
 import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.send
 import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.name
+import org.home.utils.extensions.AnysExtensions.plus
 import org.home.utils.extensions.AtomicBooleansExtensions.atomic
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
+import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
-import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.className
 import org.home.utils.log
@@ -42,7 +47,6 @@ import java.io.OutputStream
 import java.net.Socket
 import java.net.SocketException
 import java.net.UnknownHostException
-import java.util.concurrent.atomic.AtomicBoolean
 
 class BattleClient: BattleController() {
     private val awaitConditions: AwaitConditions by newGame()
@@ -74,18 +78,15 @@ class BattleClient: BattleController() {
         log { "client is listening for server ..." }
         receiverJob = receiver.launch {
             log { "receiver is launched" }
-            while (canProceed()) {
+
+            loop {
                 log { "waiting for message ..." }
-                try {
-                    val messages = serverSocket.receive()
-                    logReceive(serverSocket, messages)
-                    messages.drop(1).forEach { process(it as Action)}
-                } catch (e: SocketException) {
-                    log { e.message }
-                } catch (e: EOFException) {
-                    log { e.message }
-                }
-            }
+                val messages = serverSocket.receive()
+                logReceive(serverSocket, messages)
+                messages.drop(1).forEach { process(it as Action) }
+            } stopOnAll {
+                SocketException::class + EOFException::class
+            } doWhile( canProceed)
         }
         receiverJob.start()
     }
@@ -123,15 +124,15 @@ class BattleClient: BattleController() {
         }
     }
 
-    override fun send(action: Action) = serverSocket { isNotClosed.so { send(action) } }
-    override fun send(actions: Collection<Action>) = serverSocket { isNotClosed.so { send(actions) } }
+    override fun send(action: Action) = serverSocket { isNotClosed { send(action) } }
+    override fun send(actions: Collection<Action>) = serverSocket { isNotClosed { send(actions) } }
 
     override fun onBattleViewExit() {
         leaveBattle()
     }
 
     override fun onWindowClose() {
-        serverSocket.isNotClosed.so { leaveBattle() }
+        serverSocket.isNotClosed { leaveBattle() }
     }
 
     override fun startBattle() {
@@ -140,7 +141,10 @@ class BattleClient: BattleController() {
     }
 
     override fun leaveBattle() {
-        send(LeaveAction(currentPlayer))
+        model.battleIsStarted {
+            send(LeaveAction(currentPlayer))
+        }
+
         Platform.runLater {
             disconnect()
         }
@@ -154,19 +158,19 @@ class BattleClient: BattleController() {
 
     override fun disconnect() {
         canProceed(false)
+        runBlocking {
+            receiverJob.cancel()
+            log { "receiver's ${receiverJob.name } is canceled" }
+        }
         input.close()
         output.close()
         serverSocket.close()
-        runBlocking {
-            receiverJob.cancel()
-            log { "${this.javaClass }#receiver is canceled" }
-        }
     }
 
 
     private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         action {
-            model.playersReadiness[player] = isReady
+            model.setReady(player, isReady)
             eventbus { + event(this@action) }
         }
     }

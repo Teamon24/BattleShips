@@ -60,6 +60,12 @@ sealed class InfiniteTryBase<E, H> {
                 putNoArgHandler { condition(false) }
             }
 
+        inline infix fun <E, H> InfiniteTryBase<E, H>.stopOnAll(stopExClasses: () -> List<KClass<out Exception>>) =
+            apply {
+                +stopExClasses()
+                putNoArgHandler { condition(false) }
+            }
+
     }
 
     abstract fun loopBody()

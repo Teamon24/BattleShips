@@ -2,7 +2,6 @@ package org.home.utils.extensions
 
 object CollectionsExtensions {
 
-    @JvmName("excludeByKey")
     fun <K, V> Map<K, V>.exclude(exception: K) = filter { it.key != exception }
 
     fun <K, V> Map<K, V>.excludeAll(exceptions: Collection<K>) = filter { it.key !in exceptions }
@@ -19,5 +18,7 @@ object CollectionsExtensions {
         return this.toMutableList()
     }
 
-    val <T> Collection<T>.hasElements get() = size > 1
+    inline val <T> Collection<T>.hasElements get() = size > 1
+    inline val <T> Collection<T>.isNotEmpty get() = isNotEmpty()
+    inline val <T> Collection<T>.isEmpty get() = isEmpty()
 }

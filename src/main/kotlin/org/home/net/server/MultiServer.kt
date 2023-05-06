@@ -3,10 +3,6 @@ package org.home.net.server
 import org.home.mvc.contoller.BattleController
 import org.home.net.message.Message
 import org.home.utils.SocketsMessages
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.isNotAlive
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.log
 import org.home.utils.logMultiServerThreads
 import java.net.ServerSocket
@@ -17,9 +13,9 @@ import java.util.concurrent.CountDownLatch
 abstract class MultiServer<M : Message, S : Socket> : BattleController() {
     val processor: MessageProcessor<M, S> by di()
     val receiver: MessageReceiver<M, S> by di()
-    val accepter: ConnectionsListener<M, S> by di()
+    val connector: ConnectionsListener<M, S> by di()
 
-    val threads = listOf(accepter, receiver, processor)
+    val threads = listOf(connector, receiver, processor)
 
     internal val readTimeout = 50
 
@@ -37,29 +33,21 @@ abstract class MultiServer<M : Message, S : Socket> : BattleController() {
     fun start(port: Int) {
         serverSocket = ServerSocket(port)
 
-        accepter.start()
+        connector.start()
         receiver.start()
         processor.start()
 
         logMultiServerThreads()
     }
 
-    private var acceptNextConnection = CountDownLatch(1)
+    private var connectionBarrier = CountDownLatch(1)
 
-    internal fun acceptNextConnection() = acceptNextConnection
+    internal fun connectionBarrier() = connectionBarrier
 
-    fun permitToAccept(canConnect: Boolean) {
-        log { "accepter can accept: $canConnect" }
-        acceptNextConnection.countDown()
-        acceptNextConnection = CountDownLatch(1)
+    fun permitToConnect() {
+        connectionBarrier.countDown()
+        connectionBarrier = CountDownLatch(1)
         log { "reset barrier" }
     }
-
-    fun runAccepter() {
-        accepter.canProceed(true)
-        accepter.start()
-    }
-
-    fun hasOnePlayer() = model.hasOnePlayerLeft()
 }
 

@@ -57,11 +57,14 @@ import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
+import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.BooleansExtensions.otherwise
 import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.CollectionsExtensions.hasElements
+import org.home.utils.extensions.CollectionsExtensions.isNotEmpty
+import org.home.utils.extensions.CollectionsExtensions.isEmpty
 import org.home.utils.extensions.CollectionsExtensions.shuffledKeys
 import org.home.utils.extensions.className
 import org.home.utils.log
@@ -72,8 +75,8 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
     private val notifierStrategies: ShotNotifierStrategies by di()
     private val awaitConditions: AwaitConditions by newGame()
 
-    private val <E> Collection<E>.hasPlayers get() = hasElements
-    private val String.hasTurn get() = this == turnPlayer
+    private inline val <E> Collection<E>.hasPlayers get() = hasElements
+    private inline val String.hasTurn get() = this == turnPlayer
 
     private val shotNotifier = notifierStrategies.create(sockets)
     private val turnList: MutableList<String> = mutableListOf()
@@ -87,7 +90,10 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
         val action = message
         when (action) {
             is PlayerConnectionAction -> {
-                permitToAccept(sockets.size + 1 < model.playersNumber.value)
+                if (sockets.size + 1 < model.playersNumber.value) {
+                    permitToConnect()
+                }
+                
                 action.also {
                     val connected = it.player
 
@@ -107,8 +113,8 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
                 }
             }
 
-            is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
-            is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
+            is NotReadyAction     -> processReadiness(action, ::PlayerIsNotReadyReceived)
+            is ReadyAction        -> processReadiness(action, ::PlayerIsReadyReceived)
             is ShipAdditionAction -> processFleetEdit(action, ::ShipWasAdded)
             is ShipDeletionAction -> processFleetEdit(action, ::ShipWasDeleted)
 
@@ -120,11 +126,13 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
                     model.registersAHit(shot)
                         .yes {
                             onHit(action)
-                            val ships = model.shipsOf(currentPlayer)
-                            ships.isEmpty().so { turnList.remove(currentPlayer) }
+                            model
+                                .shipsOf(currentPlayer)
+                                .isEmpty { turnList.remove(currentPlayer) }
                             return
+                        } no {
+                            onMiss(action)
                         }
-                        .no { onMiss(action) }
                 } else {
                     sockets.send(shotNotifier.notifiactions(action))
                     sockets[action.target].send(action)
@@ -159,7 +167,7 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
     private fun processFleetEdit(action: ShipAction, event: (ShipAction) -> FleetEditEvent) {
         sockets.exclude(action.player).send(action)
         eventbus {
-            +event(action)
+            + event(action)
         }
     }
 
@@ -178,26 +186,28 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
                     +PlayerWasDefeated(action)
                     turnList.remove(removedPlayer)
                     currentPlayer.hasTurn yes {
-                        turnList.hasPlayers so { +TurnReceived(TurnAction(currentPlayer)) }
+                        turnList.hasPlayers { +TurnReceived(TurnAction(currentPlayer)) }
                     } no {
-                        sockets[action.shooter].send(TurnAction(action.shooter))
+                        model.hasAWinner().otherwise {
+                            sockets[action.shooter].send(TurnAction(action.shooter))
+                        }
                     }
                 }
             }
 
-            turnList.isNotEmpty().so {
+            turnList.isNotEmpty {
                 log { "<${action.className}> turn = $turnList" }
-
-                removedPlayer.hasTurn.so {
+                removedPlayer.hasTurn {
                     val nextTurn = nextTurn()
                     turnList.remove(removedPlayer)
-                    turnList.hasPlayers.so {
+                    turnList.hasPlayers {
                         TurnAction(nextTurn).also {
                             +TurnReceived(it)
                             send(it)
                         }
                     }
                 }
+                log { "<${action.className}> turn = $turnList" }
             }
         }
     }
@@ -211,6 +221,10 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
         }
 
         +event(toRemovedAction)
+
+        model.battleIsNotStarted {
+            permitToConnect()
+        }
     }
 
     private fun onMiss(action: ShotAction) {
@@ -272,8 +286,8 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
 
     override fun disconnect() {
         sockets.forEach { it.close() }
-        log { "interrupting ${accepter.name}" }
-        accepter.interrupt()
+        log { "interrupting ${connector.name}" }
+        connector.interrupt()
 
         log { "interrupting ${processor.name}" }
         processor.interrupt()
@@ -324,18 +338,18 @@ class BattleServer: MultiServer<Action, PlayerSocket>() {
     }
 
     override fun onBattleViewExit() {
-        accepter.canProceed(false)
+        connector.canProceed(false)
         leaveBattle()
     }
 
     override fun onWindowClose() {
-        accepter.canProceed(false)
+        connector.canProceed(false)
         leaveBattle()
     }
 
     override fun onDisconnect(socket: PlayerSocket) {
         socket {
-            isNotClosed.so {
+            isNotClosed {
                 DisconnectAction(player!!).also {
                     send(it)
                     eventbus {

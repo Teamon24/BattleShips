@@ -42,10 +42,11 @@ object AnysExtensions {
     inline operator fun <T> T.plus(messages: MutableList<in T>) = messages.also { it.add(0, this) }
 
     inline fun <T> T.removeFrom(collection: MutableCollection<T>) = this.also { collection.remove(it) }
-    inline fun <T> T.excludeFrom(collection: MutableCollection<T>) = collection.filter { it != this }
     inline fun <T> T.removeFrom(map: MutableMap<T, *>) = map.remove(this)
 
     inline fun <T> T.notIn(collection: Collection<T>) = this !in collection
+    inline operator fun <T> T.plus(that: T) = listOf(this, that)
+    inline operator fun <T> Collection<T>.plus(that: T) = ArrayList<T>(this.size + 1).apply { addAll(this); add(that) }
 }
 
 

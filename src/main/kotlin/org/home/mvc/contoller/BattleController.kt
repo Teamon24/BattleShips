@@ -10,7 +10,9 @@ import org.home.net.message.DefeatAction
 import org.home.net.message.HitAction
 import org.home.net.message.ShotAction
 import org.home.utils.DSLContainer
+import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.CollectionsExtensions.isEmpty
 
 abstract class BattleController: AbstractGameController() {
     abstract fun send(action: Action)
@@ -36,20 +38,20 @@ abstract class BattleController: AbstractGameController() {
 
         send {
             + hitAction
-            ships.isEmpty().so { + defeatAction }
+            ships.isEmpty { + defeatAction }
         }
 
         eventbus {
             + ShipWasHit(hitAction)
-            ships.isEmpty().so { + PlayerWasDefeated(defeatAction) }
+            ships.isEmpty { + PlayerWasDefeated(defeatAction) }
         }
     }
 
+    abstract fun connect(ip: String, port: Int)
     abstract fun startBattle()
     abstract fun leaveBattle()
     abstract fun endBattle()
     abstract fun disconnect()
-    abstract fun connect(ip: String, port: Int)
 
     abstract fun onBattleViewExit()
     abstract fun onWindowClose()

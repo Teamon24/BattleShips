@@ -15,7 +15,8 @@ import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
 import org.home.utils.extensions.AtomicBooleansExtensions.atomic
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.so
+import org.home.utils.extensions.BooleansExtensions.invoke
+import org.home.utils.log
 import org.home.utils.logError
 import org.home.utils.logReceive
 import org.home.utils.logTitle
@@ -43,23 +44,24 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
             }
     }
     fun interrupt() {
-        thread.interrupt()
         canProceed(false)
+        thread.interrupt()
     }
 
     fun onSocketException(socket: S) = multiServer.onDisconnect(socket)
-    fun hasOnePlayerLeft() = multiServer.hasOnePlayer()
 }
 
 
 class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
-    override val name get() = "connections-listener"
+    override val name get() = "connector"
 
     override fun run() {
         multiServer {
             loop {
                 sockets.add(accept().withTimeout(readTimeout))
-                acceptNextConnection().await()
+                log { "waiting for connection permission ..." }
+                connectionBarrier().await()
+                log { "connection permission is granted" }
             } stopOn {
                 InterruptedException::class
             } catch {
@@ -91,7 +93,7 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
                     logError(ex)
                     socket {
                         removeFrom(sockets)
-                        isNotClosed.so { close() }
+                        isNotClosed { close() }
                     }
                     onSocketException(socket)
                 }
@@ -106,10 +108,10 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
     override fun run() {
         multiServer {
             loop {
-                socketsMessages.take().invoke { (socket, messages) ->
-                    socket.isNotClosed.so {
-                        messages.forEach { process(socket, it) }
-                    }
+                val (socket, messages) = socketsMessages.take()
+
+                socket.isNotClosed {
+                    messages.forEach { message -> process(socket, message) }
                 }
             } stopOn {
                 InterruptedException::class

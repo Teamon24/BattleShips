@@ -1,5 +1,6 @@
 package org.home.mvc.view.battle.subscriptions
 
+import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -9,7 +10,6 @@ import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.extensions.AnysExtensions.notIn
 import org.home.utils.extensions.BooleansExtensions.or
 import org.home.utils.extensions.BooleansExtensions.so
@@ -63,9 +63,11 @@ internal fun BattleView.playerWasDefeated() {
                 "${args[0]} проиграл${args[1]}"
             }
 
-            currentPlayerIs(defeated).so { battleViewExitButton.text = "Покинуть поле боя" }
+            currentPlayerIs(defeated).so {
+                battleViewExitButton.text = leaveBattleFieldText
+                battleViewExitButton.addClass(AppStyles.defeatedTitleCell)
+            }
             hasAWinner().so { battleController.endBattle() }
-            hasOnePlayerLeft().so { battleController.disconnect() }
         }
     }
 }
@@ -92,8 +94,7 @@ private fun BattleView.removePlayer(player: String) {
 
         playersAndShips.remove(player)
         removeEnemyFleet(player)
-        if (playersNames.size == 1 && battleIsEnded) {
-            battleController.disconnect()
-        }
+
+        hasOnePlayerLeft().so { battleController.disconnect() }
     }
 }

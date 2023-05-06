@@ -1,6 +1,8 @@
 package org.home.mvc.view.battle.subscriptions
 
 import javafx.beans.property.SimpleIntegerProperty
+import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
+import org.home.mvc.ApplicationProperties.Companion.leaveBattleText
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
@@ -54,11 +56,7 @@ fun View.subscriptions(subs: View.() -> Unit) {
 internal fun BattleView.playerWasConnected() {
     subscribe<ConnectedPlayerReceived> {
         logEvent(it, model)
-        val connectedPlayer = it.player
-        val ships = model.playersAndShips[connectedPlayer]
-        if (ships == null) {
-            addNewFleet(connectedPlayer)
-        }
+        addNewFleet(it.player)
     }
 }
 
@@ -199,7 +197,7 @@ internal fun BattleView.battleIsStarted() {
     subscribe<BattleIsStarted> { event ->
         model.battleIsStarted = true
         logEvent(event, model)
-        battleViewExitButton.text = "Покинуть бой"
+        battleViewExitButton.text = leaveBattleText
         battleViewExitButton.action {
             battleController.leaveBattle()
             transitTo<AppView>(backSlide)
@@ -228,7 +226,7 @@ internal fun BattleView.battleIsEnded() {
         openMessageWindow {
             if (it.player == currentPlayer) "Вы победили" else "Победил \"${it.player}\""
         }
-        battleViewExitButton.text = "Покинуть поле боя"
+        battleViewExitButton.text = leaveBattleFieldText
     }
 }
 

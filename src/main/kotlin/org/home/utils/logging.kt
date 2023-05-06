@@ -25,8 +25,8 @@ import kotlin.concurrent.thread
 
 const val N = 40
 const val COM_SIGN = "-"
-const val leftArrow = "<|"
-const val rightArrow = "|>"
+const val LEFT_ARROW = "<|"
+const val RIGHT_ARROW = "|>"
 const val UI_EVENT_SIGN = "+"
 
 val comString = COM_SIGN.repeat(N)
@@ -134,17 +134,17 @@ fun StringBuilder.line(length: Int) = repeat(length) { append(UI_EVENT_SIGN) }
 
 inline fun logReceive(disabled: Boolean = false, crossinline block: () -> Any) {
     if (!disabled) {
-        log { "$leftArrow$comString ${block()}" }
+        log { "$LEFT_ARROW$comString ${block()}" }
     }
 }
 
 inline fun logSend(disabled: Boolean = false, crossinline block: () -> Any) {
     if (!disabled) {
-        log { "$comString$rightArrow ${block()}" }
+        log { "$comString$RIGHT_ARROW ${block()}" }
     }
 }
 
-inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "$leftArrow$it" }, block)
+inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "$LEFT_ARROW$it" }, block)
 
 fun <S: Socket> logReceive(socket: S, messages: Collection<Message>) {
     logReceive(socket) {
@@ -152,8 +152,7 @@ fun <S: Socket> logReceive(socket: S, messages: Collection<Message>) {
     }
 }
 
-
-inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it$rightArrow" }, block)
+inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it$RIGHT_ARROW" }, block)
 
 inline fun <T> logComLogic(socket: Socket, comLine: (String) -> String, block: () -> T) {
     val dashesNumber = N
@@ -187,14 +186,14 @@ fun <T : Event> T.logCoordinate() {
     }
 }
 
-fun MultiServer<*, *>.logMultiServerThreads() {
+fun MultiServer<*, *>.logMultiServerThreads(b: Boolean = true) {
     val lengthOfMax = threads.map { it.name }.maxBy { it.length }.length
     thread {
-        while (true) {
+        while (b) {
             Thread.sleep(10_000)
             processor { logMultiServerThread(thread, lengthOfMax) }
             receiver { logMultiServerThread(thread, lengthOfMax) }
-            accepter { logMultiServerThread(thread, lengthOfMax) }
+            connector { logMultiServerThread(thread, lengthOfMax) }
         }
     }
 }

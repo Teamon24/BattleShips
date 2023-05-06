@@ -244,10 +244,11 @@ class FleetGridHandlers(
         this.addEventHandler(eventType, handler)
         backingHandlers[eventType] = handler
     }
+
+    private fun MouseEvent.isPrimary() = this.button == MouseButton.PRIMARY
+    private fun MouseEvent.isSecondary() = this.button == MouseButton.SECONDARY
 }
 
 
-fun MouseEvent.isPrimary() = this.button == MouseButton.PRIMARY
-fun MouseEvent.isSecondary() = this.button == MouseButton.SECONDARY
 
 

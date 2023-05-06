@@ -68,11 +68,15 @@ class ApplicationProperties(
         private const val isToNotifyAllProperty = "isToNotifyAll"
 
         const val connectionButtonText = "Подключиться"
+
         const val squareSize = "квадрат"
         const val widthFieldLabel = "ширина"
         const val heightFieldLabel = "высота"
         const val playersNumberLabel = "игроки"
         const val battleFieldCreationMenuTitle = "Создание поля боя"
+        const val leaveBattleFieldText = "Покинуть поле боя"
+        const val leaveBattleText = "Покинуть бой"
+
         const val ipAddressFieldLabel = "ip"
         const val backButtonText = "Назад"
         const val createNewGameButtonText = "Создать"
