@@ -2,11 +2,12 @@ package org.home.net.server
 
 import org.home.net.isNotClosed
 import org.home.net.message.Message
-import org.home.utils.InfiniteTry.Companion.infiniteTry
+import org.home.utils.InfiniteTry.Companion.loop
 import org.home.utils.InfiniteTryBase.Companion.catch
-import org.home.utils.InfiniteTryBase.Companion.handle
 import org.home.utils.InfiniteTryBase.Companion.doWhile
-import org.home.utils.InfiniteTryBase.Companion.noHandle
+import org.home.utils.InfiniteTryBase.Companion.handle
+import org.home.utils.InfiniteTryBase.Companion.ignore
+import org.home.utils.InfiniteTryBase.Companion.stopOn
 import org.home.utils.InfiniteTryFor
 import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
 import org.home.utils.SocketUtils.receive
@@ -15,7 +16,6 @@ import org.home.utils.extensions.AnysExtensions.removeFrom
 import org.home.utils.extensions.AtomicBooleansExtensions.atomic
 import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.log
 import org.home.utils.logError
 import org.home.utils.logReceive
 import org.home.utils.logTitle
@@ -25,7 +25,6 @@ import java.io.IOException
 import java.net.Socket
 import java.net.SocketException
 import java.net.SocketTimeoutException
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
@@ -36,6 +35,7 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     abstract fun run()
 
     fun start() {
+        canProceed(true)
         thread = thread(start = false, name = name, block = this::run)
             .apply {
                 start()
@@ -44,7 +44,11 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     }
     fun interrupt() {
         thread.interrupt()
+        canProceed(false)
     }
+
+    fun onSocketException(socket: S) = multiServer.onDisconnect(socket)
+    fun hasOnePlayerLeft() = multiServer.hasOnePlayer()
 }
 
 
@@ -53,16 +57,15 @@ class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override fun run() {
         multiServer {
-            infiniteTry {
+            loop {
                 sockets.add(accept().withTimeout(readTimeout))
                 acceptNextConnection().await()
+            } stopOn {
+                InterruptedException::class
             } catch {
                 +IOException::class
                 +SocketException::class
                 handle { logError(it) }
-
-                +InterruptedException::class
-                handle { canProceed(false) }
             } doWhile canProceed
         }
     }
@@ -74,14 +77,14 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override fun run() {
         multiServer {
-            sockets.infiniteReceive { socket, received ->
-                Thread.sleep(10)
-                logReceive(socket, received)
-                socketsMessages.add(socket to received.drop(1) as Collection<M>)
+            sockets.receiveInLoop { socket, messages ->
+                logReceive(socket, messages)
+                socketsMessages.add(socket to messages.drop(1) as Collection<M>)
+            } ignore {
+                SocketTimeoutException::class
+            } stopOn {
+                InterruptedException::class
             } catch {
-                +SocketTimeoutException::class
-                noHandle()
-
                 +SocketException::class
                 +EOFException::class
                 handle { ex, socket ->
@@ -90,11 +93,8 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
                         removeFrom(sockets)
                         isNotClosed.so { close() }
                     }
-                    sockets.isEmpty().so { canProceed(false) }
+                    onSocketException(socket)
                 }
-
-                +InterruptedException::class
-                handle { _, _ -> canProceed(false) }
             } doWhile canProceed
         }
     }
@@ -105,12 +105,14 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override fun run() {
         multiServer {
-            infiniteTry {
-                val (socket, messages) = socketsMessages.take()
-                messages.forEach { process(socket, it) }
-            } catch {
-                +InterruptedException::class
-                handle { canProceed(false) }
+            loop {
+                socketsMessages.take().invoke { (socket, messages) ->
+                    socket.isNotClosed.so {
+                        messages.forEach { process(socket, it) }
+                    }
+                }
+            } stopOn {
+                InterruptedException::class
             } doWhile canProceed
         }
     }
@@ -121,7 +123,7 @@ private fun <S : Socket> S.withTimeout(readTimeout: Int): S {
     return this
 }
 
-infix fun <S: Socket> Collection<S>.infiniteReceive(forEach: (S, Collection<Message>) -> Unit): InfiniteTryFor<S> {
+infix fun <S: Socket> Collection<S>.receiveInLoop(forEach: (S, Collection<Message>) -> Unit): InfiniteTryFor<S> {
     return infiniteTryFor { socket ->
         socket.receive {
             forEach(socket, it)

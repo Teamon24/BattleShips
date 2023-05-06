@@ -5,7 +5,6 @@ import javafx.scene.control.Button
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
-import org.home.mvc.model.BattleModel
 import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.components.GridPaneExtensions.removeColumn
 import org.home.mvc.view.fleet.FleetCellLabel
@@ -15,17 +14,12 @@ import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
 import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.log
-import tornadofx.Component
-import tornadofx.Controller
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.onChange
 import tornadofx.runLater
 
-class ShipTypePaneComponent: Controller() {
-
-    private val model: BattleModel by di()
-
+class ShipTypePaneComponent: AbstractGameController() {
     private fun lastShipType() = model.battleShipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
     fun addShipTypeButton(gridPane: GridPane) {

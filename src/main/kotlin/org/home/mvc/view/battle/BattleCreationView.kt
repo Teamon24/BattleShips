@@ -10,15 +10,16 @@ import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
-import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.battleFieldCreationMenuTitle
+import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.mvc.ApplicationProperties.Companion.heightFieldLabel
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.mvc.ApplicationProperties.Companion.playersNumberLabel
 import org.home.mvc.ApplicationProperties.Companion.squareSize
 import org.home.mvc.ApplicationProperties.Companion.widthFieldLabel
+import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPaneController
-import org.home.mvc.model.BattleModel
+import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.app.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
@@ -26,26 +27,23 @@ import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.marginGrid
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
-import org.home.mvc.view.components.slide
+import org.home.mvc.view.components.forwardSlide
+import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.net.server.BattleServer
 import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
-import tornadofx.Scope
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.label
 import tornadofx.textfield
+import kotlin.reflect.KClass
 
-class BattleCreationView : View("Настройки боя") {
-
-    private val model: BattleModel by di()
-    private val applicationProperties: ApplicationProperties by di()
-    private val shipsTypesPaneController: ShipsTypesPaneController by di()
-    private val battleServer: BattleServer by di()
+class BattleCreationView : AbstractGameView("Настройки боя") {
+    private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
+    private val battleController: BattleController by di()
 
     override val root = Form()
         .addClass(AppStyles.form)
@@ -56,6 +54,7 @@ class BattleCreationView : View("Настройки боя") {
     private val ipAddress = SimpleStringProperty("$ip:$freePort")
 
     init {
+        applicationProperties.isServer = true
         this.title = applicationProperties.currentPlayer.uppercase()
         with(root) {
             centerGrid {
@@ -63,9 +62,8 @@ class BattleCreationView : View("Настройки боя") {
                 cell(1, 0) { shipsTypesPaneController.shipTypesPaneControl().also { add(it) } }
                 cell(2, 0) {
                     marginGrid {
-                        val view = this@BattleCreationView
-                        cell(0, 0) { backTransitButton(view, AppView::class) }
-                        cell(0, 1) { createBattleButton(view) }
+                        cell(0, 0) { backTransitButton<AppView>(this@BattleCreationView) }
+                        cell(0, 1) { createBattleButton() }
                     }
                 }
             }
@@ -100,13 +98,12 @@ class BattleCreationView : View("Настройки боя") {
         }
     }
 
-    private fun EventTarget.createBattleButton(view: BattleCreationView) =
-        button("Создать") {
+    private fun EventTarget.createBattleButton() =
+        button(createNewGameButtonText) {
             action {
                 try {
-                    applicationProperties.isServer = true
-                    battleServer.start(freePort)
-                    view.replaceWith(tornadofx.find(BattleView::class, Scope()), slide)
+                    battleController.connect("", freePort)
+                    this@BattleCreationView.transferTo<BattleView>()
                 } catch (e: Exception) {
                     e.printStackTrace()
                     openAlertWindow {
@@ -115,6 +112,10 @@ class BattleCreationView : View("Настройки боя") {
                 }
             }
         }
+
+    fun transit(from: View, to: KClass<BattleView>) {
+        from.replaceWith(tornadofx.find(to), forwardSlide)
+    }
 
     private fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
         return button("", ImageView("/icons/clipboard.png"))

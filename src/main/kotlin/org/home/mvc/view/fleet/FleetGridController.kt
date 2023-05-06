@@ -10,10 +10,9 @@ import javafx.scene.input.MouseDragEvent.MOUSE_RELEASED
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
-import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.delayTime
+import org.home.mvc.contoller.AbstractGameController
 import org.home.mvc.contoller.ShipsTypesController
-import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
@@ -23,17 +22,13 @@ import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.log
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch
-import tornadofx.Controller
 
-class FleetGridController : Controller() {
+class FleetGridController : AbstractGameController() {
 
-    private val model: BattleModel by di()
-    private val applicationProperties: ApplicationProperties by di()
-    private val currentPlayer: String = applicationProperties.currentPlayer
-    private val shipsTypesController: ShipsTypesController by di()
-    private val fleetGridCreator: FleetGridCreator by di()
+    private val shipsTypesController: ShipsTypesController by newGame()
+    private val fleetGridCreator: FleetGridCreator by newGame()
 
-    private val ships = model.playersAndShips[currentPlayer]!!
+    private val ships by lazy { model.shipsOf(currentPlayer) }
     private val currentShip = Ship()
 
     private var mouseWentOutOfBound = false.atomic

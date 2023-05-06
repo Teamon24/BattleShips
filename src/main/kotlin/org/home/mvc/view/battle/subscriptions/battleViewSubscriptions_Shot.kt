@@ -8,11 +8,13 @@ import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.openMessageWindow
-import org.home.net.action.HasAShot
+import org.home.net.message.HasAShot
 import org.home.style.AppStyles
 import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.extensions.BooleansExtensions.or
 import org.home.utils.extensions.BooleansExtensions.then
+import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.addClass
 
@@ -53,7 +55,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
                     "По вам ${part}попал \"${player}\""
                 }
             } else {
-                markShot(enemiesFleetsFleetGrids[target]!!)
+                markShot(enemiesFleetGridsPanes[target]!!)
                 openMessageWindow {
                     val actionString = isMiss() then "промахнулся по" or "попал в"
                     return@openMessageWindow "\"${player}\" $actionString \"${target}\""

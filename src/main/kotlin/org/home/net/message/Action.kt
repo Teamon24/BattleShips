@@ -1,4 +1,4 @@
-package org.home.net.action
+package org.home.net.message
 
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
@@ -18,7 +18,6 @@ import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
-import org.home.net.message.Message
 import org.home.utils.RomansDigits
 import org.home.utils.extensions.BooleansExtensions.then
 
@@ -146,7 +145,7 @@ val Action.event get() = when (this) {
     is ShipAdditionAction -> ShipWasAdded(this)
     is ShipDeletionAction -> ShipWasDeleted(this)
     is TurnAction -> TurnReceived(this)
-    else -> null
+    else -> null //НЕ ТРОГАТЬ! На это значение ориентируется логика обработки полученных сообщений.
 }
 
 

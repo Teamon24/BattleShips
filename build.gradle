@@ -42,20 +42,18 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'com.google.guava:guava-collections:r03'
-    implementation 'com.google.guava:guava:13.0'
 
-
-
-    testImplementation("io.insert-koin:koin-test:$koin_version")
-    testImplementation("io.insert-koin:koin-test-junit5:$koin_version")
-    testImplementation 'org.mockito:mockito-core:5.2.0'
+//    testImplementation("io.insert-koin:koin-test:$koin_version")
+//    testImplementation("io.insert-koin:koin-test-junit5:$koin_version")
+//    testImplementation 'org.mockito:mockito-core:5.2.0'
+//    testImplementation 'net.bytebuddy:byte-buddy:1.14.2'
 
     testImplementation 'org.testfx:testfx-core:4.0.13-alpha'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
 
-    testImplementation 'net.bytebuddy:byte-buddy:1.14.2'
+    testImplementation 'com.google.guava:guava-collections:r03'
+    testImplementation 'com.google.guava:guava:13.0'
 }
 
 compileKotlin { kotlinOptions.jvmTarget = '16' }

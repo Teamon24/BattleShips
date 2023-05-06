@@ -4,19 +4,29 @@ import javafx.event.Event
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.message.Message
+import org.home.net.server.MultiServer
+import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.isNotUnit
+import org.home.utils.extensions.AnysExtensions.name
+import org.home.utils.extensions.AnysExtensions.refClass
+import org.home.utils.extensions.AnysExtensions.refNumber
 import org.home.utils.extensions.BooleansExtensions.or
 import org.home.utils.extensions.BooleansExtensions.then
 import org.home.utils.extensions.LogBuilder
 import org.home.utils.extensions.add
 import org.home.utils.extensions.className
 import org.home.utils.extensions.ln
+import tornadofx.Component
 import tornadofx.FXEvent
+import tornadofx.Scope
 import tornadofx.View
 import java.net.Socket
+import kotlin.concurrent.thread
 
 const val N = 40
 const val COM_SIGN = "-"
+const val leftArrow = "<|"
+const val rightArrow = "|>"
 const val UI_EVENT_SIGN = "+"
 
 val comString = COM_SIGN.repeat(N)
@@ -55,6 +65,21 @@ inline fun log(disabled: Boolean = false, block: () -> Any?) {
     }
 }
 
+inline fun logInject(target: Component, injection: Component) {
+    log {
+        "${target.componentName} <== ${injection.componentName}"
+    }
+}
+
+inline fun logInject(targetName: String, injection: Component, scope: Scope) {
+    log {
+        "$targetName <== ${injection.componentName} with ${scope.name}"
+    }
+}
+
+
+val Component.componentName get() = "$refClass-[$refNumber]"
+
 fun logError(throwable: Throwable, stackTrace: Boolean = false) {
     val dot = "."
     val dots = dot.repeat(5)
@@ -72,7 +97,7 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false) {
 
 inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> Any) {
     if (!disabled) {
-        threadPrintln("::: MODEL ::: " + block())
+        threadPrintln("::: MODEL[${refNumber}] ::: " + block())
     }
 }
 
@@ -105,37 +130,42 @@ inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block:
 
 fun StringBuilder.line(length: Int) = repeat(length) { append(UI_EVENT_SIGN) }
 
+
+
 inline fun logReceive(disabled: Boolean = false, crossinline block: () -> Any) {
     if (!disabled) {
-        log { "<$comString ${block()}" }
+        log { "$leftArrow$comString ${block()}" }
     }
 }
 
 inline fun logSend(disabled: Boolean = false, crossinline block: () -> Any) {
     if (!disabled) {
-        log { "$comString> ${block()}" }
+        log { "$comString$rightArrow ${block()}" }
     }
 }
 
-inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "<$it" }, block)
+inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "$leftArrow$it" }, block)
 
 fun <S: Socket> logReceive(socket: S, messages: Collection<Message>) {
     logReceive(socket) {
         messages.forEach { logReceive { it } }
     }
 }
-inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it>" }, block)
+
+
+inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it$rightArrow" }, block)
 
 inline fun <T> logComLogic(socket: Socket, comLine: (String) -> String, block: () -> T) {
     val dashesNumber = N
-    val line = COM_SIGN.repeat(dashesNumber)
-    val uppercase = socket.toString().uppercase()
-    val left = comLine(line)
-    val title = "$left $uppercase $left"
-    val title2 = "$left ${COM_SIGN.repeat(uppercase.length)} $line"
+    val uppercase = socket.toString().replace("null ", "").uppercase()
+    val line = comLine(COM_SIGN.repeat(dashesNumber))
+    val title = "$line $uppercase $line"
+    val title2 = "$line ${COM_SIGN.repeat(uppercase.length)} $line"
 
     threadPrintln()
+    threadPrintln(title2)
     threadPrintln(title)
+    threadPrintln(title2)
     block()
     threadPrintln(title2)
     threadPrintln()
@@ -157,4 +187,25 @@ fun <T : Event> T.logCoordinate() {
     }
 }
 
+fun MultiServer<*, *>.logMultiServerThreads() {
+    val lengthOfMax = threads.map { it.name }.maxBy { it.length }.length
+    thread {
+        while (true) {
+            Thread.sleep(10_000)
+            processor { logMultiServerThread(thread, lengthOfMax) }
+            receiver { logMultiServerThread(thread, lengthOfMax) }
+            accepter { logMultiServerThread(thread, lengthOfMax) }
+        }
+    }
+}
+
+fun logMultiServerThread(thread: Thread, lengthOfMax: Int) {
+    thread.invoke {
+        val indent = " ".repeat(lengthOfMax - name.length)
+        threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
+    }
+}
+
+
 private fun coord(it: Event) = (it.source as FleetCell).coord
+

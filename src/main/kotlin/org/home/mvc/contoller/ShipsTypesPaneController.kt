@@ -7,10 +7,9 @@ import org.home.mvc.model.BattleModel
 import org.home.utils.extensions.BooleansExtensions.yes
 import tornadofx.Controller
 
-class ShipsTypesPaneController: Controller() {
+class ShipsTypesPaneController: AbstractGameController() {
 
-    private val model: BattleModel by di()
-    private val component: ShipTypePaneComponent by di()
+    private val component: ShipTypePaneComponent by newGame()
 
     fun shipTypesPaneControl(): ShipsTypesPane {
         return ShipsTypesPane().apply {

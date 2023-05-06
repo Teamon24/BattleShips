@@ -10,22 +10,21 @@ import tornadofx.opcr
 
 object GridPaneExtensions {
 
-    fun marginGrid(op: GridPane.() -> Unit = {}) = GridPane().apply {
-        addClass(AppStyles.gridMargin)
-        op()
-    }
+    inline fun marginGrid(op: GridPane.() -> Unit = {}) =
+        GridPane()
+            .addClass(AppStyles.gridMargin)
+            .op()
 
-    fun EventTarget.centerGrid(op: GridPane.() -> Unit = {}) =
-        marginGrid(op).apply { addClass(AppStyles.centerGrid) }
+    inline fun EventTarget.centerGrid(op: GridPane.() -> Unit = {}) = marginGrid(op).addClass(AppStyles.centerGrid)
 
-    fun EventTarget.marginGrid(op: GridPane.() -> Unit = {}) = opcr(
-        this,
-        GridPane().apply { addClass(AppStyles.gridMargin) },
-        op)
+    inline fun EventTarget.marginGrid(op: GridPane.() -> Unit = {}) =
+        opcr(
+            this,
+            GridPane().addClass(AppStyles.gridMargin),
+            op
+        )
 
-    fun GridPane.getCell(cell: Coord): Node {
-        return getCell(cell.first, cell.second)
-    }
+    fun GridPane.getCell(cell: Coord) = getCell(cell.first, cell.second)
 
     fun GridPane.getCell(row: Int, col: Int): Node {
         for (node in children) {
@@ -42,21 +41,20 @@ object GridPaneExtensions {
         }
     }
 
-
     data class Row(val index: Int, val gridPane: GridPane)
 
-    fun cell(row: Int, column: Int, node: () -> Node) {
+    inline fun cell(row: Int, column: Int, node: () -> Node) {
         val child = node()
         setIndices(child, row, column)
     }
 
-    fun Row.col(column: Int, node: GridPane.() -> Node) {
+    inline fun Row.col(column: Int, node: GridPane.() -> Node) {
         val row = this
         val child = row.gridPane.node()
         setIndices(child, row.index, column)
     }
 
-    fun GridPane.row(index: Int, function: Row.() -> Unit) {
+    inline fun GridPane.row(index: Int, function: Row.() -> Unit) {
         Row(index, this).function()
     }
 

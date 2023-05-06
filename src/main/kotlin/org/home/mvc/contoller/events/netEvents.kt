@@ -1,26 +1,39 @@
 package org.home.mvc.contoller.events
 
 import javafx.beans.property.SimpleIntegerProperty
-import org.home.net.action.AreReadyAction
-import org.home.net.action.BattleEndAction
-import org.home.net.action.PlayersConnectionsAction
-import org.home.net.action.PlayerConnectionAction
-import org.home.net.action.FleetSettingsAction
-import org.home.net.action.FleetsReadinessAction
-import org.home.net.action.HasAShot
-import org.home.net.action.HitAction
-import org.home.net.action.MissAction
-import org.home.net.action.NewServerConnectionAction
-import org.home.net.action.PlayerAction
-import org.home.net.action.PlayerReadinessAction
-import org.home.net.action.ShipAction
+import org.home.mvc.contoller.AbstractGameController
+import org.home.mvc.view.AbstractGameView
+import org.home.mvc.view.Scopes
+import org.home.net.message.AreReadyAction
+import org.home.net.message.BattleEndAction
+import org.home.net.message.PlayersConnectionsAction
+import org.home.net.message.PlayerConnectionAction
+import org.home.net.message.FleetSettingsAction
+import org.home.net.message.FleetsReadinessAction
+import org.home.net.message.HasAShot
+import org.home.net.message.HitAction
+import org.home.net.message.MissAction
+import org.home.net.message.NewServerConnectionAction
+import org.home.net.message.PlayerAction
+import org.home.net.message.PlayerReadinessAction
+import org.home.net.message.ShipAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
 import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.name
+import org.home.utils.log
 import tornadofx.Component
+import tornadofx.FX
 import tornadofx.FXEvent
+import tornadofx.Scope
 
 sealed class BattleEvent: FXEvent() {
+
+    override val scope: Scope
+        get() {
+            log { "scope of ${this.name} was requested" }
+            return Scopes.gameScope
+        }
 
     override fun toString(): String {
         return when(this) {
@@ -110,7 +123,12 @@ class ShipWasDeleted(shipType: Int, player: String): FleetEditEvent(shipType, pl
 inline fun Component.eventbus(addEvents: DSLContainer<FXEvent>.() -> Unit) {
     val dslContainer = DSLContainer<FXEvent>()
     dslContainer.addEvents()
-    dslContainer.elements.onEach { fire(it) }.clear()
+    dslContainer.elements.forEach {
+        fire(it)
+        log { "fired $it" }
+    }
+    dslContainer.clear()
 }
+
 
 

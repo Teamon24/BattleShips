@@ -22,18 +22,22 @@ import org.home.mvc.view.NewServerView
 import org.home.mvc.view.app.AppView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.backSlide
-import org.home.mvc.view.components.slide
+import org.home.mvc.view.components.forwardSlide
+import org.home.mvc.view.components.transferTo
+import org.home.mvc.view.components.transitTo
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
-import org.home.net.action.NewServerConnectionAction
-import org.home.net.action.NotReadyAction
-import org.home.net.action.ReadyAction
-import org.home.net.action.ShipAction
-import org.home.net.action.ShipAdditionAction
-import org.home.net.action.ShipDeletionAction
+import org.home.net.message.NewServerConnectionAction
+import org.home.net.message.NotReadyAction
+import org.home.net.message.ReadyAction
+import org.home.net.message.ShipAction
+import org.home.net.message.ShipAdditionAction
+import org.home.net.message.ShipDeletionAction
 import org.home.style.AppStyles
 import org.home.utils.IpUtils
+import org.home.utils.componentName
 import org.home.utils.extensions.AnysExtensions.invoke
+import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.extensions.CollectionsExtensions.excludeAll
 import org.home.utils.log
 import org.home.utils.logEvent
@@ -104,7 +108,7 @@ internal fun BattleView.playerIsReadyReceived() {
     subscribe<PlayerIsReadyReceived> {
         logEvent(it, model)
 
-        if (model.allAreReady && appProps.isServer) {
+        if (model.allAreReady && applicationProperties.isServer) {
             battleButton.isDisable = false
             battleButton.addClass(AppStyles.readyButton)
         }
@@ -116,13 +120,13 @@ internal fun BattleView.playerIsReadyReceived() {
 internal fun BattleView.playerIsNotReadyReceived() {
     subscribe<PlayerIsNotReadyReceived> {
         logEvent(it, model)
-        if (appProps.isServer) battleButton.updateStyle()
+        if (applicationProperties.isServer) battleButton.updateStyle()
         model.log { "ready = $playersReadiness" }
     }
 }
 
 fun BattleView.readyPlayersReceived() {
-    subscribe<ReadyPlayersReceived> { event ->
+    this.subscribe<ReadyPlayersReceived> { event ->
         logEvent(event, model)
         val playersReadiness = model.playersReadiness
         val players = event.players
@@ -144,9 +148,9 @@ internal fun BattleView.playerTurnToShoot() {
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
                 log { "defeated = $defeatedPlayers" }
-                enemiesFleetsFleetGrids.excludeAll(defeatedPlayers).enable()
+                enemiesFleetGridsPanes.excludeAll(defeatedPlayers).enable()
             } else {
-                enemiesFleetsFleetGrids.disable()
+                enemiesFleetGridsPanes.disable()
             }
         }
     }
@@ -198,7 +202,7 @@ internal fun BattleView.battleIsStarted() {
         battleViewExitButton.text = "Покинуть бой"
         battleViewExitButton.action {
             battleController.leaveBattle()
-            replaceWith(tornadofx.find(AppView::class, Scope()), backSlide)
+            transitTo<AppView>(backSlide)
         }
 
         model {
@@ -233,15 +237,15 @@ internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> {
         logEvent(it, model)
         if (currentPlayer == it.player) {
-            replaceWith(tornadofx.find(NewServerView::class, Scope()), backSlide)
+            transitTo<NewServerView>(backSlide)
             battleController.disconnect()
             val freePort = IpUtils.freePort()
             val publicIp = IpUtils.publicIp()
             model.newServer = publicIp to freePort
             battleController.send(NewServerConnectionAction(currentPlayer, publicIp, freePort))
-            appProps.isServer = true
+            applicationProperties.isServer = true
         } else {
-            replaceWith(tornadofx.find(NewServerView::class, Scope()), backSlide)
+            transitTo<NewServerView>(backSlide)
         }
     }
 }
@@ -250,8 +254,8 @@ internal fun NewServerView.serverTransferClientsReceived() {
     subscribe<NewServerConnectionReceived> {
         logEvent(it, model)
         battleController.disconnect()
-        battleController.connectAndSend(it.action.ip, it.action.port)
-        replaceWith(tornadofx.find(BattleView::class), slide)
+        battleController.connect(it.action.ip, it.action.port)
+        transitTo<NewServerView>(backSlide)
     }
 }
 

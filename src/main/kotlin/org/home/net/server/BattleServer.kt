@@ -1,7 +1,6 @@
 package org.home.net.server
 
-import org.home.mvc.ApplicationProperties
-import org.home.mvc.contoller.Conditions
+import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
@@ -24,32 +23,33 @@ import org.home.mvc.model.BattleModel
 import org.home.mvc.model.thoseAreReady
 import org.home.net.BattleClient.ActionTypeAbsentException
 import org.home.net.PlayerSocket
-import org.home.net.action.Action
-import org.home.net.action.AreReadyAction
-import org.home.net.action.BattleEndAction
-import org.home.net.action.BattleStartAction
-import org.home.net.action.PlayersConnectionsAction
-import org.home.net.action.PlayerConnectionAction
-import org.home.net.action.DefeatAction
-import org.home.net.action.DisconnectAction
-import org.home.net.action.FleetSettingsAction
-import org.home.net.action.FleetsReadinessAction
-import org.home.net.action.HasAShot
-import org.home.net.action.HitAction
-import org.home.net.action.LeaveAction
-import org.home.net.action.MissAction
-import org.home.net.action.NewServerAction
-import org.home.net.action.NewServerConnectionAction
-import org.home.net.action.NotReadyAction
-import org.home.net.action.PlayerAction
-import org.home.net.action.PlayerReadinessAction
-import org.home.net.action.PlayerToRemoveAction
-import org.home.net.action.ReadyAction
-import org.home.net.action.ShipAction
-import org.home.net.action.ShipAdditionAction
-import org.home.net.action.ShipDeletionAction
-import org.home.net.action.ShotAction
-import org.home.net.action.TurnAction
+import org.home.net.isNotClosed
+import org.home.net.message.Action
+import org.home.net.message.AreReadyAction
+import org.home.net.message.BattleEndAction
+import org.home.net.message.BattleStartAction
+import org.home.net.message.PlayersConnectionsAction
+import org.home.net.message.PlayerConnectionAction
+import org.home.net.message.DefeatAction
+import org.home.net.message.DisconnectAction
+import org.home.net.message.FleetSettingsAction
+import org.home.net.message.FleetsReadinessAction
+import org.home.net.message.HasAShot
+import org.home.net.message.HitAction
+import org.home.net.message.LeaveAction
+import org.home.net.message.MissAction
+import org.home.net.message.NewServerAction
+import org.home.net.message.NewServerConnectionAction
+import org.home.net.message.NotReadyAction
+import org.home.net.message.PlayerAction
+import org.home.net.message.PlayerReadinessAction
+import org.home.net.message.PlayerToRemoveAction
+import org.home.net.message.ReadyAction
+import org.home.net.message.ShipAction
+import org.home.net.message.ShipAdditionAction
+import org.home.net.message.ShipDeletionAction
+import org.home.net.message.ShotAction
+import org.home.net.message.TurnAction
 import org.home.utils.DSLContainer
 import org.home.utils.PlayerSocketUtils.send
 import org.home.utils.PlayersSocketsExtensions.exclude
@@ -68,22 +68,16 @@ import org.home.utils.log
 import tornadofx.FXEvent
 import kotlin.concurrent.thread
 
-
-
-class BattleServer(
-    notifierStrategies: ShotNotifierStrategies,
-    private val conditions: Conditions,
-    processor: MessageProcessor<Action, PlayerSocket>,
-    receiver: MessageReceiver<Action, PlayerSocket>,
-    accepter: ConnectionsListener<Action, PlayerSocket>,
-    appProps: ApplicationProperties,
-) : MultiServer<Action, PlayerSocket>(processor, receiver, accepter, appProps) {
+class BattleServer: MultiServer<Action, PlayerSocket>() {
+    private val notifierStrategies: ShotNotifierStrategies by di()
+    private val awaitConditions: AwaitConditions by newGame()
 
     private val <E> Collection<E>.hasPlayers get() = hasElements
     private val String.hasTurn get() = this == turnPlayer
 
     private val shotNotifier = notifierStrategies.create(sockets)
     private val turnList: MutableList<String> = mutableListOf()
+
     private lateinit var turnPlayer: String
 
     override fun send(action: Action) = sockets.send(action)
@@ -126,7 +120,7 @@ class BattleServer(
                     model.registersAHit(shot)
                         .yes {
                             onHit(action)
-                            val ships = model.playersAndShips[currentPlayer]!!
+                            val ships = model.shipsOf(currentPlayer)
                             ships.isEmpty().so { turnList.remove(currentPlayer) }
                             return
                         }
@@ -154,7 +148,7 @@ class BattleServer(
             }
 
             is PlayerToRemoveAction -> sendRemovePlayer(action)
-            is NewServerConnectionAction -> conditions.newServerFound.notifyUI() {
+            is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
                 newServer = action.ip to action.port
             }
 
@@ -180,7 +174,15 @@ class BattleServer(
             when (action) {
                 is DisconnectAction -> removeAndFire(action, ::PlayerWasDisconnected)
                 is LeaveAction -> removeAndFire(action, ::PlayerLeaved)
-                is DefeatAction -> Unit
+                is DefeatAction -> {
+                    +PlayerWasDefeated(action)
+                    turnList.remove(removedPlayer)
+                    currentPlayer.hasTurn yes {
+                        turnList.hasPlayers so { +TurnReceived(TurnAction(currentPlayer)) }
+                    } no {
+                        sockets[action.shooter].send(TurnAction(action.shooter))
+                    }
+                }
             }
 
             turnList.isNotEmpty().so {
@@ -196,16 +198,6 @@ class BattleServer(
                         }
                     }
                 }
-
-
-                action.asDefeat {
-                    +PlayerWasDefeated(this)
-                    currentPlayer.hasTurn yes {
-                        turnList.hasPlayers so { +TurnReceived(TurnAction(currentPlayer)) }
-                    } no {
-                        sockets[shooter].send(TurnAction(shooter))
-                    }
-                }
             }
         }
     }
@@ -217,6 +209,7 @@ class BattleServer(
         sockets.removeIf {
             it.player == toRemovedAction.player
         }
+
         +event(toRemovedAction)
     }
 
@@ -291,19 +284,19 @@ class BattleServer(
                 receiver.interrupt()
             }
         }
-        serverSocket.close()
+        serverSocket().close()
     }
 
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
         log { "server is leaving battle" }
         model {
-            log { "model.battleIsEnded = $battleIsEnded" }
-            log { "model.battleIsStarted = $battleIsStarted" }
+            log { "battleIsEnded = $battleIsEnded" }
+            log { "battleIsStarted = $battleIsStarted" }
             if ((!battleIsEnded || battleIsStarted) && playersNames.size > 1) {
-                TODO("${this.className}#leaveBattle has no server transfer logic that tested for correct implementation")
+                TODO("${this@BattleServer.className}#leaveBattle has no server transfer logic that tested for correct implementation")
                 sockets.send(NewServerAction(turnPlayer))
-                conditions.newServerFound.await()
+                awaitConditions.newServerFound.await()
                 sockets.exclude(turnPlayer).send(
                     NewServerConnectionAction(
                         turnPlayer,
@@ -320,12 +313,12 @@ class BattleServer(
         }
     }
 
-    override fun connectAndSend(ip: String, port: Int) {
-        throw UnsupportedOperationException("${this.className}#connectAndSend")
+    override fun connect(ip: String, port: Int) {
+        start(port)
     }
 
     override fun accept(): PlayerSocket {
-        val socket = PlayerSocket(serverSocket.accept())
+        val socket = PlayerSocket(serverSocket().accept())
         log { "client has been connected" }
         return socket
     }
@@ -341,11 +334,14 @@ class BattleServer(
     }
 
     override fun onDisconnect(socket: PlayerSocket) {
-        val player = socket.player!!
-        DisconnectAction(player).also {
-            send(it)
-            eventbus {
-                +PlayerWasDisconnected(it)
+        socket {
+            isNotClosed.so {
+                DisconnectAction(player!!).also {
+                    send(it)
+                    eventbus {
+                        +PlayerWasDisconnected(it)
+                    }
+                }
             }
         }
     }
@@ -361,10 +357,7 @@ class BattleServer(
         return turnPlayer
     }
 
-    private fun fleetsReadinessExcept(
-        player: String,
-        model: BattleModel,
-    ): FleetsReadinessAction {
+    private fun fleetsReadinessExcept(player: String, model: BattleModel): FleetsReadinessAction {
         val states = model.fleetsReadiness
             .exclude(player)
             .map { (player, state) ->

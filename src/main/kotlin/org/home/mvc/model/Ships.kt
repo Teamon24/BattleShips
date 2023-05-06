@@ -5,6 +5,8 @@ import org.home.utils.log
 typealias Ships = MutableCollection<Ship>
 
 class Ship(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
+    override fun toString() = super.toString()
+
     constructor(coordinate: Coord) : this(listOf(coordinate))
     constructor(vararg coordinates: Coord) : this(coordinates.toList())
     fun copy() = Ship(this.toMutableList())

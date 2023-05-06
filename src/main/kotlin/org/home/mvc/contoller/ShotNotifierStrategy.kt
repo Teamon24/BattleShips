@@ -1,11 +1,11 @@
 package org.home.mvc.contoller
 
 import org.home.mvc.ApplicationProperties
-import org.home.net.action.Action
-import org.home.net.action.HasAShot
-import org.home.net.action.HitAction
-import org.home.net.action.MissAction
-import org.home.net.action.ShotAction
+import org.home.net.message.Action
+import org.home.net.message.HasAShot
+import org.home.net.message.HitAction
+import org.home.net.message.MissAction
+import org.home.net.message.ShotAction
 import org.home.utils.PlayersSockets
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.className

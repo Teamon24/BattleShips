@@ -5,8 +5,6 @@ import org.home.utils.log
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Condition<A>(val name: String, private val accepter: A) {
-
-
     private val state = AtomicBoolean(false)
     private fun isNotDone() = !state()
 

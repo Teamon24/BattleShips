@@ -1,41 +1,41 @@
 package org.home.mvc.view.battle
 
 import javafx.beans.property.SimpleStringProperty
-import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
-import org.home.mvc.contoller.Conditions
+import org.home.mvc.contoller.AwaitConditions
+import org.home.mvc.contoller.BattleController
+import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.app.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
-import org.home.mvc.view.components.slide
+import org.home.mvc.view.components.forwardSlide
+import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.net.BattleClient
-import org.home.net.action.PlayerConnectionAction
 import org.home.style.AppStyles
-import tornadofx.Scope
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.label
 import tornadofx.textfield
+import kotlin.reflect.KClass
 
-class BattleJoinView : View("Присоединиться к битве") {
+class BattleJoinView : AbstractGameView("Присоединиться к битве") {
+    private val battleClient: BattleController by di()
+    private val awaitConditions: AwaitConditions by newGame()
 
-    private val applicationProperties: ApplicationProperties by di()
-    private val battleClient: BattleClient by di()
-    private val conditions: Conditions by di()
     private val ipAddress = SimpleStringProperty().apply {
         value = "${applicationProperties.ip}:${applicationProperties.port}"
     }
 
-    private val currentView = this@BattleJoinView
+    protected val currentView = this@BattleJoinView
 
     init {
+        applicationProperties.isServer = false
         this.title = applicationProperties.currentPlayer.uppercase()
     }
 
@@ -50,13 +50,10 @@ class BattleJoinView : View("Присоединиться к битве") {
             button(connectionButtonText) {
                 action {
                     try {
-                        applicationProperties.isServer = false
                         val (ip, port) = extract()
                         battleClient.connect(ip, port)
-                        battleClient.listen()
-                        battleClient.send(connectMessage())
-                        conditions.fleetSettingsReceived.await()
-                        currentView.replaceWith(tornadofx.find(BattleView::class, Scope()), slide)
+                        awaitConditions.fleetSettingsReceived.await()
+                        currentView.transferTo<BattleView>(forwardSlide)
                     } catch (e: Exception) {
                         e.printStackTrace()
                         openAlertWindow {
@@ -67,12 +64,12 @@ class BattleJoinView : View("Присоединиться к битве") {
             }
         }
 
-        cell(2, 1) {
-            backTransitButton(currentView, AppView::class)
-        }
+        cell(2, 1) { backTransitButton<AppView>(currentView) }
     }
 
-    private fun connectMessage() = PlayerConnectionAction(applicationProperties.currentPlayer)
+    fun transit(from: View, to: KClass<BattleView>) {
+        from.replaceWith(tornadofx.find(to), forwardSlide)
+    }
 
     private fun extract(): Pair<String, Int> {
         val split = ipAddress.value.split(":")

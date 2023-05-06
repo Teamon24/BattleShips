@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 
 sealed class InfiniteTryBase<E, H> {
+    lateinit var condition: AtomicBoolean
     private val handlers = mutableMapOf<H, List<KClass<out Exception>>>()
     private val exceptions = mutableListOf<KClass<out Exception>>()
     abstract val emptyHandler: H
@@ -23,6 +24,8 @@ sealed class InfiniteTryBase<E, H> {
         exceptions.clear()
     }
 
+    abstract fun putNoArgHandler(body: () -> Unit)
+
     fun getHandler(ex: Exception): H {
         val handlerAndExceptions = handlers.entries.firstOrNull { handlerAndExs ->
             ex::class in handlerAndExs.value
@@ -35,24 +38,28 @@ sealed class InfiniteTryBase<E, H> {
 
     companion object {
         infix fun <E, H> InfiniteTryBase<E, H>.doWhile(condition: AtomicBoolean) {
+            this.condition = condition
             while (condition()) { loopBody() }
             log { "i'm done" }
         }
 
-        infix fun <E, H> InfiniteTryBase<E, H>.handle(handler: H) {
-            putHandler(handler)
-        }
+        infix fun <E, H> InfiniteTryBase<E, H>.handle(handler: H) { putHandler(handler) }
 
-        inline fun <E, H> InfiniteTryBase<E, H>.noHandle() {
-            putHandler(emptyHandler)
-        }
+        inline infix fun <E, H> InfiniteTryBase<E, H>.catch(function: InfiniteTryBase<E, H>.() -> Unit) =
+            apply { function() }
 
-        inline infix fun <E, H> InfiniteTryBase<E, H>.catch(
-            function: InfiniteTryBase<E, H>.() -> Unit
-        ): InfiniteTryBase<E, H> {
-            function()
-            return this
-        }
+        inline infix fun <E, H> InfiniteTryBase<E, H>.ignore(skippedExClass: () -> KClass<out Exception>) =
+            apply {
+                +skippedExClass()
+                putHandler(emptyHandler)
+            }
+
+        inline infix fun <E, H> InfiniteTryBase<E, H>.stopOn(stopExClass: () -> KClass<out Exception>) =
+            apply {
+                +stopExClass()
+                putNoArgHandler { condition(false) }
+            }
+
     }
 
     abstract fun loopBody()
@@ -64,19 +71,17 @@ class InfiniteTryFor<E>(
     override val emptyHandler = { _: Exception, _: E -> }
 
     override fun loopBody() {
-        elements.forEach { element ->
-            try { body(element) }
-            catch (ex: Exception) {
-                getHandler(ex)(ex, element)
-            }
+        elements.forEach {
+            try { body(it) }
+            catch (ex: Exception) { getHandler(ex)(ex, it) }
         }
     }
 
     companion object {
-        infix fun <E> Collection<E>.infiniteTryFor(forEach: (E) -> Unit): InfiniteTryFor<E> {
-            return InfiniteTryFor(this, forEach)
-        }
+        infix fun <E> Collection<E>.infiniteTryFor(forEach: (E) -> Unit) = InfiniteTryFor(this, forEach)
     }
+
+    override fun putNoArgHandler(body: () -> Unit) { putHandler { _, _ -> body() } }
 }
 
 
@@ -84,17 +89,13 @@ class InfiniteTry(val body: () -> Unit): InfiniteTryBase<Unit, (Exception) -> Un
     override val emptyHandler = { _: Exception -> }
 
     override fun loopBody() {
-        try {
-            body()
-        } catch (ex: Exception) {
-            val handler = getHandler(ex)
-            handler(ex)
-        }
+        try { body() }
+        catch (ex: Exception) { getHandler(ex)(ex) }
     }
 
     companion object {
-        fun infiniteTry(body: () -> Unit): InfiniteTry {
-            return InfiniteTry(body)
-        }
+        fun loop(body: () -> Unit) = InfiniteTry(body)
     }
+
+    override fun putNoArgHandler(body: () -> Unit) { putHandler { body() } }
 }

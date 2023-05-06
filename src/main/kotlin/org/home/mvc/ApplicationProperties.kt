@@ -74,6 +74,8 @@ class ApplicationProperties(
         const val playersNumberLabel = "игроки"
         const val battleFieldCreationMenuTitle = "Создание поля боя"
         const val ipAddressFieldLabel = "ip"
+        const val backButtonText = "Назад"
+        const val createNewGameButtonText = "Создать"
         const val creationButtonText = "Создать поле боя"
         const val joinButtonText = "Присоединиться"
         const val delayTime = 100L

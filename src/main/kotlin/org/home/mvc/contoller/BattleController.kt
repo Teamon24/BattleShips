@@ -1,24 +1,18 @@
 package org.home.mvc.contoller
 
-import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.eventbus
-import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
 import org.home.mvc.model.removeDestroyedDeck
-import org.home.net.action.Action
-import org.home.net.action.DefeatAction
-import org.home.net.action.HitAction
-import org.home.net.action.ShotAction
+import org.home.net.message.Action
+import org.home.net.message.DefeatAction
+import org.home.net.message.HitAction
+import org.home.net.message.ShotAction
 import org.home.utils.DSLContainer
 import org.home.utils.extensions.BooleansExtensions.so
-import tornadofx.Controller
 
-abstract class BattleController(applicationProperties: ApplicationProperties): Controller() {
-    protected val currentPlayer = applicationProperties.currentPlayer
-    protected val model: BattleModel by di()
-
+abstract class BattleController: AbstractGameController() {
     abstract fun send(action: Action)
     abstract fun send(actions: Collection<Action>)
 
@@ -27,7 +21,6 @@ abstract class BattleController(applicationProperties: ApplicationProperties): C
         send(shotMessage)
     }
 
-
     fun send(addMessages: DSLContainer<Action>.() -> Unit) {
         val dslContainer = DSLContainer<Action>()
         dslContainer.addMessages()
@@ -35,7 +28,7 @@ abstract class BattleController(applicationProperties: ApplicationProperties): C
     }
 
     fun onHit(shotAction: ShotAction) {
-        val ships = model.playersAndShips[currentPlayer]!!
+        val ships = model.shipsOf(currentPlayer)
         ships.removeDestroyedDeck(shotAction.shot)
         val hitAction = HitAction(shotAction)
 
@@ -56,7 +49,7 @@ abstract class BattleController(applicationProperties: ApplicationProperties): C
     abstract fun leaveBattle()
     abstract fun endBattle()
     abstract fun disconnect()
-    abstract fun connectAndSend(ip: String, port: Int)
+    abstract fun connect(ip: String, port: Int)
 
     abstract fun onBattleViewExit()
     abstract fun onWindowClose()

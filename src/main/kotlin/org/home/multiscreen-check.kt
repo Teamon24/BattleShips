@@ -65,8 +65,6 @@ class StartUpLocation(windowWidth: Double, windowHeight: Double) {
     /**
      * Get Top Left X and Y Positions for a Window to centre it on the
      * currently active screen at application startup
-     * @param windowWidth - Window Width
-     * @param windowHeight - Window Height
      */
     init {
         // Get X Y of start-up location on Active Screen
