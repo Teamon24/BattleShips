@@ -13,5 +13,5 @@ abstract class AbstractGameController : Controller() {
 
     protected val model: BattleModel by newGame()
     protected val applicationProperties = model.applicationProperties
-    protected val currentPlayer = model.currentPlayer
+    protected open val currentPlayer = model.currentPlayer
 }

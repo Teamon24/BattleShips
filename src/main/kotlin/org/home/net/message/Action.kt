@@ -45,8 +45,8 @@ sealed class Action: Message {
             is ShipDeletionAction -> "ShipDeletion[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
             is FleetSettingsAction -> buildString {
                 append("FleetSettings(width=").append(width)
-                append("height=").append(height)
-                append("types=").append(shipsTypes)
+                append(" height=").append(height)
+                append(" types=").append(shipsTypes)
                 append(")")
             }
         }

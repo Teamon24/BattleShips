@@ -39,6 +39,7 @@ import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
+import org.home.net.message.Action
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
@@ -61,7 +62,7 @@ import tornadofx.selectedItem
 import kotlin.collections.set
 
 class BattleView : AbstractGameView("Battle View") {
-    internal val battleController: BattleController by di()
+    internal val battleController: BattleController<Action> by di()
 
     init {
         model.playersAndShips[currentPlayer] = mutableListOf()

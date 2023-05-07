@@ -15,6 +15,7 @@ import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
+import org.home.net.message.Action
 import org.home.style.AppStyles
 import tornadofx.View
 import tornadofx.action
@@ -25,14 +26,14 @@ import tornadofx.textfield
 import kotlin.reflect.KClass
 
 class BattleJoinView : AbstractGameView("Присоединиться к битве") {
-    private val battleClient: BattleController by di()
+    private val battleClient: BattleController<Action> by di()
     private val awaitConditions: AwaitConditions by newGame()
 
     private val ipAddress = SimpleStringProperty().apply {
         value = "${applicationProperties.ip}:${applicationProperties.port}"
     }
 
-    protected val currentView = this@BattleJoinView
+    private val currentView = this@BattleJoinView
 
     init {
         applicationProperties.isServer = false

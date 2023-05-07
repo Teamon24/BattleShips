@@ -3,11 +3,11 @@ package org.home.mvc.di
 import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShotNotifierStrategies
-import org.home.mvc.contoller.ShotNotifierStrategies.di
 import org.home.mvc.view.Scopes
 import org.home.net.BattleClient
 import org.home.net.PlayerSocket
 import org.home.net.message.Action
+import org.home.net.server.BattleEventEmitter
 import org.home.net.server.BattleServer
 import org.home.net.server.ConnectionsListener
 import org.home.net.server.MessageProcessor
@@ -35,23 +35,16 @@ object Injector  {
             logInject(c.componentName, this, scope)
         }
     }
-
-    inline fun <reified T> netDi(c: Component):
-            ReadOnlyProperty<Component, T>
-            where T : Component,
-                  T : ScopedInstance = ReadOnlyProperty { component, kProperty ->
-
-        val value = di<T>().getValue(component, kProperty)
-        logInject(c, value)
-        value
-    }
 }
+
+val battleControllerImplName = "battle-controller-impl"
 
 val diDev = { props: String, player: Int, players: Int ->
     module {
         single { ApplicationProperties(props, player, players) }
 
         single { ShotNotifierStrategies }
+        single { BattleEventEmitter }
         single { ConnectionsListener<Action, PlayerSocket>() }
         single { MessageReceiver<Action, PlayerSocket>() }
         single { MessageProcessor<Action, PlayerSocket>() }
@@ -61,7 +54,7 @@ val diDev = { props: String, player: Int, players: Int ->
 
         single<MultiServer<Action, PlayerSocket>> { get<BattleServer>() }
 
-        factory<BattleController> {
+        factory<BattleController<Action>> {
             val isServer = get<ApplicationProperties>().isServer
             isServer then get<BattleServer>() or get<BattleClient>()
         }

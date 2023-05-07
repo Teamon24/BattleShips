@@ -30,6 +30,7 @@ import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
+import org.home.net.message.Action
 import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
@@ -43,7 +44,7 @@ import kotlin.reflect.KClass
 
 class BattleCreationView : AbstractGameView("Настройки боя") {
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
-    private val battleController: BattleController by di()
+    private val battleController: BattleController<Action> by di()
 
     override val root = Form()
         .addClass(AppStyles.form)

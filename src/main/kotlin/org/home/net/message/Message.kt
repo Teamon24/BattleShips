@@ -4,6 +4,7 @@ import java.io.Serializable
 
 
 interface Message: Serializable
+object Ping: Message
 
 class MessagesInfo(val number: Int): Message {
     override fun toString(): String {

@@ -1,6 +1,6 @@
 package org.home.net.server
 
-import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.AbstractGameController
 import org.home.net.message.Message
 import org.home.utils.SocketsMessages
 import org.home.utils.log
@@ -10,7 +10,7 @@ import java.net.Socket
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 
-abstract class MultiServer<M : Message, S : Socket> : BattleController() {
+abstract class MultiServer<M : Message, S : Socket>: AbstractGameController() {
     val processor: MessageProcessor<M, S> by di()
     val receiver: MessageReceiver<M, S> by di()
     val connector: ConnectionsListener<M, S> by di()
@@ -24,7 +24,7 @@ abstract class MultiServer<M : Message, S : Socket> : BattleController() {
 
     private lateinit var serverSocket: ServerSocket
 
-    protected fun serverSocket(): ServerSocket = serverSocket
+    fun serverSocket(): ServerSocket = serverSocket
 
     abstract fun process(socket: S, message: M)
     abstract fun accept(): S

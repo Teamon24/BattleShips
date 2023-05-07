@@ -2,6 +2,7 @@ package org.home.net.server
 
 import org.home.net.isNotClosed
 import org.home.net.message.Message
+import org.home.net.message.Ping
 import org.home.utils.InfiniteTry.Companion.loop
 import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.doWhile
@@ -114,7 +115,12 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
                 val (socket, messages) = socketsMessages.take()
 
                 socket.isNotClosed {
-                    messages.forEach { message -> process(socket, message) }
+                    messages.forEach { message ->
+                        when (message) {
+                            is Ping -> Unit
+                            else -> process(socket, message)
+                        }
+                    }
                 }
             } stopOn {
                 InterruptedException::class
