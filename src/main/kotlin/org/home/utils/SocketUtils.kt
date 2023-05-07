@@ -26,8 +26,8 @@ object SocketUtils {
             }
         }
 
-    fun <T: Message> Socket.send(message: T) = send(withInfo(message))
-    fun <T: Message> Socket.send(messages: Collection<T>) = send(withInfo(messages))
+    fun Socket.send(message: Message) = send(withInfo(message))
+    fun Socket.send(messages: Collection<Message>) = send(withInfo(messages))
 
     fun <T: Message, S: Socket> Collection<S>.send(message: T) = forEach { it.send(withInfo(message)) }
     fun <T: Message, S: Socket> Collection<S>.send(messages: Collection<T>) = forEach { it.send(messages) }
@@ -39,15 +39,11 @@ object SocketUtils {
             .forEach { (socket, messages) -> socket.send(messages) }
     }
 
-    inline infix fun Collection<Socket>.send(addMessages: DSLContainer<Action>.() -> Unit) {
-        val dslContainer = DSLContainer<Action>()
-        dslContainer.addMessages()
-        send(dslContainer.elements)
+    inline infix fun Collection<Socket>.send(addMessages: DSLContainer<Message>.() -> Unit) {
+        send(dslContainer(addMessages))
     }
 
-    inline fun Socket.send(addMessages: DSLContainer<Action>.() -> Unit) {
-        val dslContainer = DSLContainer<Action>()
-        dslContainer.addMessages()
-        send(dslContainer.elements)
+    inline fun Socket.send(addMessages: DSLContainer<Message>.() -> Unit) {
+        send(dslContainer(addMessages))
     }
 }

@@ -31,7 +31,7 @@ import kotlin.concurrent.thread
 sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     abstract val name: String
     protected val multiServer: MultiServer<M, S> by di()
-    lateinit var thread: Thread
+    private lateinit var thread: Thread
     internal val canProceed = true.atomic
     abstract fun run()
 
@@ -47,6 +47,9 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
         canProceed(false)
         thread.interrupt()
     }
+
+    val isAlive get() = thread.isAlive
+    val isInterrupted get() = thread.isInterrupted
 
     fun onSocketException(socket: S) = multiServer.onDisconnect(socket)
 }

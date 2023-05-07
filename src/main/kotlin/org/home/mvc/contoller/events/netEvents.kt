@@ -1,8 +1,6 @@
 package org.home.mvc.contoller.events
 
 import javafx.beans.property.SimpleIntegerProperty
-import org.home.mvc.contoller.AbstractGameController
-import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.Scopes
 import org.home.net.message.AreReadyAction
 import org.home.net.message.BattleEndAction
@@ -19,13 +17,17 @@ import org.home.net.message.PlayerReadinessAction
 import org.home.net.message.ShipAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
+import org.home.utils.dslContainer
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.name
 import org.home.utils.log
 import tornadofx.Component
-import tornadofx.FX
 import tornadofx.FXEvent
 import tornadofx.Scope
+
+inline fun Component.eventbus(addEvents: DSLContainer<FXEvent>.() -> Unit) {
+    dslContainer(addEvents).forEach(this::fire)
+}
 
 sealed class BattleEvent: FXEvent() {
 
@@ -68,39 +70,42 @@ sealed class BattleEvent: FXEvent() {
         }
     }
 }
-
 sealed class HasAPlayer(val player: String): BattleEvent()
+
 sealed class HasPlayers(val players: Collection<String>): BattleEvent()
-
 class ConnectedPlayerReceived(action: PlayerConnectionAction): HasAPlayer(action.player)
+
+
 class FleetSettingsReceived(val settings: FleetSettingsAction): BattleEvent()
-
-
 class PlayerIsNotReadyReceived(action: PlayerReadinessAction): HasAPlayer(action.player)
 class PlayerIsReadyReceived(action: PlayerReadinessAction): HasAPlayer(action.player)
+
 class FleetsReadinessReceived(action: FleetsReadinessAction): BattleEvent() {
     val states = action.states
 }
 class ConnectedPlayersReceived(action: PlayersConnectionsAction): HasPlayers(action.players)
 class ReadyPlayersReceived(action: AreReadyAction): HasPlayers(action.players)
+
 class TurnReceived(action: PlayerAction): HasAPlayer(action.player)
 
 sealed class ThereWasAShot(val hasAShot: HasAShot): HasAPlayer(hasAShot.player) {
     fun isMiss() = hasAShot is MissAction
 }
-
 class ShipWasHit(hitAction: HitAction): ThereWasAShot(hitAction)
-class ThereWasAMiss(missAction: MissAction): ThereWasAShot(missAction)
 
+class ThereWasAMiss(missAction: MissAction): ThereWasAShot(missAction)
 sealed class PlayerToRemoveReceived(action: PlayerAction): HasAPlayer(action.player)
 class PlayerWasDefeated(action: PlayerAction): PlayerToRemoveReceived(action)
 class PlayerLeaved(action: PlayerAction): PlayerToRemoveReceived(action)
+
 class PlayerWasDisconnected(action: PlayerAction) : PlayerToRemoveReceived(action)
-
 object BattleIsStarted: BattleEvent()
-class BattleIsEnded(battleEndAction: BattleEndAction): HasAPlayer(battleEndAction.player)
 
+class BattleIsEnded(winner: String): HasAPlayer(winner) {
+    constructor(battleEndAction: BattleEndAction): this(battleEndAction.player)
+}
 class NewServerReceived(action: PlayerAction): HasAPlayer(action.player)
+
 class NewServerConnectionReceived(val action: NewServerConnectionAction): BattleEvent()
 
 sealed class FleetEditEvent(val shipType: Int, player: String): HasAPlayer(player) {
@@ -118,16 +123,6 @@ class ShipWasDeleted(shipType: Int, player: String): FleetEditEvent(shipType, pl
     constructor(action: ShipAction): this(action.shipType, action.player)
     override val operation: SimpleIntegerProperty.() -> Unit = { value += 1 }
     override val op = "+"
-}
-
-inline fun Component.eventbus(addEvents: DSLContainer<FXEvent>.() -> Unit) {
-    val dslContainer = DSLContainer<FXEvent>()
-    dslContainer.addEvents()
-    dslContainer.elements.forEach {
-        fire(it)
-        log { "fired $it" }
-    }
-    dslContainer.clear()
 }
 
 

@@ -6,15 +6,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
+import org.home.mvc.contoller.events.PlayerWasDefeated
+import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.eventbus
+import org.home.mvc.model.removeDestroyedDeck
 import org.home.net.message.Action
-import org.home.net.message.BattleEndAction
+import org.home.net.message.DefeatAction
 import org.home.net.message.FleetSettingsAction
+import org.home.net.message.HitAction
 import org.home.net.message.LeaveAction
 import org.home.net.message.MissAction
 import org.home.net.message.NotReadyAction
@@ -36,6 +39,7 @@ import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.no
 import org.home.utils.extensions.BooleansExtensions.yes
+import org.home.utils.extensions.CollectionsExtensions.isEmpty
 import org.home.utils.extensions.className
 import org.home.utils.log
 import org.home.utils.logReceive
@@ -62,6 +66,9 @@ class BattleClient: BattleController() {
     class ActionTypeAbsentException(any: Any, className: String, method: String):
     RuntimeException("There is no when-branch for $any in $className#$method")
 
+    override fun send(action: Action) = serverSocket { isNotClosed { send(action) } }
+    override fun send(actions: Collection<Action>) = serverSocket { isNotClosed { send(actions) } }
+
     @Throws(UnknownHostException::class, IOException::class)
     override fun connect(ip: String, port: Int) {
         serverSocket = Socket(ip, port)
@@ -86,7 +93,7 @@ class BattleClient: BattleController() {
                 messages.drop(1).forEach { process(it as Action) }
             } stopOnAll {
                 SocketException::class + EOFException::class
-            } doWhile( canProceed)
+            } doWhile canProceed
         }
         receiverJob.start()
     }
@@ -103,10 +110,10 @@ class BattleClient: BattleController() {
 
             is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
+
             is ShotAction -> {
                 val target = action.target
-                val serverIsTarget = target == currentPlayer
-                if (serverIsTarget) {
+                if (target == currentPlayer) {
                     model
                         .registersAHit(action.shot)
                         .yes { onHit(action) }
@@ -124,8 +131,26 @@ class BattleClient: BattleController() {
         }
     }
 
-    override fun send(action: Action) = serverSocket { isNotClosed { send(action) } }
-    override fun send(actions: Collection<Action>) = serverSocket { isNotClosed { send(actions) } }
+    fun onHit(shotAction: ShotAction) {
+        val ships = model.shipsOf(currentPlayer)
+        ships.removeDestroyedDeck(shotAction.shot)
+        val hitAction = HitAction(shotAction)
+
+        val defeatAction = DefeatAction(shotAction.player, currentPlayer)
+
+        send {
+            + hitAction
+            ships.isEmpty { + defeatAction }
+        }
+
+        eventbus {
+            + ShipWasHit(hitAction)
+            ships.isEmpty {
+                + PlayerWasDefeated(defeatAction)
+            }
+        }
+    }
+
 
     override fun onBattleViewExit() {
         leaveBattle()
@@ -141,18 +166,9 @@ class BattleClient: BattleController() {
     }
 
     override fun leaveBattle() {
-        model.battleIsStarted {
-            send(LeaveAction(currentPlayer))
-        }
-
+        send(LeaveAction(currentPlayer))
         Platform.runLater {
             disconnect()
-        }
-    }
-
-    override fun endBattle() {
-        eventbus {
-            +BattleIsEnded(BattleEndAction(model.getWinner()))
         }
     }
 

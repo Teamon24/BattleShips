@@ -76,32 +76,34 @@ class InfiniteTryFor<E>(
     val body: (E) -> Unit): InfiniteTryBase<E, (Exception, E) -> Unit>() {
     override val emptyHandler = { _: Exception, _: E -> }
 
-    override fun loopBody() {
+    override inline fun loopBody() {
         elements.forEach {
             try { body(it) }
             catch (ex: Exception) { getHandler(ex)(ex, it) }
         }
     }
 
+    override inline fun putNoArgHandler(crossinline body: () -> Unit) { putHandler { _, _ -> body() } }
+
     companion object {
         infix fun <E> Collection<E>.infiniteTryFor(forEach: (E) -> Unit) = InfiniteTryFor(this, forEach)
     }
 
-    override fun putNoArgHandler(body: () -> Unit) { putHandler { _, _ -> body() } }
 }
 
 
 class InfiniteTry(val body: () -> Unit): InfiniteTryBase<Unit, (Exception) -> Unit>() {
     override val emptyHandler = { _: Exception -> }
 
-    override fun loopBody() {
+    override inline fun loopBody() {
         try { body() }
         catch (ex: Exception) { getHandler(ex)(ex) }
     }
 
+    override inline fun putNoArgHandler(crossinline body: () -> Unit) { putHandler { body() } }
+
     companion object {
-        fun loop(body: () -> Unit) = InfiniteTry(body)
+        fun loop(body: () -> Unit): InfiniteTry = InfiniteTry(body)
     }
 
-    override fun putNoArgHandler(body: () -> Unit) { putHandler { body() } }
 }

@@ -38,7 +38,7 @@ class Ship(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(
 }
 
 
-fun Ships.hadHit(shot: Coord): Boolean {
+fun Ships.areHit(shot: Coord): Boolean {
     return firstOrNull { it.contains(shot) } != null
 }
 

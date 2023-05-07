@@ -24,8 +24,6 @@ import org.home.mvc.view.NewServerView
 import org.home.mvc.view.app.AppView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.backSlide
-import org.home.mvc.view.components.forwardSlide
-import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.components.transitTo
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
@@ -37,13 +35,12 @@ import org.home.net.message.ShipAdditionAction
 import org.home.net.message.ShipDeletionAction
 import org.home.style.AppStyles
 import org.home.utils.IpUtils
-import org.home.utils.componentName
 import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.name
+import org.home.utils.extensions.BooleansExtensions.or
+import org.home.utils.extensions.BooleansExtensions.then
 import org.home.utils.extensions.CollectionsExtensions.excludeAll
 import org.home.utils.log
 import org.home.utils.logEvent
-import tornadofx.Scope
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
@@ -81,14 +78,10 @@ internal fun BattleView.fleetsReadinessReceived() {
         logEvent(event, model)
         model.fleetsReadiness {
             event.states.forEach { (player, state) ->
-                get(player) ?: run {
-                    put(player, mutableMapOf())
-                }
+                get(player) ?: run { put(player, mutableMapOf()) }
 
                 state.forEach { (shipType, number) ->
-
                     val shipNumberProperty = get(player)!![shipType]
-
                     shipNumberProperty ?: run {
                         get(player)!![shipType] = SimpleIntegerProperty(number)
                         return@fleetsReadiness
@@ -221,10 +214,9 @@ internal fun BattleView.battleIsStarted() {
 
 internal fun BattleView.battleIsEnded() {
     subscribe<BattleIsEnded> {
-        model.battleIsEnded = true
         logEvent(it, model)
         openMessageWindow {
-            if (it.player == currentPlayer) "Вы победили" else "Победил \"${it.player}\""
+            model.currentPlayerIs(it.player) then "Вы победили" or "Победил \"${it.player}\""
         }
         battleViewExitButton.text = leaveBattleFieldText
     }

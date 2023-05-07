@@ -9,7 +9,6 @@ object BooleansExtensions {
     inline infix fun <T> T?.or(body: T) = this ?: body
 
     inline infix fun Boolean.so(body: () -> Unit) = if (this) body() else Unit
-    inline infix fun Boolean.otherwise(body: () -> Unit) = if (this) body() else Unit
     inline operator fun Boolean.invoke(body: () -> Unit) = if (this) body() else Unit
 
     inline infix fun Boolean.yes(body: () -> Unit): Boolean {

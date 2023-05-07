@@ -1,16 +1,16 @@
 package org.home.mvc.model
 
 import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.collections.ListChangeListener
 import javafx.collections.MapChangeListener
 import org.home.mvc.ApplicationProperties
 import org.home.net.message.FleetSettingsAction
 import org.home.net.message.HasAShot
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.removeFrom
-import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.extensions.BooleansExtensions.invoke
 import org.home.utils.extensions.BooleansExtensions.yes
 import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.extensions.ObservablePropertiesExtensions.ObservableValueMap
@@ -93,16 +93,15 @@ class BattleModel : ViewModel {
             .putInitials()
             .updateFleetReadiness()
 
-    val playersNames = emptySimpleListProperty<String>()
+    val players = emptySimpleListProperty<String>().apply { log("players") }
+    val defeatedPlayers = emptySimpleListProperty<String>().apply { log("defeated") }
 
     val fleetsReadiness = mutableMapOf<String, MutableMap<Int, SimpleIntegerProperty>>()
     val playersReadiness = ObservableValueMap<String, Boolean>()
-    val defeatedPlayers = emptySimpleListProperty<String>()
 
     val playersAndShips = emptySimpleMapProperty<String, MutableList<Ship>>()
         .notifyOnChange()
         .putInitials()
-
 
     private fun SimpleMapProperty<Int, Int>.updateFleetReadiness(): SimpleMapProperty<Int, Int> {
         addListener(
@@ -115,12 +114,13 @@ class BattleModel : ViewModel {
         return this
     }
 
-    fun getWinner(): String = playersNames.first { it !in defeatedPlayers }
+
+    fun getWinner(): String = players.first { it !in defeatedPlayers }
+
     fun lastButNotDefeated(player: String): Boolean {
         return player !in defeatedPlayers &&
-                defeatedPlayers.containsAll(playersNames.exclude(player, currentPlayer))
+                defeatedPlayers.containsAll(players.exclude(player, currentPlayer))
     }
-
     private fun SimpleMapProperty<Int, Int>.putInitials(): SimpleMapProperty<Int, Int> {
         (0 until shipsTypes).forEach { this[it + 1] = shipsTypes - it }
         return this
@@ -132,8 +132,8 @@ class BattleModel : ViewModel {
         return this
     }
 
-
     private val statistics = mutableListOf<HasAShot>()
+
 
     fun getShots(player: String): List<Coord> {
         return statistics.filter { it.target == player }.map { it.shot }
@@ -145,7 +145,7 @@ class BattleModel : ViewModel {
                 val player = change.key
                 when {
                     change.wasAdded() -> {
-                        playersNames.add(player)
+                        players.add(player)
                         setNotReady(player)
                         fleetsReadiness[player] = fleetReadiness(battleShipsTypes)
                         log { "added \"$player\"" }
@@ -153,7 +153,7 @@ class BattleModel : ViewModel {
 
                     change.wasRemoved() -> {
                         player {
-                            removeFrom(playersNames)
+                            removeFrom(players)
                             removeFrom(playersReadiness)
                             removeFrom(fleetsReadiness)
                             removeFrom(defeatedPlayers)
@@ -177,7 +177,7 @@ class BattleModel : ViewModel {
     }
 
     fun registersAHit(shot: Coord): Boolean {
-        return shipsOf(currentPlayer).hadHit(shot)
+        return shipsOf(currentPlayer).areHit(shot)
     }
 
     fun hasNo(enemyToHit: String, hitCoord: Coord): Boolean {
@@ -196,13 +196,21 @@ class BattleModel : ViewModel {
     }
 
     fun hasReady(player: String) = playersReadiness[player]!!
+
     fun setReady(player: String) { playersReadiness[player] = true }
     fun setReady(player: String, ready: Boolean) { playersReadiness[player] = ready }
     fun setNotReady(player: String) { playersReadiness[player] = false }
-    fun hasOnePlayerLeft() = playersNames.size == 1 && battleIsEnded
-    fun hasAWinner() = playersNames.size - defeatedPlayers.size == 1
+    fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
+    fun hasAWinner() = players.size - defeatedPlayers.size == 1
+    fun hasNoWinner() = players.size - defeatedPlayers.size > 1
     fun currentPlayerIs(player: String) = currentPlayer == player
     fun shipsOf(player: String) = playersAndShips[player]!!
+
+    private fun <T> SimpleListProperty<T>.log(name: String) {
+        addListener(ListChangeListener {
+            log { "$name - ${it.list}" }
+        })
+    }
 }
 
 val BattleModel.notAllReady get() =

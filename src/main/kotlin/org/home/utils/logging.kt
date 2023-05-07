@@ -5,6 +5,7 @@ import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.message.Message
 import org.home.net.server.MultiServer
+import org.home.net.server.MultiServerThread
 import org.home.utils.extensions.AnysExtensions.invoke
 import org.home.utils.extensions.AnysExtensions.isNotUnit
 import org.home.utils.extensions.AnysExtensions.name
@@ -191,18 +192,16 @@ fun MultiServer<*, *>.logMultiServerThreads(b: Boolean = true) {
     thread {
         while (b) {
             Thread.sleep(10_000)
-            processor { logMultiServerThread(thread, lengthOfMax) }
-            receiver { logMultiServerThread(thread, lengthOfMax) }
-            connector { logMultiServerThread(thread, lengthOfMax) }
+            processor { logMultiServerThread(lengthOfMax) }
+            receiver { logMultiServerThread(lengthOfMax) }
+            connector { logMultiServerThread(lengthOfMax) }
         }
     }
 }
 
-fun logMultiServerThread(thread: Thread, lengthOfMax: Int) {
-    thread.invoke {
-        val indent = " ".repeat(lengthOfMax - name.length)
-        threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
-    }
+fun MultiServerThread<*,*>.logMultiServerThread(lengthOfMax: Int) {
+    val indent = " ".repeat(lengthOfMax - name.length)
+    threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
 }
 
 

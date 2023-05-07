@@ -14,7 +14,6 @@ import org.home.utils.extensions.AnysExtensions.notIn
 import org.home.utils.extensions.BooleansExtensions.or
 import org.home.utils.extensions.BooleansExtensions.so
 import org.home.utils.extensions.BooleansExtensions.then
-import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.addClass
 
@@ -39,8 +38,10 @@ internal fun BattleView.playerWasDefeated() {
             defeatedPlayers.add(defeated)
 
             val (fleetReadiness, fleetGrid) = when (currentPlayerIs(defeated)) {
-                true -> currentPlayerFleetReadinessPane to (currentPlayerFleetGridPane.center as FleetGrid)
-                else -> enemiesFleetsReadinessPanes[defeated]!! to enemiesFleetGridsPanes[defeated]!!.disable()
+                true -> currentPlayerFleetReadinessPane to
+                        (currentPlayerFleetGridPane.center as FleetGrid)
+                else -> enemiesFleetsReadinessPanes[defeated]!! to
+                        enemiesFleetGridsPanes[defeated]!!.disable()
             }
 
             fleetGrid
@@ -67,7 +68,10 @@ internal fun BattleView.playerWasDefeated() {
                 battleViewExitButton.text = leaveBattleFieldText
                 battleViewExitButton.addClass(AppStyles.defeatedTitleCell)
             }
-            hasAWinner().so { battleController.endBattle() }
+
+            hasAWinner().so {
+                battleController.endBattle()
+            }
         }
     }
 }
@@ -84,13 +88,13 @@ private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
 
 private fun BattleView.removePlayer(player: String) {
     model {
-        log { "players = $playersNames" }
-        log { "defeated = $defeatedPlayers" }
 
         lastButNotDefeated(player)
             .and(currentPlayer !in defeatedPlayers)
             .and(battleIsStarted)
-            .so { battleController.endBattle() }
+            .so {
+                battleController.endBattle()
+            }
 
         playersAndShips.remove(player)
         removeEnemyFleet(player)

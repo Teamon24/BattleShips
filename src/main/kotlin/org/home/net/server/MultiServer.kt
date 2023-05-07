@@ -37,7 +37,7 @@ abstract class MultiServer<M : Message, S : Socket> : BattleController() {
         receiver.start()
         processor.start()
 
-        logMultiServerThreads()
+        logMultiServerThreads(false)
     }
 
     private var connectionBarrier = CountDownLatch(1)

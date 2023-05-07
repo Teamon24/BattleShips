@@ -1,24 +1,22 @@
 package org.home.net
 
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
 import org.home.utils.log
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.CountDownLatch
 
 class Condition<A>(val name: String, private val accepter: A) {
-    private val state = AtomicBoolean(false)
-    private fun isNotDone() = !state()
+    private val state = CountDownLatch(1)
 
     private var afterNotify: A.() -> Unit = {}
 
     fun notifyUI(afterNotify: A.() -> Unit = {}) {
         this.afterNotify = afterNotify
-        state(true)
+        state.countDown()
         log { "$this: true" }
     }
 
     fun await() {
         log { "awaiting for $this" }
-        while (this.isNotDone()) { Thread.sleep(50L) }
+        state.await()
         accepter.afterNotify()
     }
 

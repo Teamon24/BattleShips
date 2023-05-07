@@ -89,7 +89,7 @@ class BattleView : AbstractGameView("Battle View") {
     private val emptyFleetGrid = createEmptyFleetGreed()
     private val selectedEnemyFleetPane = BorderPane().apply { center = emptyFleetGrid }
 
-    private val playersListView: ListView<String> = ListView(model.playersNames).apply {
+    private val playersListView: ListView<String> = ListView(model.players).apply {
         playersListView = this
         cellFactory = MarkReadyPlayers(model)
 
@@ -125,8 +125,8 @@ class BattleView : AbstractGameView("Battle View") {
                 playersListView.refresh()
             }
 
-            log { "players = $playersNames" }
-            playersNames
+            log { "players = $players" }
+            players
                 .exclude(currentPlayer)
                 .forEach { name ->
                     addEnemyFleetGrid(name)
@@ -146,7 +146,7 @@ class BattleView : AbstractGameView("Battle View") {
                 playersNodes: Map<String, N>,
                 afterInit: N.() -> Unit = {}
     ) {
-        model.playersNames
+        model.players
             .exclude(currentPlayer)
             .firstOrNull()
             ?.also { player ->

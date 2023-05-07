@@ -46,7 +46,7 @@ abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
 
     fun shouldNotifyAll(action: KClass<out HasAShot>) { map[action] = false }
 
-    fun notifiactions(hasAShot: HasAShot): HashMap<String, MutableList<Action>> {
+    fun notifications(hasAShot: HasAShot): HashMap<String, MutableList<Action>> {
         val toNotifyShooter = map[hasAShot::class]
 
         toNotifyShooter ?: throw RuntimeException(
