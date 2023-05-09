@@ -67,7 +67,7 @@ class FleetGridController : AbstractGameBean() {
         fleetGridEventHandlers[MOUSE_RELEASED] = releaseAfterExitHandler
 
         return fleetGrid
-            .addFleetCellClass(AppStyles.emptyFleetCell)
+            .addFleetCellClass(AppStyles.emptyCell)
             .apply {
                 forEachFleetCells { cell ->
                     cell.setOnDragDetected { startFullDrag() }

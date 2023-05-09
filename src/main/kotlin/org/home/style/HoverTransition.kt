@@ -1,9 +1,6 @@
 package org.home.style
 
-import javafx.scene.layout.Region
-import javafx.scene.paint.Color
 import home.Quadruple
-import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
@@ -12,6 +9,8 @@ import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.then
 import home.extensions.BooleansExtensions.yes
+import javafx.scene.layout.Region
+import javafx.scene.paint.Color
 import org.home.utils.log
 import tornadofx.InlineCss
 import tornadofx.onHover
@@ -20,13 +19,31 @@ import tornadofx.style
 import kotlin.concurrent.thread
 import kotlin.math.abs
 
-class HoverTransition(
-    private val region: Region,
-    time: Double,
-    private val hoversInfo: Map<Pair<Color, Color>, InlineCss.(Color) -> Unit>
-) {
+class HoverTransition(private val region: Region) {
+
+    private val hoversInfo: MutableList<Pair<Color, Color>> = mutableListOf()
     private val steps = 50
-    private val stepSleep = (time / steps).toLong()
+    var millis = 0L
+    set(value) {
+        field = value
+        stepSleep = (value / steps)
+    }
+
+    private var stepSleep = (millis / steps)
+
+    private val colorIncrementors = mutableListOf<(Color) -> Color>()
+    private val colorDecrementors = mutableListOf<(Color) -> Color>()
+    private val transformations = mutableListOf<InlineCss.(Color) -> Unit>()
+
+    private fun getColorInc(from: Color, to: Color) = { c: Color -> c.incr(from, to) }
+    private fun getColorDecr(from: Color, to: Color) = { c: Color -> c.decr(from, to) }
+
+    fun add(fromTo: Pair<Color, Color>, cssProp: InlineCss.(Color) -> Unit) {
+        hoversInfo.add(fromTo)
+        colorIncrementors.add(getColorInc(fromTo.first, fromTo.second))
+        colorDecrementors.add(getColorDecr(fromTo.first, fromTo.second))
+        transformations.add(cssProp)
+    }
 
     @JvmInline
     value class RGB(val triple: Quadruple<Double, Double, Double, Double>) {
@@ -90,12 +107,6 @@ class HoverTransition(
     private var hovered = true
     private lateinit var counter: (Int) -> Int
     private var colorCounters = mutableListOf<(Color) -> Color>()
-    private val colorIncrementors = hoversInfo.keys.map { getColorInc(it.first, it.second) }.toMutableList()
-    private val colorDecrementors = hoversInfo.keys.map { getColorDecr(it.first, it.second) }.toMutableList()
-    private val transformets = hoversInfo.values
-
-    private fun getColorInc(from: Color, to: Color) = { c: Color -> c.incr(from, to) }
-    private fun getColorDecr(from: Color, to: Color) = { c: Color -> c.decr(from, to) }
 
     fun disable() {
         log { "${region.name} disabling hover transition" }
@@ -137,8 +148,8 @@ class HoverTransition(
         var count = hovered then 0 or steps
 
         var colors = when(hovered) {
-            true -> hoversInfo.keys.map { it.first }.toMutableList()
-            else -> hoversInfo.keys.map { it.second }.toMutableList()
+            true -> hoversInfo.map { it.first }.toMutableList()
+            else -> hoversInfo.map { it.second }.toMutableList()
         }
 
         do {
@@ -155,7 +166,9 @@ class HoverTransition(
 
             runLater {
                 region.style {
-                    transformets.zip(colors).forEach { (transformation, color) -> transformation(color) }
+                    transformations.zip(colors).forEach { (transformation, color) ->
+                        transformation(color)
+                    }
                 }
             }
 

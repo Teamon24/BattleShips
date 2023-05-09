@@ -6,36 +6,32 @@ import home.extensions.BooleansExtensions.yes
 import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.control.Button
-import org.home.mvc.AppView
+import javafx.scene.paint.Color.BLACK
+import javafx.scene.paint.Color.WHITE
 import org.home.mvc.ApplicationProperties.Companion.exitText
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.model.notAllReady
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.GridPaneExtensions.cell
-import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
-import org.home.style.CssUtils.hover
+import org.home.style.AppStyles.Companion.buttonColor
+import org.home.style.AppStyles.Companion.chosenCellColor
+import org.home.style.HoverTransitionDSL.hover
+import org.home.style.HoverTransitionDSL.transition
 import org.home.style.HoverTransition
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.attachTo
-import tornadofx.button
 import tornadofx.removeClass
+import tornadofx.style
 import kotlin.system.exitProcess
 
 inline fun EventTarget.exitButton(view: AbstractGameView) =
     battleButton(exitText) {
-        action {
-            view.exit()
-        }
+        action { view.exit() }
     }
 
 inline fun EventTarget.exitButton() =
     battleButton(exitText) {
-        action {
-            exitProcess(0)
-        }
+        action { exitProcess(0) }
     }
 
 fun EventTarget.battleButton(text: String = "", graphic: Node? = null, op: Button.() -> Unit = {}) =
@@ -44,6 +40,7 @@ fun EventTarget.battleButton(text: String = "", graphic: Node? = null, op: Butto
     }
 
 class BattleButton(text: String): Button(text) {
+    private val currentNode = this@BattleButton
     var hoverTransition: HoverTransition? = null
 
     fun disableHover() {
@@ -51,7 +48,15 @@ class BattleButton(text: String): Button(text) {
         hoverTransition = null
     }
 
-    init { hover() }
+    init {
+        style {
+            hover(currentNode) {
+                millis = 50L
+                transition(buttonColor, chosenCellColor) { backgroundColor += it }
+                transition(BLACK, WHITE) { textFill = it }
+            }
+        }
+    }
 }
 
 fun EventTarget.battleStartButton(text: String = "", graphic: Node? = null, op: BattleStartButton.() -> Unit = {}) =

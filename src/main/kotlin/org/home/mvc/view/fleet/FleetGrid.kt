@@ -10,6 +10,9 @@ import tornadofx.addClass
 
 class FleetGrid : GridPane() {
 
+    fun addFleetCellClass(cssRule: CssRule) = onEachFleetCells { it.addClass(cssRule) }
+    fun addTitleCellClass(cssRule: CssRule) = onEachTitleCells { it.addClass(cssRule) }
+
     fun addShips(ships: Ships): FleetGrid {
         ships.forEach { ship -> ship.forEach { this.getCell(it).addSelectionColor() } }
         return this
@@ -26,12 +29,11 @@ class FleetGrid : GridPane() {
     }
 
     inline fun forEachFleetCells(block: (FleetCell) -> Unit) {
-        this.children
+        children
             .asSequence()
             .filterIsInstance<FleetCell>()
             .filter {
                 val (row, col) = getIndices(it)
-
                 row > 0 && col > 0
             }
             .forEach {
@@ -40,7 +42,7 @@ class FleetGrid : GridPane() {
     }
 
     inline fun forEachTitleCells(block: (FleetCell) -> Unit) {
-        this.children
+        children
             .asSequence()
             .filterIsInstance<FleetCell>()
             .filter {
@@ -52,15 +54,5 @@ class FleetGrid : GridPane() {
             }
     }
 
-    fun addFleetCellClass(cssRule: CssRule): FleetGrid {
-        return onEachFleetCells {
-            it.addClass(cssRule)
-        }
-    }
 
-    fun addTitleCellClass(cssRule: CssRule): FleetGrid {
-        return onEachTitleCells {
-            it.addClass(cssRule)
-        }
-    }
 }

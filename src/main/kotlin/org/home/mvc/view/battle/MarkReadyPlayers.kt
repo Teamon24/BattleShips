@@ -14,11 +14,11 @@ import home.extensions.BooleansExtensions.yes
 import tornadofx.style
 
 class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, ListCell<String>> {
+
     override fun call(param: ListView<String>): ListCell<String> {
+
         return object : ListCell<String>() {
-
             override fun updateItem(playerName: String?, empty: Boolean) {
-
                 super.updateItem(playerName, empty)
 
                 if (item == null || empty) {
@@ -28,9 +28,9 @@ class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, List
 
                 text = playerName
 
-                    isDisable = (model.currentPlayer == text)
-                        .yes { currentPlayerListViewColors.setStyle(model) }
-                        .no { enemyListViewColors.setStyle(model) }
+                isDisable = model.currentPlayerIs(text)
+                    .yes { currentPlayerListViewColors.setStyle(model) }
+                    .no { enemyListViewColors.setStyle(model) }
             }
 
             private fun AppStyles.PlayerListViewColors.setStyle(model: BattleModel) {

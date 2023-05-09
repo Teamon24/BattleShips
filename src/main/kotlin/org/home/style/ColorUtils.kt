@@ -3,6 +3,8 @@ package org.home.style
 import javafx.scene.paint.Color
 
 object ColorUtils {
+    fun Color.brighter(i: Int) = apply { repeat(i) { this.brighter() } }
+
     fun Color.withOpacity(d: Double): Color {
         return Color.color(red, green, blue, d)
     }

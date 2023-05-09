@@ -13,22 +13,22 @@ object FleetGridStyleComponent {
 
     fun Node.removeAnyColor() = this
         .removeClass(
-            AppStyles.chosenFleetCell,
-            AppStyles.incorrectFleetCell,
+            AppStyles.chosenCell,
+            AppStyles.incorrectCell,
             AppStyles.shipBorderCell,
             AppStyles.titleCell)
 
-    fun Node.addSelectionColor() =  addClass(AppStyles.chosenFleetCell)
-    fun Node.addIncorrectColor() =  addClass(AppStyles.incorrectFleetCell)
+    fun Node.addSelectionColor() =  addClass(AppStyles.chosenCell)
+    fun Node.addIncorrectColor() =  addClass(AppStyles.incorrectCell)
     fun Node.addBorderColor() = addClass(AppStyles.shipBorderCell)
 
-    fun Node.removeSelectionColor() = removeClass(AppStyles.chosenFleetCell)
-    fun Node.removeIncorrectColor() = removeClass(AppStyles.incorrectFleetCell)
+    fun Node.removeSelectionColor() = removeClass(AppStyles.chosenCell)
+    fun Node.removeIncorrectColor() = removeClass(AppStyles.incorrectCell)
     fun Node.removeBorderColor() = removeClass(AppStyles.shipBorderCell)
 
     fun GridPane.removeIncorrectColor(beingConstructedShip: Ship) {
         beingConstructedShip.forEach {
-            getCell(it).removeClass(AppStyles.incorrectFleetCell)
+            getCell(it).removeClass(AppStyles.incorrectCell)
         }
     }
 

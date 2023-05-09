@@ -1,32 +1,82 @@
 package org.home.style
 
+import javafx.geometry.Pos
 import javafx.scene.paint.Color
-import javafx.scene.paint.Color.BLACK
-import javafx.scene.paint.Color.WHITE
-import javafx.scene.paint.Paint
-import org.home.mvc.view.components.BattleButton
-import org.home.style.AppStyles.Companion.buttonColorHex
-import org.home.style.AppStyles.Companion.chosenCellColor
-import tornadofx.InlineCss
-import tornadofx.style
+import org.home.style.AppStyles.Companion.fleetBorderWidth
+import org.home.utils.LinearUnits
+import tornadofx.CssSelectionBlock
+import tornadofx.MultiValue
+import tornadofx.box
+import tornadofx.px
 
 object CssUtils {
-    fun BattleButton.hover() {
-        style {
-            val colorTransition1 = Paint.valueOf(buttonColorHex) as Color to chosenCellColor
-            val colorTransition2 = BLACK to WHITE
+    val AppStyles.border: CssSelectionBlock.() -> Unit
+        get() { return {
+            borderColor += box(Color.BLACK)
+            borderWidth += box(fleetBorderWidth.px)
+        }
+        }
 
-            val cssPropertyTransform1: InlineCss.(Color) -> Unit = { backgroundColor += it }
-            val cssPropertyTransform2: InlineCss.(Color) -> Unit = { textFill = it }
+    inline val AppStyles.noBorder: CssSelectionBlock.() -> Unit
+        get() { return { borderWidth += box(0.px) } }
 
-            this@hover.hoverTransition = HoverTransition(
-                region = this@hover,
-                time = 50.0,
-                hoversInfo = listOf(
-                    colorTransition1 to cssPropertyTransform1,
-                    colorTransition2 to cssPropertyTransform2).toMap()
-            )
+    inline val AppStyles.jetBrainFont: CssSelectionBlock.() -> Unit
+        get() { return {
+            +AppStyles.jetBrainsMonoLightFont
+            +AppStyles.small
+        }
+        }
+
+    inline val AppStyles.square: CssSelectionBlock.() -> Unit
+        get() { return {
+            focusColor = Color.TRANSPARENT
+            faintFocusColor = Color.TRANSPARENT
+            backgroundRadius += box(0.px)
+        }
+        }
+
+    fun gridMargin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
+        return { hgap = dimension
+            vgap = hgap }
+    }
+
+    fun margin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
+        return { margin(dimension) }
+    }
+
+    fun padding(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
+        return {
+            padding = box(dimension)
         }
     }
-}
 
+    val Color.background: CssSelectionBlock.() -> Unit get() = { backgroundColor += this@background }
+    fun background(color: Color): CssSelectionBlock.() -> Unit = { backgroundColor += color }
+
+
+    fun text(color: Color): CssSelectionBlock.() -> Unit = { textFill = color }
+
+    inline val AppStyles.cellSize: CssSelectionBlock.() -> Unit get() { return { size(AppStyles.fleetCellSize) } }
+    inline val AppStyles.center: CssSelectionBlock.() -> Unit get() { return { alignment = Pos.CENTER } }
+
+    inline val AppStyles.fillParent: CssSelectionBlock.() -> Unit
+        get() { return {
+            maxWidth = Short.MAX_VALUE.px
+            maxHeight = Short.MAX_VALUE.px
+        }
+        }
+
+    fun CssSelectionBlock.size(dimension: LinearUnits): CssSelectionBlock {
+        minWidth = dimension
+        minHeight = minWidth
+        return this
+    }
+
+    fun CssSelectionBlock.margin(px: LinearUnits) {
+        padding = box(px)
+        backgroundInsets = MultiValue(arrayOf(box(px / 2)))
+    }
+
+
+
+}

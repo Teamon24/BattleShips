@@ -1,7 +1,5 @@
 package org.home.app
 
-import javafx.animation.FillTransition
-import javafx.animation.Transition
 import javafx.geometry.Pos
 import javafx.scene.layout.GridPane
 import javafx.scene.paint.Color
@@ -13,11 +11,14 @@ import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.animationGridMargin
+import org.home.style.AppStyles.Companion.chosenCellColor
 import org.home.style.ColorUtils.withOpacity
 import org.koin.core.context.GlobalContext
 import tornadofx.View
 import tornadofx.addChildIfPossible
 import tornadofx.addClass
+import tornadofx.animateFill
 import tornadofx.launch
 import java.util.Random
 import kotlin.math.PI
@@ -34,22 +35,26 @@ fun main() {
 class AnimationCheck: AbstractApp<My2View>(My2View::class)
 
 class My2View: View() {
-
-
     override val root = appViewAnimationGrid(50)
-
 
     companion object {
 
-        private val twoPi = 2 * PI
+        private inline fun IntRange.doubleFor(body: (Int, Int) -> Unit) {
+            for (i in this) {
+                for (j in this) {
+                    body(i, j)
+                }
+            }
+        }
+        private fun random() = Random().nextDouble(0.0, 1.0)
+        private fun random(incl: Double, excl: Double) = Random().nextDouble(incl, excl)
+        private const val twoPi = 2 * PI
 
         fun appViewAnimationGrid(rows: Int): GridPane {
             return object : GridPane() {
-
-
                 init {
                     alignment = Pos.CENTER
-                    addClass(AppStyles.animationGridMargin)
+                    addClass(animationGridMargin)
                     val cellSize = 40.0
                     (1..rows).doubleFor { row, col ->
                         cell(row, col) {
@@ -59,63 +64,63 @@ class My2View: View() {
                                 .also { addChildIfPossible(it) }
                         }
                     }
-
-                    randomCellFill(this)
-
+                    waveCellFill(this, rows, rows, 30000.0)
                 }
             }
         }
 
-        fun randomCellFill(gridPane: GridPane) {
+        fun randomCellFill(gridPane: GridPane, time: Double) {
             gridPane.children.forEach {
                 val (i, j) = getIndices(it)
-                val label = gridPane.getCell(i, j) as Rectangle
-                randomAnimation(label, AppStyles.chosenCellColor.withOpacity(0.001))
+                val rectangle = gridPane.getCell(i, j) as Rectangle
+                randomFillAnimation(rectangle, chosenCellColor.withOpacity(0.5), time)
             }
         }
 
-
-
-        inline fun IntRange.doubleFor(body: (Int, Int) -> Unit) { for (i in this) { for (j in this) { body(i, j) } } }
-
-        private fun randomAnimation(label: Rectangle, color: Color) {
-            val (fill, d) = fillTransition(label, color)
-            val duration = Duration.millis(d * random())
-            fill.playFrom(duration)
-        }
-
-        private fun random() = Random().nextDouble(0.0, 1.0)
-
-        private fun fillTransition(label: Rectangle, color: Color): Pair<Transition, Double> {
-            val fill = FillTransition()
-            fill.isAutoReverse = false
-            fill.cycleCount = 50
-
-            fill.shape = label
-            fill.fromValue = color
-            fill.toValue = WHITE
-            val d = 10000.0
-            fill.duration = Duration.millis(d)
-            return Pair(fill, d)
-        }
-
-
-        private fun waveAnimation(gridPane: GridPane, size: Int, period: Int) {
-            (1..size).doubleFor { i, j ->
-                val label = gridPane.getCell(i, j) as Rectangle
-                waveAnimation(label, i, j, size, size, period, AppStyles.chosenCellColor.withOpacity(0.01))
+        fun waveCellFill(gridPane: GridPane, rows: Int, cols: Int, time: Double) {
+            gridPane.children.forEach {
+                val (i, j) = getIndices(it)
+                val rectangle = gridPane.getCell(i, j) as Rectangle
+                waveAnimation(rectangle, i, j, rows, cols, rows / 2, chosenCellColor.withOpacity(0.5), time)
             }
         }
 
-        private fun waveAnimation(label: Rectangle, i: Int, j: Int, rows: Int, cols: Int, period: Int, color: Color) {
+        private fun randomFillAnimation(label: Rectangle, color: Color, time: Double) {
+            label.animateFill(
+                time = Duration.millis(time),
+                from = color,
+                to = WHITE,
+                play = true
+            ) {
+                cycleCount = 50
+                playFrom(Duration.millis(time * random()))
+            }
 
-            val (fill, d) = fillTransition(label, color)
-            val d1 = d * twoPi / period
-            val shiftI = i.toDouble() + rows/2
-            val shiftJ = j.toDouble() + cols/2
-            val millis = d1 * sqrt(shiftI * shiftI + shiftJ * shiftJ)
-            val duration = Duration.millis(millis)
-            fill.playFrom(duration)
+        }
+
+        private fun waveAnimation(
+            label: Rectangle,
+            i: Int,
+            j: Int,
+            rows: Int,
+            cols: Int,
+            period: Int,
+            color: Color,
+            time: Double,
+        ) {
+            label.animateFill(
+                time = Duration.millis(time),
+                from = color,
+                to = color.withOpacity(0.1),
+                play = true
+            ) {
+                cycleCount = 50
+                val d1 = time * twoPi / period
+                val shiftI = i.toDouble() + rows/2
+                val shiftJ = j.toDouble() + cols/2
+                val millis = d1 * sqrt(shiftI * shiftI + shiftJ * shiftJ)
+                playFrom(Duration.millis(millis + random(time/10, time/9)))
+            }
         }
     }
 

@@ -73,7 +73,7 @@ class ShipTypePaneComponent: AbstractGameBean() {
         ShipTypeLabel(column)
             .addClass(
                 AppStyles.shipTypeLabel,
-                AppStyles.chosenFleetCell
+                AppStyles.chosenCell
             )
             .also {
                 gridPane.add(it, column, 0)

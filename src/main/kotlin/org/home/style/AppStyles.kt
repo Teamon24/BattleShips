@@ -13,22 +13,30 @@ import javafx.scene.paint.Color.MEDIUMSEAGREEN
 import javafx.scene.paint.Color.ORANGERED
 import javafx.scene.paint.Color.PINK
 import javafx.scene.paint.Color.RED
-import javafx.scene.paint.Color.TRANSPARENT
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Color.rgb
 import javafx.scene.paint.Color.valueOf
 import javafx.scene.paint.Paint
 import org.home.style.ColorUtils.withOpacity
-import org.home.utils.LinearUnits
+import org.home.style.CssUtils.background
+import org.home.style.CssUtils.border
+import org.home.style.CssUtils.cellSize
+import org.home.style.CssUtils.center
+import org.home.style.CssUtils.fillParent
+import org.home.style.CssUtils.gridMargin
+import org.home.style.CssUtils.jetBrainFont
+import org.home.style.CssUtils.margin
+import org.home.style.CssUtils.noBorder
+import org.home.style.CssUtils.padding
+import org.home.style.CssUtils.square
+import org.home.style.CssUtils.text
 import tornadofx.CssRule
 import tornadofx.CssSelectionBlock
-import tornadofx.MultiValue
 import tornadofx.Stylesheet
 import tornadofx.box
 import tornadofx.cssclass
 import tornadofx.loadFont
 import tornadofx.mixin
-import tornadofx.parallelTransition
 import tornadofx.px
 import java.net.URI
 
@@ -42,12 +50,13 @@ class AppStyles : Stylesheet() {
     )
 
     companion object {
+        private val String.color get() = Paint.valueOf(this) as Color
         private const val targetIconPath = "/icons/target-3699.svg"
 
-        val chosenCellColor: Color = valueOf("#085191").withOpacity(0.7)
-        val readyPlayerCellColor: Color = MEDIUMSEAGREEN
-        const val buttonColorHex = "EAE5E5FF"
-        val buttonColor: Paint = Paint.valueOf(buttonColorHex)!!
+        val chosenCellColor = valueOf("#085191").withOpacity(0.7)
+        val readyPlayerCellColor = MEDIUMSEAGREEN
+        val wrongCellColor = RED
+        val buttonColor = "EAE5E5FF".color
 
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
         val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyPlayerCellColor, BLACK)
@@ -71,16 +80,14 @@ class AppStyles : Stylesheet() {
         val fleetCellSize = 40.px
         val marginValue = 10.px
 
-        private const val fleetBorderWidth = 0.5
-
-        private val wrongCellColor = RED
+        const val fleetBorderWidth = 0.5
 
         val form by cssclass()
         val fleetGrid by cssclass()
 
         val shipTypeLabel by cssclass()
 
-        val emptyFleetCell by cssclass()
+        val emptyCell by cssclass()
         val fleetLabel by cssclass()
 
         val missCell by cssclass()
@@ -90,10 +97,10 @@ class AppStyles : Stylesheet() {
 
         val titleCell by cssclass()
 
-        val incorrectFleetCell by cssclass()
+        val incorrectCell by cssclass()
         val fieldSize by cssclass()
 
-        val chosenFleetCell by cssclass()
+        val chosenCell by cssclass()
         val animationCell by cssclass()
 
         val gridMargin by cssclass()
@@ -112,75 +119,39 @@ class AppStyles : Stylesheet() {
         val readyButton by cssclass()
 
         const val playersListView = "players-list-view"
-
     }
 
     init {
-        errorLabel + padding(20.px)
-
-        odd {
-            margin(1.px)
-            backgroundColor += WHITE
-        }
-
-        even {
-            margin(1.px)
-            backgroundColor += WHITE
-        }
-
         label + jetBrainFont
         textField + square
 
-        (button + jetBrainFont + fillParent + square) {
-            backgroundColor += buttonColor
+        errorLabel + padding(20.px)
 
-//            and(hover) {
-//                backgroundColor += chosenCellColor.brighter(5)
-//                textFill = WHITE
-//            }
-        }
+        odd + background(WHITE) + margin(1.px)
+        even + background(WHITE) + margin(1.px)
+
+        button + jetBrainFont + fillParent + square + background(buttonColor)
 
         fleetLabel + jetBrainFont + cellSize + center
         centerGrid + center
 
-        readyButton {
-            backgroundColor += readyPlayerCellColor
-            textFill = WHITE
-        }
+        chosenCell    + noBorder + text(WHITE) + background(chosenCellColor)
+        incorrectCell + noBorder + background(wrongCellColor)
+        animationCell + noBorder + background(chosenCellColor)
+        missCell      + border   + background("A4A5A6FF".color)
+        hitCell       + border   + background(ORANGERED)
+        titleCell     + border   + text(WHITE) + background(LIGHTSLATEGRAY)
+        defeatedCell  + border   + background(PINK)
 
-        chosenFleetCell {
-            textFill = WHITE
-            backgroundColor += chosenCellColor
-            borderWidth += box(0.px)
-        }
+        defeatedTitleCell + text(WHITE) + background("A93638F4".color)
 
-        animationCell {
-            backgroundColor += chosenCellColor
-            borderWidth += box(1.px)
-            borderColor += box(WHITE)
-        }
+        (currentPlayerCell + border) { focusTraversable = false }
 
-        (missCell + border) {
-            backgroundColor += Paint.valueOf("A4A5A6FF")
-        }
-
-        (hitCell + border) {
-            backgroundColor += ORANGERED
-        }
-
-
-        (titleCell + border) {
-            textFill = WHITE
-            backgroundColor += LIGHTSLATEGRAY
-        }
-
-        (emptyFleetCell + border) {
+        (emptyCell + border) {
             and(hover) {
                 backgroundColor += chosenCellColor
             }
         }
-
-        (currentPlayerCell + border) { focusTraversable = false }
 
         (enemyCell + border) {
             and(hover) {
@@ -190,34 +161,18 @@ class AppStyles : Stylesheet() {
             }
         }
 
-        (defeatedCell + border) {
-            backgroundColor += PINK
-        }
-
-        defeatedTitleCell {
-            backgroundColor += Paint.valueOf("A93638F4")
-            textFill = WHITE
-        }
-
-        (shipsTypesInfoPane + margin(10.px)) {
-            backgroundColor += rgb(58, 132, 192, 0.35)
-        }
+        shipsTypesInfoPane + margin(10.px) + background(rgb(58, 132, 192, 0.35))
 
         shipTypeLabel {
             backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
         }
 
-        shipBorderCell {
-            backgroundColor += rgb(255, 0, 0, 0.3)
+        (shipBorderCell + rgb(255, 0, 0, 0.3).background) {
             borderColor += box(rgb(255, 0, 0, 0.15))
             borderWidth += box(fleetBorderWidth.px)
         }
 
-        incorrectFleetCell {
-            backgroundColor += wrongCellColor
-            borderWidth += box(0.px)
-        }
-
+        readyButton + text(WHITE) + background(readyPlayerCellColor)
 
         (debugClass + gridMargin(10.px)) {
             borderColor += box(BLACK)
@@ -244,70 +199,12 @@ class AppStyles : Stylesheet() {
         animationGridMargin + gridMargin(10.px)
     }
 
-    private val AppStyles.border: CssSelectionBlock.() -> Unit
-        get() { return {
-                borderColor += box(BLACK)
-                borderWidth += box(fleetBorderWidth.px)
-            }
-        }
-
-    private val AppStyles.jetBrainFont: CssSelectionBlock.() -> Unit
-        get() { return {
-                +jetBrainsMonoLightFont
-                +small
-            }
-        }
-
-    private val AppStyles.square: CssSelectionBlock.() -> Unit
-        get() { return {
-            focusColor = TRANSPARENT
-            faintFocusColor = TRANSPARENT
-            backgroundRadius += box(0.px)
-        }
-        }
-
-    private fun gridMargin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
-        return { hgap = dimension
-                 vgap = hgap }
-        }
-
-    private fun margin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
-        return { margin(dimension) }
-    }
-
-    private fun padding(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
-        return {
-            padding = box(dimension)
-        }
-    }
-
-    private val AppStyles.cellSize: CssSelectionBlock.() -> Unit get() { return { size(fleetCellSize) } }
-    private val AppStyles.center: CssSelectionBlock.() -> Unit get() { return { alignment = Pos.CENTER } }
-
-    private val AppStyles.fillParent: CssSelectionBlock.() -> Unit
-        get() { return {
-                maxWidth = Short.MAX_VALUE.px
-                maxHeight = Short.MAX_VALUE.px
-            }
-        }
-
-    private fun CssSelectionBlock.size(dimension: LinearUnits): CssSelectionBlock {
-        minWidth = dimension
-        minHeight = minWidth
-        return this
-    }
-
-    private fun CssSelectionBlock.margin(px: LinearUnits) {
-        padding = box(px)
-        backgroundInsets = MultiValue(arrayOf(box(px / 2)))
-    }
-
-    operator fun CssRule.plus(block: CssSelectionBlock.() -> Unit): CssRule {
+    inline operator fun CssRule.plus(crossinline block: CssSelectionBlock.() -> Unit): CssRule {
         this { block() }
         return this
     }
 }
 
-private fun Color.brighter(i: Int) = apply { repeat(i) { this.brighter() } }
+
 
 
