@@ -1,6 +1,6 @@
 package org.home.mvc.view.battle.subscriptions
 
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
+import home.extensions.AnysExtensions.invoke
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -10,12 +10,23 @@ import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.notIn
-import org.home.utils.extensions.BooleansExtensions.or
-import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.extensions.BooleansExtensions.then
+import home.extensions.AnysExtensions.notIn
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.then
+import org.home.mvc.AppView
+import org.home.mvc.ApplicationProperties
+import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
+import org.home.mvc.view.components.BattleButton
+import org.home.mvc.view.components.GridPaneExtensions
+import org.home.mvc.view.components.GridPaneExtensions.getIndices
+import org.home.mvc.view.components.backSlide
+import org.home.mvc.view.components.transferTo
+import org.home.style.AppStyles.Companion.defeatedTitleCell
 import org.home.utils.logEvent
+import tornadofx.action
 import tornadofx.addClass
+import tornadofx.button
 
 internal fun BattleView.playerWasDisconnected() {
     subscribeToRemove<PlayerWasDisconnected> {
@@ -31,6 +42,7 @@ internal fun BattleView.playerLeaved() {
 
 internal fun BattleView.playerWasDefeated() {
     subscribe<PlayerWasDefeated> { event ->
+        val battleView = this@playerWasDefeated
         model {
 
             logEvent(event, this)
@@ -45,7 +57,7 @@ internal fun BattleView.playerWasDefeated() {
             }
 
             fleetGrid
-                .addTitleCellClass(AppStyles.defeatedTitleCell)
+                .addTitleCellClass(defeatedTitleCell)
                 .onEachFleetCells {
                     it.coord
                         .notIn(getShots(defeated))
@@ -54,7 +66,7 @@ internal fun BattleView.playerWasDefeated() {
 
             fleetReadiness
                 .getTypeLabels()
-                .forEach { it.addClass(AppStyles.defeatedTitleCell) }
+                .forEach { it.addClass(defeatedTitleCell) }
 
             openMessageWindow {
                 val args = when (currentPlayerIs(defeated)) {
@@ -65,8 +77,8 @@ internal fun BattleView.playerWasDefeated() {
             }
 
             currentPlayerIs(defeated).so {
-                battleViewExitButton.text = leaveBattleFieldText
-                battleViewExitButton.addClass(AppStyles.defeatedTitleCell)
+                (battleViewExitButton as BattleButton).disableHover()
+                battleView.updateLeaveBattleFieldButton()
             }
 
             hasAWinner().so {
@@ -100,5 +112,27 @@ private fun BattleView.removePlayer(player: String) {
         removeEnemyFleet(player)
 
         hasOnePlayerLeft().so { battleController.disconnect() }
+    }
+}
+
+fun BattleView.updateLeaveBattleFieldButton() {
+
+    this {
+        val buttonIndices = battleViewExitButtonIndices
+        root {
+            children.removeIf { getIndices(it) == buttonIndices }
+
+            GridPaneExtensions.cell(buttonIndices.first, buttonIndices.second) {
+                button(leaveBattleFieldText) {
+                    addClass(defeatedTitleCell)
+                    action {
+                        battleController.onBattleViewExit()
+                        transferTo<AppView>(backSlide)
+                    }
+                }.also {
+                    battleViewExitButton = it
+                }
+            }
+        }
     }
 }

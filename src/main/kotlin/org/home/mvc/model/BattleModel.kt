@@ -9,16 +9,17 @@ import javafx.collections.MapChangeListener
 import org.home.mvc.ApplicationProperties
 import org.home.net.message.FleetSettingsAction
 import org.home.net.message.HasAShot
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.removeFrom
-import org.home.utils.extensions.BooleansExtensions.yes
-import org.home.utils.extensions.CollectionsExtensions.exclude
-import org.home.utils.extensions.ObservablePropertiesExtensions.ObservableValueMap
-import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
-import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.removeFrom
+import home.extensions.BooleansExtensions.yes
+import home.extensions.CollectionsExtensions.exclude
+import home.extensions.ObservablePropertiesExtensions.ObservableValueMap
+import home.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
+import home.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
 import org.home.utils.log
 import tornadofx.ViewModel
 import tornadofx.onChange
+import java.util.concurrent.ConcurrentHashMap
 
 class BattleModel : ViewModel {
 
@@ -96,7 +97,7 @@ class BattleModel : ViewModel {
     val players = emptySimpleListProperty<String>().apply { log("players") }
     val defeatedPlayers = emptySimpleListProperty<String>().apply { log("defeated") }
 
-    val fleetsReadiness = mutableMapOf<String, MutableMap<Int, SimpleIntegerProperty>>()
+    val fleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>()
     val playersReadiness = ObservableValueMap<String, Boolean>()
 
     val playersAndShips = emptySimpleMapProperty<String, MutableList<Ship>>()
@@ -157,9 +158,9 @@ class BattleModel : ViewModel {
                             removeFrom(playersReadiness)
                             removeFrom(fleetsReadiness)
                             removeFrom(defeatedPlayers)
+                            log { "removed \"$this\"" }
                         }
 
-                        log { "removed \"$player\"" }
                     }
                 }
             })

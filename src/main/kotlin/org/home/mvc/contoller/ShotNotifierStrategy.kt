@@ -1,5 +1,7 @@
 package org.home.mvc.contoller
 
+import home.extensions.AnysExtensions.className
+import home.extensions.CollectionsExtensions.exclude
 import org.home.mvc.ApplicationProperties
 import org.home.net.message.Action
 import org.home.net.message.HasAShot
@@ -7,8 +9,6 @@ import org.home.net.message.HitAction
 import org.home.net.message.MissAction
 import org.home.net.message.ShotAction
 import org.home.utils.PlayersSockets
-import org.home.utils.extensions.CollectionsExtensions.exclude
-import org.home.utils.extensions.className
 import tornadofx.Controller
 import kotlin.reflect.KClass
 
@@ -50,7 +50,7 @@ abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
         val toNotifyShooter = map[hasAShot::class]
 
         toNotifyShooter ?: throw RuntimeException(
-            "There is no boolean flag for ${HasAShot::className}'s descendant: ${hasAShot.className}"
+            "There is no boolean flag for ${HasAShot::class.className}'s descendant: ${hasAShot.className}"
         )
 
         val toSend = hashMapOf<String, MutableList<Action>>()

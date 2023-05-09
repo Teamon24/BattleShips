@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
+import org.home.app.AbstractApp.Companion.newGame
 import org.home.mvc.ApplicationProperties.Companion.battleFieldCreationMenuTitle
 import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.mvc.ApplicationProperties.Companion.heightFieldLabel
@@ -20,13 +21,15 @@ import org.home.mvc.ApplicationProperties.Companion.widthFieldLabel
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.view.app.AppView
+import org.home.mvc.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.marginGrid
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
+import org.home.mvc.view.components.battleButton
+import org.home.mvc.view.components.exitButton
 import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
@@ -41,10 +44,13 @@ import tornadofx.button
 import tornadofx.label
 import tornadofx.textfield
 import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 class BattleCreationView : AbstractGameView("Настройки боя") {
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
     private val battleController: BattleController<Action> by di()
+
+
 
     override val root = Form()
         .addClass(AppStyles.form)
@@ -95,12 +101,13 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
             row(3) {
                 col(0) { label(heightFieldLabel) }
                 col(1) { intField(model.height) }
+                col(2) { exitButton(this@BattleCreationView) }
             }
         }
     }
 
     private fun EventTarget.createBattleButton() =
-        button(createNewGameButtonText) {
+        battleButton(createNewGameButtonText) {
             action {
                 try {
                     battleController.connect("", freePort)
@@ -114,12 +121,8 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
             }
         }
 
-    fun transit(from: View, to: KClass<BattleView>) {
-        from.replaceWith(tornadofx.find(to), forwardSlide)
-    }
-
     private fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
-        return button("", ImageView("/icons/clipboard.png"))
+        return battleButton("", ImageView("/icons/clipboard.png"))
             .apply {
                 action {
                     ClipboardContent().apply {

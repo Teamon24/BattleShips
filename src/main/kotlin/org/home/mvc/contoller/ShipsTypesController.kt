@@ -7,10 +7,10 @@ import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.mvc.model.addIfAbsent
-import org.home.utils.extensions.ObservablePropertiesExtensions.copy
+import home.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.log
 
-class ShipsTypesController: AbstractGameController() {
+class ShipsTypesController: AbstractGameBean() {
     private val battleShipsTypes = model.battleShipsTypes.copy()
 
     fun validates(newShip: Collection<Coord>): Boolean {

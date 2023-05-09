@@ -1,7 +1,7 @@
 package org.home.mvc.contoller.events
 
 import javafx.beans.property.SimpleIntegerProperty
-import org.home.mvc.view.Scopes
+import org.home.app.di.Scopes
 import org.home.net.message.AreReadyAction
 import org.home.net.message.BattleEndAction
 import org.home.net.message.PlayersConnectionsAction
@@ -18,8 +18,8 @@ import org.home.net.message.ShipAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
 import org.home.utils.dslContainer
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.name
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import org.home.utils.log
 import tornadofx.Component
 import tornadofx.FXEvent

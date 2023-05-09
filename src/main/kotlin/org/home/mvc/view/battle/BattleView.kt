@@ -1,5 +1,9 @@
 package org.home.mvc.view.battle
 
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
+import home.extensions.BooleansExtensions.so
+import home.extensions.CollectionsExtensions.exclude
 import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -8,12 +12,12 @@ import javafx.scene.control.Label
 import javafx.scene.control.ListView
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
+import org.home.app.AbstractApp.Companion.newGame
+import org.home.mvc.AppView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
-import org.home.mvc.model.notAllReady
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.view.app.AppView
 import org.home.mvc.view.battle.subscriptions.battleIsEnded
 import org.home.mvc.view.battle.subscriptions.battleIsStarted
 import org.home.mvc.view.battle.subscriptions.connectedPlayersReceived
@@ -31,11 +35,13 @@ import org.home.mvc.view.battle.subscriptions.shipWasDeleted
 import org.home.mvc.view.battle.subscriptions.shipWasHit
 import org.home.mvc.view.battle.subscriptions.subscriptions
 import org.home.mvc.view.battle.subscriptions.thereWasAMiss
+import org.home.mvc.view.components.BattleStartButton
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
+import org.home.mvc.view.components.battleStartButton
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
@@ -43,37 +49,28 @@ import org.home.net.message.Action
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.name
-import org.home.utils.extensions.BooleansExtensions.no
-import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.extensions.BooleansExtensions.yes
-import org.home.utils.extensions.CollectionsExtensions.exclude
 import org.home.utils.log
 import tornadofx.action
 import tornadofx.addClass
-import tornadofx.button
 import tornadofx.flowpane
 import tornadofx.gridpane
 import tornadofx.label
 import tornadofx.onLeftClick
-import tornadofx.removeClass
 import tornadofx.selectedItem
 import kotlin.collections.set
+import javafx.beans.Observable as Observable1
 
 class BattleView : AbstractGameView("Battle View") {
     internal val battleController: BattleController<Action> by di()
-
     init {
         model.playersAndShips[currentPlayer] = mutableListOf()
     }
 
-    internal val fleetGridController: FleetGridController by newGame()
+    private val fleetGridController: FleetGridController by newGame()
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
-
     internal val currentPlayerFleetGridPane = BorderPane().apply { center = fleetGridController.activeFleetGrid() }
-    internal val currentPlayerFleetReadinessPane = currentPlayerFleetReadinessPane(currentPlayer)
 
+    internal val currentPlayerFleetReadinessPane = currentPlayerFleetReadinessPane(currentPlayer)
     private fun currentPlayerFleetReadinessPane(player: String) =
         shipsTypesPaneController.shipTypesPane(player).transpose().apply { leftPadding(10) }
 
@@ -83,11 +80,12 @@ class BattleView : AbstractGameView("Battle View") {
         shipsTypesPaneController.shipTypesPane(player).transpose().flip().apply { rightPadding(10) }
 
     internal val enemiesFleetGridsPanes = hashMapOf<String, FleetGrid>()
-    internal val enemiesFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
 
+    internal val enemiesFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
     private val selectedEnemyFleetReadinessPane = BorderPane()
 
     private val emptyFleetGrid = createEmptyFleetGreed()
+
     private val selectedEnemyFleetPane = BorderPane().apply { center = emptyFleetGrid }
 
     private val playersListView: ListView<String> = ListView(model.players).apply {
@@ -100,12 +98,13 @@ class BattleView : AbstractGameView("Battle View") {
         subscriptions {
             readyPlayersReceived()
         }
+
         selectedEnemyLabel = label(selectionModel.selectedItemProperty())
     }
 
     internal lateinit var battleViewExitButton: Button
-    internal lateinit var battleButton: Button
 
+    internal lateinit var battleStartButton: BattleStartButton
     private fun createEmptyFleetGreed() =
         fleetGridController
             .fleetGrid()
@@ -116,17 +115,18 @@ class BattleView : AbstractGameView("Battle View") {
         title = currentPlayer.uppercase()
 
         primaryStage.setOnCloseRequest { battleController.onWindowClose() }
-        primaryStage.setOnCloseRequest { battleController.onWindowClose() }
 
         model {
-            turn.addListener { _, _, _ -> playersListView.refresh() }
-            defeatedPlayers.addListener { _, _, new -> new?.run { playersListView.refresh() } }
+
+            listOf(turn, defeatedPlayers).forEach {
+                it.addListener { _, _, new -> new?.run { playersListView.refresh() } }
+            }
+
             playersReadiness.addValueListener {
-                battleButton.updateStyle()
+                battleStartButton.updateStyle(this@BattleView)
                 playersListView.refresh()
             }
 
-            log { "players = $players" }
             players
                 .exclude(currentPlayer)
                 .forEach { name ->
@@ -141,11 +141,10 @@ class BattleView : AbstractGameView("Battle View") {
         selectedEnemyFleetReadinessPane { initByFirstIfPresent(enemiesFleetsReadinessPanes) }
     }
 
-    private inline
-    fun <N : Node>
+    private inline fun <N : Node>
             BorderPane.initByFirstIfPresent(
-                playersNodes: Map<String, N>,
-                afterInit: N.() -> Unit = {}
+        playersNodes: Map<String, N>,
+        afterInit: N.() -> Unit = {},
     ) {
         model.players
             .exclude(currentPlayer)
@@ -159,6 +158,13 @@ class BattleView : AbstractGameView("Battle View") {
     }
 
     override val root: GridPane
+
+    override fun exit() {
+        battleController.disconnect()
+        super.exit()
+    }
+
+    val battleViewExitButtonIndices = 2 to 0
 
     init {
         subscriptions {
@@ -220,7 +226,7 @@ class BattleView : AbstractGameView("Battle View") {
                 }
             }
 
-            cell(2, 0) {
+            cell(battleViewExitButtonIndices.first, battleViewExitButtonIndices.second) {
                 backTransitButton<AppView>(this@BattleView) {
                     battleController.onBattleViewExit()
                 }.also {
@@ -229,32 +235,20 @@ class BattleView : AbstractGameView("Battle View") {
             }
 
             cell(2, 1) {
-                button(if (applicationProperties.isServer) "В бой" else "Готов") {
+                battleStartButton(if (applicationProperties.isServer) "В бой" else "Готов") {
                     if (!applicationProperties.isServer) isDisable = true
-                    updateStyle()
+                    updateStyle(this@BattleView)
                     action {
                        log { "battleController: ${battleController.name}" }
                        battleController.startBattle()
                     }
                 }.also {
-                    battleButton = it
+                    battleStartButton = it
                 }
             }
         }
     }
 
-    internal fun Button.updateStyle() {
-        if (applicationProperties.isServer) {
-            isDisable = model.notAllReady
-                .yes { removeClass(AppStyles.readyButton) }
-                .no { addClass(AppStyles.readyButton) }
-        } else {
-            when(model.hasReady(currentPlayer)) {
-                true -> addClass(AppStyles.readyButton)
-                else -> removeClass(AppStyles.readyButton)
-            }
-        }
-    }
 
     internal fun addEnemyFleetGrid(enemy: String) {
         enemiesFleetGridsPanes[enemy] =

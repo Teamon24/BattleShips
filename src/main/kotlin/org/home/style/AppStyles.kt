@@ -13,10 +13,12 @@ import javafx.scene.paint.Color.MEDIUMSEAGREEN
 import javafx.scene.paint.Color.ORANGERED
 import javafx.scene.paint.Color.PINK
 import javafx.scene.paint.Color.RED
+import javafx.scene.paint.Color.TRANSPARENT
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Color.rgb
 import javafx.scene.paint.Color.valueOf
 import javafx.scene.paint.Paint
+import org.home.style.ColorUtils.withOpacity
 import org.home.utils.LinearUnits
 import tornadofx.CssRule
 import tornadofx.CssSelectionBlock
@@ -26,10 +28,9 @@ import tornadofx.box
 import tornadofx.cssclass
 import tornadofx.loadFont
 import tornadofx.mixin
+import tornadofx.parallelTransition
 import tornadofx.px
-import java.io.File
 import java.net.URI
-import java.net.URL
 
 class AppStyles : Stylesheet() {
 
@@ -43,8 +44,10 @@ class AppStyles : Stylesheet() {
     companion object {
         private const val targetIconPath = "/icons/target-3699.svg"
 
-        val chosenCellColor: Color = valueOf("#085191")
+        val chosenCellColor: Color = valueOf("#085191").withOpacity(0.7)
         val readyPlayerCellColor: Color = MEDIUMSEAGREEN
+        const val buttonColorHex = "EAE5E5FF"
+        val buttonColor: Paint = Paint.valueOf(buttonColorHex)!!
 
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
         val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyPlayerCellColor, BLACK)
@@ -71,7 +74,6 @@ class AppStyles : Stylesheet() {
         private const val fleetBorderWidth = 0.5
 
         private val wrongCellColor = RED
-        private val emptyCellColor = WHITE
 
         val form by cssclass()
         val fleetGrid by cssclass()
@@ -92,8 +94,10 @@ class AppStyles : Stylesheet() {
         val fieldSize by cssclass()
 
         val chosenFleetCell by cssclass()
+        val animationCell by cssclass()
 
         val gridMargin by cssclass()
+        val animationGridMargin by cssclass()
 
         val debugClass by cssclass()
         val defeatedCell by cssclass()
@@ -108,8 +112,8 @@ class AppStyles : Stylesheet() {
         val readyButton by cssclass()
 
         const val playersListView = "players-list-view"
-    }
 
+    }
 
     init {
         errorLabel + padding(20.px)
@@ -125,7 +129,17 @@ class AppStyles : Stylesheet() {
         }
 
         label + jetBrainFont
-        button + jetBrainFont + fillParent
+        textField + square
+
+        (button + jetBrainFont + fillParent + square) {
+            backgroundColor += buttonColor
+
+//            and(hover) {
+//                backgroundColor += chosenCellColor.brighter(5)
+//                textFill = WHITE
+//            }
+        }
+
         fleetLabel + jetBrainFont + cellSize + center
         centerGrid + center
 
@@ -135,9 +149,15 @@ class AppStyles : Stylesheet() {
         }
 
         chosenFleetCell {
-            textFill = emptyCellColor
+            textFill = WHITE
             backgroundColor += chosenCellColor
             borderWidth += box(0.px)
+        }
+
+        animationCell {
+            backgroundColor += chosenCellColor
+            borderWidth += box(1.px)
+            borderColor += box(WHITE)
         }
 
         (missCell + border) {
@@ -150,7 +170,7 @@ class AppStyles : Stylesheet() {
 
 
         (titleCell + border) {
-            textFill = emptyCellColor
+            textFill = WHITE
             backgroundColor += LIGHTSLATEGRAY
         }
 
@@ -209,7 +229,6 @@ class AppStyles : Stylesheet() {
             alignment = Pos.CENTER
             prefHeight = pref
             prefWidth = pref
-            padding = box(100.px)
             fontSize = 15.px
         }
 
@@ -220,12 +239,9 @@ class AppStyles : Stylesheet() {
 
         fleetGrid + center + border
 
-        gridMargin {
-            hgap = marginValue
-            vgap = hgap
-        }
+        gridMargin + gridMargin(marginValue)
 
-
+        animationGridMargin + gridMargin(10.px)
     }
 
     private val AppStyles.border: CssSelectionBlock.() -> Unit
@@ -240,6 +256,14 @@ class AppStyles : Stylesheet() {
                 +jetBrainsMonoLightFont
                 +small
             }
+        }
+
+    private val AppStyles.square: CssSelectionBlock.() -> Unit
+        get() { return {
+            focusColor = TRANSPARENT
+            faintFocusColor = TRANSPARENT
+            backgroundRadius += box(0.px)
+        }
         }
 
     private fun gridMargin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
@@ -278,10 +302,12 @@ class AppStyles : Stylesheet() {
         backgroundInsets = MultiValue(arrayOf(box(px / 2)))
     }
 
-    private operator fun CssRule.plus(block: CssSelectionBlock.() -> Unit): CssRule {
+    operator fun CssRule.plus(block: CssSelectionBlock.() -> Unit): CssRule {
         this { block() }
         return this
     }
 }
+
+private fun Color.brighter(i: Int) = apply { repeat(i) { this.brighter() } }
 
 

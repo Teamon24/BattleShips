@@ -31,6 +31,7 @@ class FleetGrid : GridPane() {
             .filterIsInstance<FleetCell>()
             .filter {
                 val (row, col) = getIndices(it)
+
                 row > 0 && col > 0
             }
             .forEach {

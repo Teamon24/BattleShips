@@ -4,6 +4,7 @@ import javafx.geometry.Pos
 import javafx.stage.Modality.APPLICATION_MODAL
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
+import org.home.mvc.view.components.battleButton
 import org.home.style.AppStyles
 import tornadofx.UIComponent
 import tornadofx.action
@@ -23,7 +24,7 @@ private fun window(message: () -> String) = object : UIComponent() {
                 alignment = Pos.CENTER
             }
         }
-        cell(1, 0) { button("ok") { action { close() } } }
+        cell(1, 0) { battleButton("ok") { action { close() } } }
     }
 
     init {

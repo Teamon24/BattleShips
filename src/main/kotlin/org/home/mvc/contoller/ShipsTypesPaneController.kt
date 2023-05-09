@@ -3,11 +3,9 @@ package org.home.mvc.contoller
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.scene.layout.GridPane
-import org.home.mvc.model.BattleModel
-import org.home.utils.extensions.BooleansExtensions.yes
-import tornadofx.Controller
+import org.home.app.AbstractApp.Companion.newGame
 
-class ShipsTypesPaneController: AbstractGameController() {
+class ShipsTypesPaneController: AbstractGameBean() {
 
     private val component: ShipTypePaneComponent by newGame()
 

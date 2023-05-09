@@ -11,19 +11,19 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
 import org.home.mvc.ApplicationProperties.Companion.delayTime
-import org.home.mvc.contoller.AbstractGameController
+import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.style.AppStyles
-import org.home.utils.extensions.AtomicBooleansExtensions.atomic
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.log
+import home.extensions.AtomicBooleansExtensions.atomic
+import home.extensions.AtomicBooleansExtensions.invoke
+import org.home.app.AbstractApp.Companion.newGame
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch
 
-class FleetGridController : AbstractGameController() {
+class FleetGridController : AbstractGameBean() {
 
     private val shipsTypesController: ShipsTypesController by newGame()
     private val fleetGridCreator: FleetGridCreator by newGame()
@@ -48,10 +48,10 @@ class FleetGridController : AbstractGameController() {
     private val titleCellEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
     private val fleetGridEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
 
-    fun fleetGrid() = fleetGridCreator.fleetGrid().addFleetCellClass(AppStyles.currentPlayerCell)
+    fun fleetGrid() = fleetGridCreator.titledFleetGrid().addFleetCellClass(AppStyles.currentPlayerCell)
 
     fun activeFleetGrid(): FleetGrid {
-        val fleetGrid = fleetGridCreator.fleetGrid()
+        val fleetGrid = fleetGridCreator.titledFleetGrid()
         val exitHappenedHandler = fleetGrid.exitHappened()
         val releaseAfterExitHandler = releaseAfterExit()
         val dragExitHandler = dragExit()
@@ -116,27 +116,6 @@ class FleetGridController : AbstractGameController() {
                 currentShip.clear()
             }
             mouseWentOutOfBound(true)
-        }
-    }
-
-    fun removeHandlers(fleetGrid: FleetGrid) {
-
-        log { "removing handlers" }
-
-        fleetGridEventHandlers.forEach { (event, handler) ->
-            fleetGrid.removeEventHandler(event, handler)
-        }
-
-        titleCellEventHandlers.forEach { (event, handler) ->
-            fleetGrid.forEachTitleCells {
-                it.removeEventHandler(event, handler)
-            }
-        }
-
-        fleetGrid.forEachFleetCells {
-            fleetGridHandlers.getHandlers().forEach { (event, handler) ->
-                it.removeEventHandler(event, handler)
-            }
         }
     }
 }

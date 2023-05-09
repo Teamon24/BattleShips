@@ -4,10 +4,10 @@ import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.doWhile
 import org.home.utils.InfiniteTryBase.Companion.handle
 import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
-import org.home.utils.extensions.AnysExtensions.name
-import org.home.utils.extensions.AtomicBooleansExtensions.atomic
-import org.home.utils.extensions.AtomicBooleansExtensions.toggleAfter
-import org.home.utils.extensions.BooleansExtensions.so
+import home.extensions.AnysExtensions.name
+import home.extensions.AtomicBooleansExtensions.atomic
+import home.extensions.AtomicBooleansExtensions.toggleAfter
+import home.extensions.BooleansExtensions.so
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

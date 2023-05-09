@@ -4,7 +4,7 @@ import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.mvc.contoller.AbstractGameController
+import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.HasAPlayer
@@ -14,10 +14,8 @@ import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.eventbus
-import org.home.mvc.model.BattleModel.Companion.invoke
 import org.home.mvc.model.removeDestroyedDeck
 import org.home.net.message.Action
-import org.home.net.message.BattleEndAction
 import org.home.net.message.DefeatAction
 import org.home.net.message.FleetSettingsAction
 import org.home.net.message.HitAction
@@ -37,17 +35,18 @@ import org.home.utils.InfiniteTryBase.Companion.doWhile
 import org.home.utils.InfiniteTryBase.Companion.stopOnAll
 import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.send
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.name
-import org.home.utils.extensions.AnysExtensions.plus
-import org.home.utils.extensions.AtomicBooleansExtensions.atomic
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.no
-import org.home.utils.extensions.BooleansExtensions.so
-import org.home.utils.extensions.BooleansExtensions.yes
-import org.home.utils.extensions.CollectionsExtensions.isEmpty
-import org.home.utils.extensions.className
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
+import home.extensions.AnysExtensions.plus
+import home.extensions.AtomicBooleansExtensions.atomic
+import home.extensions.AtomicBooleansExtensions.invoke
+import home.extensions.BooleansExtensions.invoke
+import home.extensions.BooleansExtensions.no
+import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.yes
+import home.extensions.CollectionsExtensions.isEmpty
+import home.extensions.AnysExtensions.className
+import org.home.app.AbstractApp.Companion.newGame
 import org.home.utils.log
 import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
@@ -59,7 +58,7 @@ import java.net.Socket
 import java.net.SocketException
 import java.net.UnknownHostException
 
-class BattleClient: AbstractGameController(), BattleController<Action> {
+class BattleClient: AbstractGameBean(), BattleController<Action> {
 
     override val currentPlayer: String get() = super.currentPlayer
 

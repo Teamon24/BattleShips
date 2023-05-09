@@ -1,6 +1,6 @@
 package org.home.mvc
 
-import org.home.utils.extensions.ln
+import home.extensions.StringBuildersExtensions.ln
 import org.home.utils.log
 import org.home.utils.logEach
 import org.home.utils.logging
@@ -76,11 +76,11 @@ class ApplicationProperties(
         const val battleFieldCreationMenuTitle = "Создание поля боя"
         const val leaveBattleFieldText = "Покинуть поле боя"
         const val leaveBattleText = "Покинуть бой"
+        const val exitText = "Выход"
 
         const val ipAddressFieldLabel = "ip"
         const val backButtonText = "Назад"
         const val createNewGameButtonText = "Создать"
-        const val creationButtonText = "Создать поле боя"
         const val joinButtonText = "Присоединиться"
         const val delayTime = 100L
     }

@@ -1,6 +1,5 @@
-package org.home
+package org.home.app
 
-import org.home.mvc.view.app.MainApp
 import tornadofx.launch
 
 fun main() {

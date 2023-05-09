@@ -1,34 +1,27 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
-import org.home.mvc.contoller.AbstractGameController
-import org.home.mvc.model.BattleModel
+import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.view.components.GridPaneExtensions.cell
-import org.home.style.AppStyles
-import tornadofx.Component
-import tornadofx.Controller
 import tornadofx.addChildIfPossible
-import tornadofx.addClass
 
-class FleetGridCreator: AbstractGameController() {
+class FleetGridCreator: AbstractGameBean() {
     private val rowRange = 1.. model.height.value
     private val colRange = 1.. model.width.value
 
-    fun fleetGrid() = FleetGrid().also {
-        it.addClass(AppStyles.fleetGrid)
-
+    fun titledFleetGrid() = FleetGrid().also {
+        fleetCells(it, rowRange, colRange)
         zeroTitleCell(it)
-        digitTitle(it)
-        letterTitle(it)
-        fleetCells(it)
+        letterTitle(it, colRange)
+        digitTitle(it, rowRange)
     }
 
     private fun zeroTitleCell(gridPane: GridPane) {
         cell(0, 0) { gridPane.titleCell(0, 0, "") }
     }
 
-    private fun letterTitle(gridPane: GridPane) {
-        for (i in 64 + rowRange) {
+    private fun letterTitle(gridPane: GridPane, colRange: IntRange) {
+        for (i in 64 + colRange) {
             val j = i - 64
             cell(0, j) {
                 val text = "${Char(i)}"
@@ -37,7 +30,7 @@ class FleetGridCreator: AbstractGameController() {
         }
     }
 
-    private fun digitTitle(gridPane: GridPane) {
+    private fun digitTitle(gridPane: GridPane, rowRange: IntRange) {
         for (i in rowRange) {
             cell(i, 0) {
                 val text = "$i"
@@ -46,7 +39,7 @@ class FleetGridCreator: AbstractGameController() {
         }
     }
 
-    private fun fleetCells(gridPane: GridPane) {
+    private fun fleetCells(gridPane: GridPane, rowRange: IntRange, colRange: IntRange) {
         for (row in rowRange) {
             for (col in colRange) {
                 cell(row, col) {
@@ -58,6 +51,10 @@ class FleetGridCreator: AbstractGameController() {
 
     operator fun Int.plus(rowRange: IntRange): IntRange {
         return this + rowRange.first..this + rowRange.last
+    }
+
+    private fun IntRange.shift(shift: Int): IntRange {
+        return IntRange(first + shift, last + shift)
     }
 }
 

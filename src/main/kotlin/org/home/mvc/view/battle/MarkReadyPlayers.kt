@@ -8,9 +8,9 @@ import org.home.mvc.model.thoseAreReady
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.currentPlayerListViewColors
 import org.home.style.AppStyles.Companion.enemyListViewColors
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.no
-import org.home.utils.extensions.BooleansExtensions.yes
+import home.extensions.AnysExtensions.invoke
+import home.extensions.BooleansExtensions.no
+import home.extensions.BooleansExtensions.yes
 import tornadofx.style
 
 class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, ListCell<String>> {

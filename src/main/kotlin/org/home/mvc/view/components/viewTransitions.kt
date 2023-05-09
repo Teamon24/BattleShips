@@ -4,7 +4,7 @@ package org.home.mvc.view.components
 
 import javafx.event.EventTarget
 import org.home.mvc.ApplicationProperties.Companion.backButtonText
-import org.home.mvc.view.Scopes
+import org.home.app.di.Scopes
 import org.home.utils.componentName
 import org.home.utils.log
 import tornadofx.View
@@ -29,7 +29,7 @@ inline fun <reified T: View> EventTarget.backTransitButton(
     text: String = backButtonText,
     crossinline body: () -> Unit = {},
 ) =
-    button(text) {
+    battleButton(text) {
         action {
             body()
             from.replaceWith(find(T::class), backSlide)

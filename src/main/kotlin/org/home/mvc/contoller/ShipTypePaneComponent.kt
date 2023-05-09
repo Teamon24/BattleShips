@@ -1,10 +1,10 @@
 package org.home.mvc.contoller
 
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.scene.control.Button
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
+import org.home.mvc.view.components.BattleButton
 import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.components.GridPaneExtensions.removeColumn
 import org.home.mvc.view.fleet.FleetCellLabel
@@ -12,18 +12,18 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.name
+import home.extensions.AnysExtensions.name
 import org.home.utils.log
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.onChange
 import tornadofx.runLater
 
-class ShipTypePaneComponent: AbstractGameController() {
+class ShipTypePaneComponent: AbstractGameBean() {
     private fun lastShipType() = model.battleShipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
     fun addShipTypeButton(gridPane: GridPane) {
-        Button("+").also {
+        BattleButton("+").also {
             it.action {
                 runLater {
                     val column = lastShipType() + 1
@@ -46,7 +46,7 @@ class ShipTypePaneComponent: AbstractGameController() {
     }
 
     fun removeShipTypeButton(gridPane: GridPane) {
-        Button("-").also {
+        BattleButton("-").also {
             it.action {
                 runLater {
                     if ((lastShipType() != 0)) {

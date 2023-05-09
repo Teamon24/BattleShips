@@ -19,15 +19,16 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.10'
 }
 
-group = 'com.test'
+group = 'home'
 version = '1.0-SNAPSHOT'
+
 
 repositories {
     mavenCentral()
 }
 
 application {
-    mainClassName = 'org.home.Application_devKt'
+    mainClassName = 'org.home.app.Application_devKt'
 }
 
 test {
@@ -37,6 +38,13 @@ test {
 def koin_version = "3.2.0-beta-1"
 
 dependencies {
+
+    implementation('home:utils') {
+        version {
+            branch = 'main'
+        }
+    }
+
     implementation("io.insert-koin:koin-core:$koin_version")
     implementation 'no.tornado:tornadofx:1.7.20'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'

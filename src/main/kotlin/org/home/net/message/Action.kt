@@ -19,7 +19,7 @@ import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
 import org.home.utils.RomansDigits
-import org.home.utils.extensions.BooleansExtensions.then
+import home.extensions.BooleansExtensions.then
 
 sealed class Action: Message {
     override fun toString(): String {

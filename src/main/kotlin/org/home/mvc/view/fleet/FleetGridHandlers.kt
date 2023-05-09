@@ -21,8 +21,8 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.so
+import home.extensions.AtomicBooleansExtensions.invoke
+import home.extensions.BooleansExtensions.so
 import org.home.utils.log
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch

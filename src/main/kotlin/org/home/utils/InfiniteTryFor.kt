@@ -1,6 +1,6 @@
 package org.home.utils
 
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
+import home.extensions.AtomicBooleansExtensions.invoke
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 

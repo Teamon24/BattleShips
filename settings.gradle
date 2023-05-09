@@ -1,2 +1,9 @@
 rootProject.name = 'sea-battle'
 
+sourceControl {
+    gitRepository("https://github.com/Teamon24/utils.git") {
+        producesModule("home:utils")
+    }
+}
+
+

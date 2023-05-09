@@ -10,10 +10,10 @@ import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.openMessageWindow
 import org.home.net.message.HasAShot
 import org.home.style.AppStyles
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.name
-import org.home.utils.extensions.BooleansExtensions.or
-import org.home.utils.extensions.BooleansExtensions.then
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.addClass

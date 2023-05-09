@@ -1,17 +1,19 @@
 package org.home.mvc.view.battle
 
 import javafx.beans.property.SimpleStringProperty
+import org.home.app.AbstractApp.Companion.newGame
 import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.view.app.AppView
+import org.home.mvc.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
+import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
@@ -48,7 +50,7 @@ class BattleJoinView : AbstractGameView("Присоединиться к бит�
         }
 
         cell(1, 1) {
-            button(connectionButtonText) {
+            battleButton(connectionButtonText) {
                 action {
                     try {
                         val (ip, port) = extract()

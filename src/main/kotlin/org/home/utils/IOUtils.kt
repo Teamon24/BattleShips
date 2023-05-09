@@ -4,7 +4,7 @@ import org.apache.commons.lang3.SerializationUtils
 import org.home.net.message.Message
 import org.home.net.message.MessagesDSL.Messages
 import org.home.net.message.MessagesInfo
-import org.home.utils.extensions.AnysExtensions.repeat
+import home.extensions.AnysExtensions.repeat
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStream

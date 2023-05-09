@@ -12,11 +12,11 @@ import org.home.utils.InfiniteTryBase.Companion.stopOn
 import org.home.utils.InfiniteTryFor
 import org.home.utils.InfiniteTryFor.Companion.infiniteTryFor
 import org.home.utils.SocketUtils.receive
-import org.home.utils.extensions.AnysExtensions.invoke
-import org.home.utils.extensions.AnysExtensions.removeFrom
-import org.home.utils.extensions.AtomicBooleansExtensions.atomic
-import org.home.utils.extensions.AtomicBooleansExtensions.invoke
-import org.home.utils.extensions.BooleansExtensions.invoke
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.removeFrom
+import home.extensions.AtomicBooleansExtensions.atomic
+import home.extensions.AtomicBooleansExtensions.invoke
+import home.extensions.BooleansExtensions.invoke
 import org.home.utils.log
 import org.home.utils.logError
 import org.home.utils.logReceive
@@ -62,6 +62,7 @@ class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
     override fun run() {
         multiServer {
             loop {
+                Thread.sleep(100)
                 sockets.add(accept().withTimeout(readTimeout))
                 log { "waiting for connection permission ..." }
                 connectionBarrier().await()
@@ -83,6 +84,7 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override fun run() {
         multiServer {
+            Thread.sleep(100)
             sockets.receiveInLoop { socket, messages ->
                 logReceive(socket, messages)
                 socketsMessages.add(socket to messages.drop(1) as Collection<M>)
@@ -112,6 +114,7 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
     override fun run() {
         multiServer {
             loop {
+                Thread.sleep(100)
                 val (socket, messages) = socketsMessages.take()
 
                 socket.isNotClosed {
