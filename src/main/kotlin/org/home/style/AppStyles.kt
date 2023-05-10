@@ -15,7 +15,6 @@ import javafx.scene.paint.Color.PINK
 import javafx.scene.paint.Color.RED
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Color.rgb
-import javafx.scene.paint.Color.valueOf
 import javafx.scene.paint.Paint
 import org.home.style.ColorUtils.withOpacity
 import org.home.style.CssUtils.background
@@ -31,6 +30,7 @@ import org.home.style.CssUtils.padding
 import org.home.style.CssUtils.square
 import org.home.style.CssUtils.text
 import tornadofx.CssRule
+import tornadofx.CssSelection
 import tornadofx.CssSelectionBlock
 import tornadofx.Stylesheet
 import tornadofx.box
@@ -40,6 +40,7 @@ import tornadofx.mixin
 import tornadofx.px
 import java.net.URI
 
+@Suppress("MAGIC_NUMBER")
 class AppStyles : Stylesheet() {
 
     class PlayerListViewColors(
@@ -53,9 +54,9 @@ class AppStyles : Stylesheet() {
         private val String.color get() = Paint.valueOf(this) as Color
         private const val targetIconPath = "/icons/target-3699.svg"
 
-        val chosenCellColor = valueOf("#085191").withOpacity(0.7)
-        val readyPlayerCellColor = MEDIUMSEAGREEN
-        val wrongCellColor = RED
+        val chosenCellColor = "#085191".color.withOpacity(0.7)
+        val readyPlayerCellColor: Color = MEDIUMSEAGREEN
+        val wrongCellColor: Color = RED
         val buttonColor = "EAE5E5FF".color
 
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
@@ -122,38 +123,80 @@ class AppStyles : Stylesheet() {
     }
 
     init {
-        label + jetBrainFont
+        fieldSize {
+            maxWidth = 400.px
+            maxHeight = 400.px
+        }
+
+        //---- components style ----------------------------------------------------------------------------------------
+        label     + jetBrainFont
         textField + square
+        button    + background(buttonColor) + jetBrainFont + fillParent + square
+        odd       + background(WHITE)       + margin(1.px)
+        even      + background(WHITE)       + margin(1.px)
 
+        form {
+            center()
+            with(600.px) {
+                prefHeight = this
+                prefWidth = this
+            }
+
+            fontSize = 15.px
+        }
+
+
+        //---- labels style --------------------------------------------------------------------------------------------
         errorLabel + padding(20.px)
+        fleetLabel + center + jetBrainFont + cellSize
 
-        odd + background(WHITE) + margin(1.px)
-        even + background(WHITE) + margin(1.px)
+        shipTypeLabel {
+            backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
+        }
 
-        button + jetBrainFont + fillParent + square + background(buttonColor)
+        //---- panes style ---------------------------------------------------------------------------------------------
+        shipsTypesInfoPane + background(rgb(58, 132, 192, 0.35)) + margin(10.px)
 
-        fleetLabel + jetBrainFont + cellSize + center
-        centerGrid + center
+        //---- buttons style -------------------------------------------------------------------------------------------
+        readyButton + background(readyPlayerCellColor) + text(WHITE)
 
-        chosenCell    + noBorder + text(WHITE) + background(chosenCellColor)
-        incorrectCell + noBorder + background(wrongCellColor)
-        animationCell + noBorder + background(chosenCellColor)
-        missCell      + border   + background("A4A5A6FF".color)
-        hitCell       + border   + background(ORANGERED)
-        titleCell     + border   + text(WHITE) + background(LIGHTSLATEGRAY)
-        defeatedCell  + border   + background(PINK)
+        //---- grids style ---------------------------------------------------------------------------------------------
+        centerGrid          + center
+        fleetGrid           + center                  + border
+        gridMargin          + gridMargin(marginValue)
+        animationGridMargin + gridMargin(10.px)
 
-        defeatedTitleCell + text(WHITE) + background("A93638F4".color)
+        //---- fleet  cells style --------------------------------------------------------------------------------------
+        chosenCell        + background(chosenCellColor)  + text(WHITE) + noBorder
+        titleCell         + background(LIGHTSLATEGRAY)   + text(WHITE) + border
+        defeatedTitleCell + background("A93638F4".color) + text(WHITE)
+        incorrectCell     + background(wrongCellColor)   + noBorder
+        animationCell     + background(chosenCellColor)  + noBorder
+        missCell          + background("A4A5A6FF".color) + border
+        hitCell           + background(ORANGERED)        + border
+        defeatedCell      + background(PINK)             + border
 
-        (currentPlayerCell + border) { focusTraversable = false }
 
-        (emptyCell + border) {
+        val shipBorderCellColor = RED
+        (shipBorderCell + shipBorderCellColor.withOpacity(0.3).background) {
+            borderColor += box(shipBorderCellColor.withOpacity(0.15))
+            borderWidth += box(fleetBorderWidth.px)
+        }
+
+        currentPlayerCell {
+            border()
+            focusTraversable = false
+        }
+
+        emptyCell {
+            border()
             and(hover) {
                 backgroundColor += chosenCellColor
             }
         }
 
-        (enemyCell + border) {
+        enemyCell {
+            border()
             and(hover) {
                 cursor = Cursor.CROSSHAIR
                 backgroundColor += rgb(231, 64, 67, 0.5)
@@ -161,47 +204,20 @@ class AppStyles : Stylesheet() {
             }
         }
 
-        shipsTypesInfoPane + margin(10.px) + background(rgb(58, 132, 192, 0.35))
-
-        shipTypeLabel {
-            backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
-        }
-
-        (shipBorderCell + rgb(255, 0, 0, 0.3).background) {
-            borderColor += box(rgb(255, 0, 0, 0.15))
-            borderWidth += box(fleetBorderWidth.px)
-        }
-
-        readyButton + text(WHITE) + background(readyPlayerCellColor)
-
-        (debugClass + gridMargin(10.px)) {
+        debugClass {
+            gridMargin(10.px)
             borderColor += box(BLACK)
             borderWidth += box(fleetBorderWidth.px)
         }
-
-        form {
-            val pref = 600.px
-            alignment = Pos.CENTER
-            prefHeight = pref
-            prefWidth = pref
-            fontSize = 15.px
-        }
-
-        fieldSize {
-            maxWidth = 400.px
-            maxHeight = 400.px
-        }
-
-        fleetGrid + center + border
-
-        gridMargin + gridMargin(marginValue)
-
-        animationGridMargin + gridMargin(10.px)
     }
 
     inline operator fun CssRule.plus(crossinline block: CssSelectionBlock.() -> Unit): CssRule {
         this { block() }
         return this
+    }
+
+    operator fun (CssSelectionBlock.() -> Unit).plus(selection: CssSelection) {
+        selection.block.this()
     }
 }
 

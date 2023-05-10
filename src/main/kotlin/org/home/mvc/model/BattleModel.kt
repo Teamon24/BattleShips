@@ -204,7 +204,7 @@ class BattleModel : ViewModel {
     fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
     fun hasAWinner() = players.size - defeatedPlayers.size == 1
     fun hasNoWinner() = players.size - defeatedPlayers.size > 1
-    fun currentPlayerIs(player: String) = currentPlayer == player
+    fun currentPlayerIs(player: String?) = currentPlayer == player
     fun shipsOf(player: String) = playersAndShips[player]!!
 
     private fun <T> SimpleListProperty<T>.log(name: String) {
