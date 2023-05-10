@@ -35,7 +35,7 @@ class ShotProcessingComponent: AbstractGameBean() {
     private val sockets = multiServerSockets.get()
     private val shotNotifier = notifierStrategies.create(sockets)
 
-    internal val turnList = playerTurnComponent.turnList
+    private val turnList = playerTurnComponent.turnList
     private inline val <E> Collection<E>.hasPlayers get() = hasElements
 
     internal fun socket(player: String) = sockets[player]
@@ -46,7 +46,7 @@ class ShotProcessingComponent: AbstractGameBean() {
             val ships = model.shipsOf(target)
             val shot = action.shot
             ships.areHit(shot).yes {
-                onHitShot(action.hit())
+                onHit(HitAction(action))
                 ships.removeDestroyedDeck(shot)
                 ships.isEmpty.invoke {
                     playerTurnComponent.remove(target)
@@ -58,6 +58,7 @@ class ShotProcessingComponent: AbstractGameBean() {
                     turnList.hasPlayers {
                         socket(shooter).send(TurnAction(shooter))
                     }
+
                     eventbus { +PlayerWasDefeated(defeatAction) }
                 }
             } no {
@@ -94,7 +95,7 @@ class ShotProcessingComponent: AbstractGameBean() {
         }
     }
 
-    fun onHitShot(hitAction: HitAction) {
+    fun onHit(hitAction: HitAction) {
         val notifications = shotNotifier.messages(hitAction)
         sockets.send(notifications)
         eventbus {

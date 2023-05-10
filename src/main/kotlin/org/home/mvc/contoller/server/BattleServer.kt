@@ -68,7 +68,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     private val shotProcessingComponent: ShotProcessingComponent by di()
     private val playerTurnComponent: PlayerTurnComponent by di()
 
-    private val turnPlayer get() = playerTurnComponent.turnPlayer
+    private val turnPlayer get() = playerTurnComponent.turnPlayer!!
     override val currentPlayer = super.currentPlayer
 
     private fun socket(player: String): PlayerSocket = sockets[player]
@@ -173,7 +173,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             is ShipDeletionAction -> processFleetEdit(action, ::ShipWasDeleted)
 
             is ShotAction -> shotProcessingComponent.onShot(action)
-            is HitAction -> shotProcessingComponent.onHitShot(action)
+            is HitAction -> shotProcessingComponent.onHit(action)
 
             is MissAction -> shotProcessingComponent.onMiss(action)
 
@@ -245,9 +245,8 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                             hasATurn(currentPlayer) {
                                 +TurnReceived(TurnAction(currentPlayer))
                             } otherwise {
-                                action {
-                                    socket(shooter).send(TurnAction(shooter))
-                                }
+                                val shooter = action.shooter
+                                socket(shooter).send(TurnAction(shooter))
                             }
                         }
                     }
@@ -255,7 +254,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             }
 
             playerTurnComponent {
-                hasPlayers {
+                battleIsStarted {
                     hasATurn(removedPlayer) {
                         val nextTurn = nextTurnAndRemove(removedPlayer)
                         hasPlayers {

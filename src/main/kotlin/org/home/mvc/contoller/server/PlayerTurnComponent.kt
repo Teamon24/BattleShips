@@ -11,8 +11,7 @@ class PlayerTurnComponent: AbstractGameBean() {
     private val backing = mutableListOf<String>()
     val turnList: List<String> get() = backing
 
-    private lateinit var backingTurnPlayer: String
-    val turnPlayer get() = backingTurnPlayer
+    var turnPlayer: String? = null
 
     inline val String.hasATurn get() = this == turnPlayer
     inline val <E> Collection<E>.hasPlayers get() = hasElements
@@ -22,9 +21,9 @@ class PlayerTurnComponent: AbstractGameBean() {
             clear()
             addAll(model.players.shuffled())
             log { "turn $this" }
-            backingTurnPlayer = first()
+            turnPlayer = first()
         }
-        return turnPlayer
+        return turnPlayer!!
     }
 
     fun nextTurnAndRemove(player: String): String {
@@ -39,9 +38,9 @@ class PlayerTurnComponent: AbstractGameBean() {
         if (nextTurnIndex > turnList.size - 1) {
             nextTurnIndex = 0
         }
-        backingTurnPlayer = turnList[nextTurnIndex]
+        turnPlayer = turnList[nextTurnIndex]
         log { "next turn: $turnPlayer" }
-        return turnPlayer
+        return turnPlayer!!
     }
 
     fun remove(removedPlayer: String) {
@@ -49,6 +48,12 @@ class PlayerTurnComponent: AbstractGameBean() {
     }
 
     inline fun hasPlayers(onTrue: () -> Unit) = turnList.hasPlayers { onTrue() }
+
+    inline fun battleIsStarted(onTrue: () -> Unit): Boolean {
+        val started = turnPlayer != null
+        started { onTrue() }
+        return started
+    }
 
     inline fun hasATurn(player: String, onTrue: () -> Unit): Boolean {
         val hasTurn = player.hasATurn
