@@ -1,4 +1,4 @@
-package org.home.net.server
+package org.home.mvc.contoller.server
 
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.no
@@ -12,15 +12,15 @@ import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
+import org.home.mvc.contoller.server.action.DefeatAction
+import org.home.mvc.contoller.server.action.HasAShot
+import org.home.mvc.contoller.server.action.HitAction
+import org.home.mvc.contoller.server.action.MissAction
+import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.TurnAction
 import org.home.mvc.model.areHit
 import org.home.mvc.model.removeDestroyedDeck
-import org.home.net.PlayerSocket
-import org.home.net.message.DefeatAction
-import org.home.net.message.HasAShot
-import org.home.net.message.HitAction
-import org.home.net.message.MissAction
-import org.home.net.message.ShotAction
-import org.home.net.message.TurnAction
+import org.home.net.server.MultiServer
 import org.home.utils.PlayerSocketUtils.send
 import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send

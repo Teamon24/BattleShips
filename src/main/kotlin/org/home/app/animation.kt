@@ -64,7 +64,7 @@ class My2View: View() {
                                 .also { addChildIfPossible(it) }
                         }
                     }
-                    waveCellFill(this, rows, rows, 30000.0)
+                    randomCellFill(this, 30000.0)
                 }
             }
         }
@@ -73,7 +73,7 @@ class My2View: View() {
             gridPane.children.forEach {
                 val (i, j) = getIndices(it)
                 val rectangle = gridPane.getCell(i, j) as Rectangle
-                randomFillAnimation(rectangle, chosenCellColor.withOpacity(0.5), time)
+                randomFillAnimation(rectangle, chosenCellColor.withOpacity(0.001), time)
             }
         }
 
@@ -95,7 +95,6 @@ class My2View: View() {
                 cycleCount = 50
                 playFrom(Duration.millis(time * random()))
             }
-
         }
 
         private fun waveAnimation(
@@ -116,8 +115,8 @@ class My2View: View() {
             ) {
                 cycleCount = 50
                 val d1 = time * twoPi / period
-                val shiftI = i.toDouble() + rows/2
-                val shiftJ = j.toDouble() + cols/2
+                val shiftI = i.toDouble() + rows / 2
+                val shiftJ = j.toDouble() + cols / 2
                 val millis = d1 * sqrt(shiftI * shiftI + shiftJ * shiftJ)
                 playFrom(Duration.millis(millis + random(time/10, time/9)))
             }

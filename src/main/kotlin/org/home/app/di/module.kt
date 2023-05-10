@@ -1,22 +1,22 @@
 package org.home.app.di
 
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShotNotifierStrategies
-import org.home.net.BattleClient
-import org.home.net.PlayerSocket
-import org.home.net.message.Action
-import org.home.net.server.BattleEventEmitter
-import org.home.net.server.BattleServer
+import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.server.BattleClient
+import org.home.mvc.contoller.server.BattleEventEmitter
+import org.home.mvc.contoller.server.BattleServer
+import org.home.mvc.contoller.server.PlayerSocket
+import org.home.mvc.contoller.server.PlayerTurnComponent
+import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.net.server.ConnectionsListener
 import org.home.net.server.MessageProcessor
 import org.home.net.server.MessageReceiver
 import org.home.net.server.MultiServer
 import org.koin.dsl.module
-import home.extensions.BooleansExtensions.then
-import home.extensions.BooleansExtensions.or
-import org.home.net.server.ShotProcessingComponent
-import org.home.net.server.PlayerTurnComponent
 
 val diDev = { props: String, player: Int, players: Int ->
     module {

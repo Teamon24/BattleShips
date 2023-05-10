@@ -10,14 +10,9 @@ sealed class InfiniteTryBase<E, H> {
     private val exceptions = mutableListOf<KClass<out Exception>>()
     abstract val emptyHandler: H
 
-    operator fun KClass<out Exception>.unaryPlus(): KClass<out Exception> {
-        exceptions.add(this)
-        return this
-    }
+    operator fun KClass<out Exception>.unaryPlus() = exceptions.add(this)
 
-    operator fun Collection<KClass<out Exception>>.unaryPlus() {
-        forEach { +it }
-    }
+    operator fun Collection<KClass<out Exception>>.unaryPlus() { forEach { +it } }
 
     fun putHandler(b: H) {
         handlers[b] = exceptions.toMutableList()
@@ -31,9 +26,7 @@ sealed class InfiniteTryBase<E, H> {
             ex::class in handlerAndExs.value
         }
 
-        handlerAndExceptions ?: throw ex
-
-        return handlerAndExceptions.key
+        return handlerAndExceptions?.key ?: throw ex
     }
 
     companion object {

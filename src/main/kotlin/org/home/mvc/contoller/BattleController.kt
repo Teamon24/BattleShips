@@ -1,8 +1,8 @@
 package org.home.mvc.contoller
 
 import org.home.mvc.model.Coord
-import org.home.net.message.Message
-import org.home.net.message.ShotAction
+import org.home.net.server.Message
+import org.home.mvc.contoller.server.action.ShotAction
 import org.home.utils.DSLContainer
 import org.home.utils.dslContainer
 

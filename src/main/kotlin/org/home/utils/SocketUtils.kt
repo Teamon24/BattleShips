@@ -1,13 +1,12 @@
 package org.home.utils
 
-import org.home.net.isNotClosed
-import org.home.net.message.Action
-import org.home.net.message.Message
-import org.home.net.message.MessagesDSL.Messages
-import org.home.net.message.MessagesDSL.Messages.Companion.withInfo
+import home.extensions.BooleansExtensions.invoke
+import org.home.mvc.contoller.server.isNotClosed
+import org.home.net.server.Message
+import org.home.net.server.MessagesDSL.Messages
+import org.home.net.server.MessagesDSL.Messages.Companion.withInfo
 import org.home.utils.IOUtils.readBatch
 import org.home.utils.IOUtils.write
-import home.extensions.BooleansExtensions.invoke
 import java.net.Socket
 
 object SocketUtils {

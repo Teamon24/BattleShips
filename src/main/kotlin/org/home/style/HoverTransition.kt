@@ -116,7 +116,6 @@ class HoverTransition(private val region: Region) {
 
     init {
         region.onHover {
-            log { "${region.name} hover transition disabled: $disabled" }
             disabled().otherwise {
                 hovered = it
                 it yes {
@@ -137,9 +136,7 @@ class HoverTransition(private val region: Region) {
 
     private fun playInThread() {
         thread = thread {
-            log { "${region.name} playing transition" }
             play()
-            log { "${region.name} transition has been played" }
         }
     }
 

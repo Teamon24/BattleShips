@@ -1,6 +1,6 @@
 package org.home.utils
 
-import org.home.net.PlayerSocket
+import org.home.mvc.contoller.server.PlayerSocket
 import tornadofx.Dimension
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue

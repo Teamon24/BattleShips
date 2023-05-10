@@ -1,10 +1,10 @@
 package org.home.utils
 
-import org.home.net.PlayerSocket
-import org.home.net.message.Action
-import org.home.net.message.MessagesDSL.Messages.Companion.withInfo
+import org.home.mvc.contoller.server.action.Action
+import org.home.net.server.MessagesDSL.Messages.Companion.withInfo
 import org.home.utils.SocketUtils.send
 import home.extensions.CollectionsExtensions.asMutableList
+import org.home.mvc.contoller.server.PlayerSocket
 
 
 object PlayerSocketUtils {

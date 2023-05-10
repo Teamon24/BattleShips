@@ -45,7 +45,7 @@ import org.home.mvc.view.components.battleStartButton
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
-import org.home.net.message.Action
+import org.home.mvc.contoller.server.action.Action
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
@@ -58,7 +58,6 @@ import tornadofx.label
 import tornadofx.onLeftClick
 import tornadofx.selectedItem
 import kotlin.collections.set
-import javafx.beans.Observable as Observable1
 
 class BattleView : AbstractGameView("Battle View") {
     internal val battleController: BattleController<Action> by di()

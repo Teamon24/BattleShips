@@ -1,4 +1,4 @@
-package org.home.net.server
+package org.home.mvc.contoller.server
 
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
@@ -26,34 +26,33 @@ import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.BattleModel.Companion.invoke
 import org.home.mvc.model.thoseAreReady
-import org.home.net.BattleClient.ActionTypeAbsentException
-import org.home.net.PlayerSocket
-import org.home.net.isNotClosed
-import org.home.net.message.Action
-import org.home.net.message.AreReadyAction
-import org.home.net.message.BattleStartAction
-import org.home.net.message.DefeatAction
-import org.home.net.message.DisconnectAction
-import org.home.net.message.FleetSettingsAction
-import org.home.net.message.FleetsReadinessAction
-import org.home.net.message.HitAction
-import org.home.net.message.LeaveAction
-import org.home.net.message.Message
-import org.home.net.message.MissAction
-import org.home.net.message.NewServerAction
-import org.home.net.message.NewServerConnectionAction
-import org.home.net.message.NotReadyAction
-import org.home.net.message.PlayerAction
-import org.home.net.message.PlayerConnectionAction
-import org.home.net.message.PlayerReadinessAction
-import org.home.net.message.PlayerToRemoveAction
-import org.home.net.message.PlayersConnectionsAction
-import org.home.net.message.ReadyAction
-import org.home.net.message.ShipAction
-import org.home.net.message.ShipAdditionAction
-import org.home.net.message.ShipDeletionAction
-import org.home.net.message.ShotAction
-import org.home.net.message.TurnAction
+import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
+import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.server.action.AreReadyAction
+import org.home.mvc.contoller.server.action.BattleStartAction
+import org.home.mvc.contoller.server.action.DefeatAction
+import org.home.mvc.contoller.server.action.DisconnectAction
+import org.home.mvc.contoller.server.action.FleetSettingsAction
+import org.home.mvc.contoller.server.action.FleetsReadinessAction
+import org.home.mvc.contoller.server.action.HitAction
+import org.home.mvc.contoller.server.action.LeaveAction
+import org.home.mvc.contoller.server.action.MissAction
+import org.home.mvc.contoller.server.action.NewServerAction
+import org.home.mvc.contoller.server.action.NewServerConnectionAction
+import org.home.mvc.contoller.server.action.NotReadyAction
+import org.home.mvc.contoller.server.action.PlayerAction
+import org.home.mvc.contoller.server.action.ConnectionAction
+import org.home.mvc.contoller.server.action.PlayerReadinessAction
+import org.home.mvc.contoller.server.action.PlayerToRemoveAction
+import org.home.mvc.contoller.server.action.ConnectionsAction
+import org.home.mvc.contoller.server.action.ReadyAction
+import org.home.mvc.contoller.server.action.ShipAction
+import org.home.mvc.contoller.server.action.ShipAdditionAction
+import org.home.mvc.contoller.server.action.ShipDeletionAction
+import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.TurnAction
+import org.home.net.server.Message
+import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
 import org.home.utils.PlayersSocketsExtensions.exclude
 import org.home.utils.PlayersSocketsExtensions.get
@@ -72,7 +71,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     private val turnPlayer get() = playerTurnComponent.turnPlayer
     override val currentPlayer = super.currentPlayer
 
-    private fun socket(player: String) = sockets[player]
+    private fun socket(player: String): PlayerSocket = sockets[player]
     private fun excluding(player: String) = sockets.exclude(player)
 
     override fun send(message: Message) = sockets.send(message)
@@ -156,9 +155,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             isNotClosed {
                 DisconnectAction(player!!).also {
                     send(it)
-                    eventbus {
-                        +PlayerWasDisconnected(it)
-                    }
+                    eventbus(PlayerWasDisconnected(it))
                 }
             }
         }
@@ -168,7 +165,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         val action = message
 
         when (action) {
-            is PlayerConnectionAction -> onConnect(socket, action)
+            is ConnectionAction -> onConnect(socket, action)
             is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
 
@@ -189,7 +186,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         }
     }
 
-    private fun onConnect(socket: PlayerSocket, action: PlayerConnectionAction){
+    private fun onConnect(socket: PlayerSocket, action: ConnectionAction){
         if (sockets.size + 1 < model.playersNumber.value) {
             permitToConnect()
         }
@@ -206,7 +203,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             sockets.exclude(connected).send(it)
             socket(connected).send {
                 +FleetSettingsAction(model)
-                +PlayersConnectionsAction(model.players.exclude(connected))
+                +ConnectionsAction(model.players.exclude(connected))
                 +fleetsReadinessExcept(connected, model)
                 +AreReadyAction(model.thoseAreReady)
             }

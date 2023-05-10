@@ -1,6 +1,6 @@
 package org.home.mvc.contoller
 
-import org.home.net.Condition.Companion.condition
+import org.home.mvc.contoller.Condition.Companion.condition
 
 class AwaitConditions: AbstractGameBean() {
     val fleetSettingsReceived = condition("fleet settings received", model)

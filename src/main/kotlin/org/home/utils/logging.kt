@@ -3,7 +3,7 @@ package org.home.utils
 import javafx.event.Event
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
-import org.home.net.message.Message
+import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.net.server.MultiServerThread
 import home.extensions.AnysExtensions.invoke
@@ -199,7 +199,7 @@ fun MultiServer<*, *>.logMultiServerThreads(b: Boolean = true) {
     }
 }
 
-fun MultiServerThread<*,*>.logMultiServerThread(lengthOfMax: Int) {
+fun MultiServerThread<*, *>.logMultiServerThread(lengthOfMax: Int) {
     val indent = " ".repeat(lengthOfMax - name.length)
     threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
 }

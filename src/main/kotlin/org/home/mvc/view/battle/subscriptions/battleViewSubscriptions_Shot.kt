@@ -8,13 +8,11 @@ import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.openMessageWindow
-import org.home.net.message.HasAShot
+import org.home.mvc.contoller.server.action.HasAShot
 import org.home.style.AppStyles
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.addClass
 

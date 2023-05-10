@@ -3,11 +3,11 @@ package org.home.mvc.contoller
 import home.extensions.AnysExtensions.className
 import home.extensions.CollectionsExtensions.exclude
 import org.home.mvc.ApplicationProperties
-import org.home.net.message.Action
-import org.home.net.message.HasAShot
-import org.home.net.message.HitAction
-import org.home.net.message.MissAction
-import org.home.net.message.ShotAction
+import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.server.action.HasAShot
+import org.home.mvc.contoller.server.action.HitAction
+import org.home.mvc.contoller.server.action.MissAction
+import org.home.mvc.contoller.server.action.ShotAction
 import org.home.utils.PlayersSockets
 import tornadofx.Controller
 import kotlin.reflect.KClass

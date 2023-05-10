@@ -1,4 +1,4 @@
-package org.home.net
+package org.home.mvc.contoller.server
 
 import javafx.application.Platform
 import kotlinx.coroutines.Job
@@ -15,21 +15,8 @@ import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.removeDestroyedDeck
-import org.home.net.message.Action
-import org.home.net.message.DefeatAction
-import org.home.net.message.FleetSettingsAction
-import org.home.net.message.HitAction
-import org.home.net.message.LeaveAction
-import org.home.net.message.Message
-import org.home.net.message.MissAction
-import org.home.net.message.NotReadyAction
-import org.home.net.message.Ping
-import org.home.net.message.PlayerConnectionAction
-import org.home.net.message.PlayerReadinessAction
-import org.home.net.message.ReadyAction
-import org.home.net.message.ShotAction
-import org.home.net.message.event
-import org.home.net.server.BattleEventEmitter
+import org.home.net.server.Message
+import org.home.net.server.Ping
 import org.home.utils.InfiniteTry.Companion.loop
 import org.home.utils.InfiniteTryBase.Companion.doWhile
 import org.home.utils.InfiniteTryBase.Companion.stopOnAll
@@ -47,6 +34,18 @@ import home.extensions.BooleansExtensions.yes
 import home.extensions.CollectionsExtensions.isEmpty
 import home.extensions.AnysExtensions.className
 import org.home.app.AbstractApp.Companion.newGame
+import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.server.action.DefeatAction
+import org.home.mvc.contoller.server.action.FleetSettingsAction
+import org.home.mvc.contoller.server.action.HitAction
+import org.home.mvc.contoller.server.action.LeaveAction
+import org.home.mvc.contoller.server.action.MissAction
+import org.home.mvc.contoller.server.action.NotReadyAction
+import org.home.mvc.contoller.server.action.ConnectionAction
+import org.home.mvc.contoller.server.action.PlayerReadinessAction
+import org.home.mvc.contoller.server.action.ReadyAction
+import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.event
 import org.home.utils.log
 import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
@@ -86,7 +85,7 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
         output = serverSocket.getOutputStream()
         input = serverSocket.getInputStream()
         log { "connected to $ip:$port" }
-        send(PlayerConnectionAction(currentPlayer))
+        send(ConnectionAction(currentPlayer))
         listen()
     }
 

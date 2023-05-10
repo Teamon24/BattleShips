@@ -1,4 +1,4 @@
-package org.home.net.message
+package org.home.net.server
 
 import java.io.Serializable
 

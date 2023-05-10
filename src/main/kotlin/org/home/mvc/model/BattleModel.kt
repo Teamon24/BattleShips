@@ -7,8 +7,8 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
 import javafx.collections.MapChangeListener
 import org.home.mvc.ApplicationProperties
-import org.home.net.message.FleetSettingsAction
-import org.home.net.message.HasAShot
+import org.home.mvc.contoller.server.action.FleetSettingsAction
+import org.home.mvc.contoller.server.action.HasAShot
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.removeFrom
 import home.extensions.BooleansExtensions.yes

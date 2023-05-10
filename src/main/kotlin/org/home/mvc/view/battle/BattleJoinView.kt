@@ -17,12 +17,11 @@ import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.net.message.Action
+import org.home.mvc.contoller.server.action.Action
 import org.home.style.AppStyles
 import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
-import tornadofx.button
 import tornadofx.label
 import tornadofx.textfield
 import kotlin.reflect.KClass

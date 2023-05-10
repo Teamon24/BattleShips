@@ -12,7 +12,7 @@ import org.home.mvc.contoller.events.NewServerConnectionReceived
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.battle.subscriptions.subscriptions
 import org.home.mvc.view.components.transferTo
-import org.home.net.message.Action
+import org.home.mvc.contoller.server.action.Action
 import org.home.style.AppStyles
 import org.home.utils.logEvent
 
