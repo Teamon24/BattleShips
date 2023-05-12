@@ -1,7 +1,6 @@
 package org.home.mvc
 
 import javafx.event.EventTarget
-import javafx.geometry.Pos
 import javafx.scene.layout.VBox
 import org.home.app.My2View
 import org.home.app.di.Scopes

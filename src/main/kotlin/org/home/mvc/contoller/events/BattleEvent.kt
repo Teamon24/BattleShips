@@ -13,38 +13,35 @@ import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope
 
-inline infix fun Component.eventbus(event: FXEvent) = fire(event)
+inline infix fun Component.eventbus(event: BattleEvent) = fire(event)
 
-inline fun Component.eventbus(addEvents: DSLContainer<FXEvent>.() -> Unit) {
+inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
     dslContainer(addEvents).forEach(this::fire)
 }
 
 sealed class BattleEvent: FXEvent() {
 
-    override val scope: Scope
-        get() {
-            log { "scope of ${this.name} was requested" }
-            return Scopes.gameScope
-        }
+    override val scope: Scope get() = Scopes.gameScope
 
     override fun toString(): String {
         return when(this) {
             is ConnectedPlayerReceived -> "Connected($player)"
-            is ConnectedPlayersReceived -> "Connected($players)"
+            is ConnectedPlayersReceived -> "AreConnected($players)"
             is PlayerIsNotReadyReceived -> "IsNotReady($player)"
             is PlayerIsReadyReceived -> "IsReady($player)"
             is FleetsReadinessReceived -> "GotFleetsReadiness$states"
-            is ReadyPlayersReceived -> "Ready($players)"
+            is ReadyPlayersReceived -> "AreReady($players)"
             is TurnReceived -> "GotATurn($player)"
             is ShipWasHit -> "GotHit(${hasAShot.toStr})"
             is ThereWasAMiss -> "Missed(${hasAShot.toStr})"
             is PlayerWasDefeated -> "Defeated($player)"
             is PlayerLeaved -> "Leaved($player)"
             is PlayerWasDisconnected -> "Disconnected($player)"
-            is BattleIsStarted -> "BattleStarted"
+            is BattleIsStarted -> "BattleIsStarted"
+            is BattleIsContinued -> "BattleIsContinued"
             is BattleIsEnded -> "BattleIsEnded(winner=$player)"
             is NewServerReceived -> "GotNewServer($player)"
-            is NewServerConnectionReceived -> action.run { "GotNewServerConnection($player $ip:$port)" }
+            is NewServerConnectionReceived -> "GotNewServerConnection(${action.string()})"
             is ShipWasAdded -> "[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
             is ShipWasDeleted -> "[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
 
@@ -63,6 +60,7 @@ sealed class BattleEvent: FXEvent() {
 
 
 object BattleIsStarted: BattleEvent()
+object BattleIsContinued: BattleEvent()
 class BattleIsEnded(winner: String): HasAPlayer(winner) {
     constructor(battleEndAction: BattleEndAction): this(battleEndAction.player)
 }

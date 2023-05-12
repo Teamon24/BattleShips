@@ -23,4 +23,5 @@ interface BattleController<M: Message> {
 
     fun onBattleViewExit()
     fun onWindowClose()
+    fun continueBattle()
 }

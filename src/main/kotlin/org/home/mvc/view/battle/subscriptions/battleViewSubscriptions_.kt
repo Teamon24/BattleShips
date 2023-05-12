@@ -1,6 +1,12 @@
 package org.home.mvc.view.battle.subscriptions
 
+import home.extensions.AnysExtensions.invoke
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.then
+import home.extensions.CollectionsExtensions.excludeAll
 import javafx.beans.property.SimpleIntegerProperty
+import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleText
 import org.home.mvc.contoller.events.BattleIsEnded
@@ -16,29 +22,23 @@ import org.home.mvc.contoller.events.ReadyPlayersReceived
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
-import org.home.mvc.model.BattleModel
-import org.home.mvc.model.BattleModel.Companion.invoke
-import org.home.mvc.model.allAreReady
-import org.home.mvc.view.NewServerView
-import org.home.mvc.AppView
-import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.backSlide
-import org.home.mvc.view.components.transferTo
-import org.home.mvc.view.components.transitTo
-import org.home.mvc.view.openMessageWindow
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.contoller.server.action.NotReadyAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShipAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
+import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleModel.Companion.invoke
+import org.home.mvc.model.allAreReady
+import org.home.mvc.view.NewServerView
+import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.components.backSlide
+import org.home.mvc.view.components.transferTo
+import org.home.mvc.view.components.transitTo
+import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles
-import org.home.utils.IpUtils
-import home.extensions.AnysExtensions.invoke
-import home.extensions.BooleansExtensions.or
-import home.extensions.BooleansExtensions.so
-import home.extensions.BooleansExtensions.then
-import home.extensions.CollectionsExtensions.excludeAll
+import org.home.utils.IpUtils.freePort
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.View
@@ -47,7 +47,7 @@ import tornadofx.addClass
 import tornadofx.hide
 
 
-fun View.subscriptions(subs: View.() -> Unit) {
+inline fun View.subscriptions(subs: View.() -> Unit) {
     this.subs()
 }
 
@@ -227,17 +227,21 @@ internal fun BattleView.battleIsEnded() {
     }
 }
 
+data class NewServerInfo(val player: String, val ip: String, val port: Int)
 
 internal fun BattleView.serverTransferReceived() {
-    subscribe<NewServerReceived> {
-        logEvent(it, model)
-        model.currentPlayerIs(it.player).so {
-            battleController.disconnect()
-            val freePort = IpUtils.freePort()
-            val publicIp = IpUtils.publicIp()
-            model.newServer = publicIp to freePort
-            battleController.send(NewServerConnectionAction(currentPlayer, publicIp, freePort))
-            applicationProperties.isServer = true
+    subscribe<NewServerReceived> { event ->
+        logEvent(event, model)
+        model {
+            newServer = NewServerInfo(event.player, applicationProperties.ip, freePort())
+            playersNumber.value -= 1
+            currentPlayerIs(event.player).so {
+                applicationProperties.isServer = true
+                battleController {
+                    send(NewServerConnectionAction(currentPlayer, newServer.ip, newServer.port))
+                    disconnect()
+                }
+            }
         }
         transferTo<NewServerView>(backSlide)
     }

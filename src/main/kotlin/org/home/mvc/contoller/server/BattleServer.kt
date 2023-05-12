@@ -9,6 +9,8 @@ import home.extensions.CollectionsExtensions.exclude
 import org.home.app.AbstractApp.Companion.newGame
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.events.BattleEvent
+import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.FleetEditEvent
@@ -45,12 +47,14 @@ import org.home.mvc.contoller.server.action.ConnectionAction
 import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.PlayerToRemoveAction
 import org.home.mvc.contoller.server.action.ConnectionsAction
+import org.home.mvc.contoller.server.action.BattleContinuationAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShipAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.TurnAction
+import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
@@ -58,8 +62,6 @@ import org.home.utils.PlayersSocketsExtensions.exclude
 import org.home.utils.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 import org.home.utils.log
-import tornadofx.FXEvent
-import kotlin.concurrent.thread
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
@@ -92,35 +94,28 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
     override fun disconnect() {
         sockets.forEach { it.close() }
-        log { "interrupting ${connector.name}" }
         connector.interrupt()
-
-        log { "interrupting ${processor.name}" }
         processor.interrupt()
-
-        log { "interrupting ${receiver.name}" }
-        thread {
-            while (receiver.canProceed()) {
-                receiver.interrupt()
-            }
-        }
+        receiver.interrupt()
         serverSocket().close()
     }
 
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
-        log { "server is leaving battle" }
         model {
-            log { "battleIsEnded = $battleIsEnded" }
-            log { "battleIsStarted = $battleIsStarted" }
             if (battleIsStarted && players.size > 1) {
+                playerTurnComponent {
+                    hasATurn(currentPlayer) {
+                        nextTurn()
+                    }
+                }
                 send(NewServerAction(turnPlayer))
                 awaitConditions.newServerFound.await()
                 excluding(turnPlayer).send(
                     NewServerConnectionAction(
                         turnPlayer,
-                        newServer.first,
-                        newServer.second))
+                        newServer.ip,
+                        newServer.port))
             }
         }
         disconnect()
@@ -174,42 +169,45 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             is ShotAction -> shotProcessingComponent.onShot(action)
             is HitAction -> shotProcessingComponent.onHit(action)
-
             is MissAction -> shotProcessingComponent.onMiss(action)
 
             is PlayerToRemoveAction -> sendRemovePlayer(action)
+
             is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
-                newServer = action.ip to action.port
+                action {
+                    newServer = NewServerInfo(player, ip, port)
+                }
             }
 
             else -> throw ActionTypeAbsentException(action.javaClass.name, javaClass.name, "process")
         }
     }
 
-    private fun onConnect(socket: PlayerSocket, action: ConnectionAction){
+    private fun onConnect(socket: PlayerSocket, action: ConnectionAction) {
         if (sockets.size + 1 < model.playersNumber.value) {
             permitToConnect()
         }
 
         action.also {
             val connected = it.player
-
             socket.player = connected
 
-            eventbus {
-                +ConnectedPlayerReceived(it)
-            }
+            eventbus(ConnectedPlayerReceived(it))
 
-            sockets.exclude(connected).send(it)
-            socket(connected).send {
-                +FleetSettingsAction(model)
-                +ConnectionsAction(model.players.exclude(connected))
-                +fleetsReadinessExcept(connected, model)
-                +AreReadyAction(model.thoseAreReady)
+            model {
+                log { "hasNoServerTransfer: $hasNoServerTransfer"}
+                hasNoServerTransfer {
+                    sockets.exclude(connected).send(it)
+                    socket(connected).send {
+                        +FleetSettingsAction(model)
+                        +ConnectionsAction(players.exclude(connected))
+                        +fleetsReadinessExcept(connected, model)
+                        +AreReadyAction(thoseAreReady)
+                    }
+                }
             }
         }
     }
-
 
     private fun processFleetEdit(action: ShipAction, event: (ShipAction) -> FleetEditEvent) {
         action.let {
@@ -227,7 +225,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             eventbus { +event(it) }
         }
     }
-
 
     private fun sendRemovePlayer(action: PlayerToRemoveAction) {
         val removedPlayer = action.player
@@ -271,7 +268,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
 
-    private fun DSLContainer<FXEvent>.removeAndFire(
+    private fun DSLContainer<BattleEvent>.removeAndFire(
         toRemovedAction: PlayerAction,
         event: (PlayerAction) -> PlayerToRemoveReceived,
     ) {
@@ -295,6 +292,11 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             .toMap()
 
         return FleetsReadinessAction(states)
+    }
+
+    override fun continueBattle() {
+        send(BattleContinuationAction)
+        eventbus(BattleIsContinued)
     }
 }
 

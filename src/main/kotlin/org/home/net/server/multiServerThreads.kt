@@ -44,6 +44,7 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     }
     fun interrupt() {
         canProceed(false)
+        log { "interrupting $name" }
         thread.interrupt()
     }
 

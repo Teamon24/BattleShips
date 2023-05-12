@@ -10,7 +10,8 @@ class FleetSettingsAction(
     constructor(model: BattleModel) : this(
         model.height.value,
         model.width.value,
-        model.battleShipsTypes.value.toMutableMap()
+        // ObserversMap не сериализуется, поэтому - toMutableMap()
+        model.shipsTypes.value.toMutableMap()
     )
 }
 

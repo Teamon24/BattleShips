@@ -20,7 +20,7 @@ import tornadofx.onChange
 import tornadofx.runLater
 
 class ShipTypePaneComponent: AbstractGameBean() {
-    private fun lastShipType() = model.battleShipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
+    private fun lastShipType() = model.shipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
     fun addShipTypeButton(gridPane: GridPane) {
         BattleButton("+").also {
@@ -30,7 +30,7 @@ class ShipTypePaneComponent: AbstractGameBean() {
                     shipTypeLabel(gridPane, column)
                     shipsNumberLabel(gridPane, column, 1)
 
-                    val shipsTypes = model.battleShipsTypes
+                    val shipsTypes = model.shipsTypes
 
                     shipsTypes.forEach { (shipType, number) ->
                         shipsTypes[shipType] = number + 1
@@ -51,7 +51,7 @@ class ShipTypePaneComponent: AbstractGameBean() {
                 runLater {
                     if ((lastShipType() != 0)) {
                         gridPane.removeColumn(lastShipType())
-                        val shipsTypes = model.battleShipsTypes
+                        val shipsTypes = model.shipsTypes
                         shipsTypes.remove(lastShipType())
                         shipsTypes.forEach { (shipType, number) ->
                             val newNumber = number - 1
@@ -94,7 +94,7 @@ class ShipTypePaneComponent: AbstractGameBean() {
             textProperty.onChange {
                 when {
                     it == "0" -> addClass(AppStyles.titleCell)
-                    0 < it!!.toInt() && it.toInt() <= model.battleShipsTypes[shipType]!! -> removeAnyColor()
+                    0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeAnyColor()
                     else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
                 }
             }

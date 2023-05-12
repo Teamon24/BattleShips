@@ -116,9 +116,8 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
             }
         }
 
-    private fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
-        return battleButton("", ImageView("/icons/clipboard.png"))
-            .apply {
+    fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
+        return battleButton("", ImageView("/icons/clipboard.png")) {
                 action {
                     ClipboardContent().apply {
                         putString(ipAddress.value)

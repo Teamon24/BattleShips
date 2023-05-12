@@ -3,9 +3,13 @@ package org.home.mvc.view.components
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.yes
+import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.control.Button
+import javafx.scene.image.ImageView
+import javafx.scene.input.Clipboard
+import javafx.scene.input.ClipboardContent
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
 import org.home.mvc.ApplicationProperties.Companion.exitText
@@ -65,7 +69,6 @@ fun EventTarget.battleStartButton(text: String = "", graphic: Node? = null, op: 
     }
 
 class BattleStartButton(text: String): Button(text) {
-
     fun updateStyle(view: AbstractGameView) {
         view {
             if (applicationProperties.isServer) {

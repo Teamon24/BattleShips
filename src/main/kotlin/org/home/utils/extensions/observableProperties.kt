@@ -1,10 +1,7 @@
 package home.extensions
 
-import javafx.beans.InvalidationListener
-import javafx.beans.Observable
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
-import javafx.beans.value.ChangeListener
 import javafx.collections.FXCollections
 import tornadofx.toObservable
 import java.beans.PropertyChangeListener

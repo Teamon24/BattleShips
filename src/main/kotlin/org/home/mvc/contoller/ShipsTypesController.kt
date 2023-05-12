@@ -11,7 +11,7 @@ import home.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.log
 
 class ShipsTypesController: AbstractGameBean() {
-    private val battleShipsTypes = model.battleShipsTypes.copy()
+    private val shipsTypes = model.shipsTypes.copy()
 
     fun validates(newShip: Collection<Coord>): Boolean {
         newShip.ifEmpty { return false }
@@ -19,18 +19,18 @@ class ShipsTypesController: AbstractGameBean() {
         val newShipSize = newShip.size
         if (newShipSize > shipMaxLength()) return false
 
-        val shipsNumber = battleShipsTypes[newShipSize]
+        val shipsNumber = shipsTypes[newShipSize]
         if (shipsNumber == 0) return false
 
         return true
     }
 
-    private fun shipMaxLength() = battleShipsTypes.maxOf { it.key }
+    private fun shipMaxLength() = shipsTypes.maxOf { it.key }
 
     fun add(vararg ships: Ship) {
         ships
             .filter { it.size != 0 }
-            .onEach { ship -> battleShipsTypes[ship.size] = battleShipsTypes[ship.size]?.minus(1) }
+            .onEach { ship -> shipsTypes[ship.size] = shipsTypes[ship.size]?.minus(1) }
             .forEach {
                 model.shipsOf(currentPlayer).addIfAbsent(it.copy())
                 log { "after addition ${ships.joinToString(",")}" }
@@ -44,7 +44,7 @@ class ShipsTypesController: AbstractGameBean() {
     fun remove(vararg ships: Ship) {
         ships
             .filter { it.size != 0 }
-            .onEach { ship -> battleShipsTypes[ship.size] = battleShipsTypes[ship.size]?.plus(1) }
+            .onEach { ship -> shipsTypes[ship.size] = shipsTypes[ship.size]?.plus(1) }
             .forEach {
                 eventbus {
                     +ShipWasDeleted(it.size, currentPlayer)

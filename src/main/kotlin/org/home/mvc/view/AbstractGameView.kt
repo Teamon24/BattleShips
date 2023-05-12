@@ -14,7 +14,7 @@ import tornadofx.px
 import tornadofx.style
 import kotlin.system.exitProcess
 
-abstract class AbstractGameView(title: String): View(title = title) {
+abstract class AbstractGameView(title: String = ""): View(title = title) {
 
     internal val model: BattleModel by newGame()
     internal val applicationProperties = model.applicationProperties

@@ -13,7 +13,7 @@ class ShipsTypesPaneController: AbstractGameBean() {
         return ShipsTypesPane().apply {
                 component.addShipTypeButton(this)
                 component.removeShipTypeButton(this)
-                addLabels(model.battleShipsTypes)
+                addLabels(model.shipsTypes)
             }
     }
 

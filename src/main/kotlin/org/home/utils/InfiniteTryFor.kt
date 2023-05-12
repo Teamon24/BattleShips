@@ -36,7 +36,7 @@ sealed class InfiniteTryBase<E, H> {
             log { "i'm done" }
         }
 
-        infix fun <E, H> InfiniteTryBase<E, H>.handle(handler: H) { putHandler(handler) }
+        inline infix fun <E, H> InfiniteTryBase<E, H>.handle(handler: H) { putHandler(handler) }
 
         inline infix fun <E, H> InfiniteTryBase<E, H>.catch(function: InfiniteTryBase<E, H>.() -> Unit) =
             apply { function() }

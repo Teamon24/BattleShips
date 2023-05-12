@@ -1,27 +1,6 @@
 package org.home.mvc.contoller.server
 
-import javafx.application.Platform
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.home.mvc.contoller.AbstractGameBean
-import org.home.mvc.contoller.AwaitConditions
-import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.events.HasAPlayer
-import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
-import org.home.mvc.contoller.events.PlayerIsReadyReceived
-import org.home.mvc.contoller.events.PlayerWasDefeated
-import org.home.mvc.contoller.events.ShipWasHit
-import org.home.mvc.contoller.events.ThereWasAMiss
-import org.home.mvc.contoller.events.eventbus
-import org.home.mvc.model.removeDestroyedDeck
-import org.home.net.server.Message
-import org.home.net.server.Ping
-import org.home.utils.InfiniteTry.Companion.loop
-import org.home.utils.InfiniteTryBase.Companion.doWhile
-import org.home.utils.InfiniteTryBase.Companion.stopOnAll
-import org.home.utils.SocketUtils.receive
-import org.home.utils.SocketUtils.send
+import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
@@ -32,21 +11,47 @@ import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.yes
 import home.extensions.CollectionsExtensions.isEmpty
-import home.extensions.AnysExtensions.className
+import javafx.application.Platform
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.home.app.AbstractApp.Companion.newGame
+import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.AwaitConditions
+import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.events.BattleIsContinued
+import org.home.mvc.contoller.events.HasAPlayer
+import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
+import org.home.mvc.contoller.events.PlayerIsReadyReceived
+import org.home.mvc.contoller.events.PlayerWasDefeated
+import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ThereWasAMiss
+import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.server.action.BattleContinuationAction
+import org.home.mvc.contoller.server.action.ConnectionAction
 import org.home.mvc.contoller.server.action.DefeatAction
 import org.home.mvc.contoller.server.action.FleetSettingsAction
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.LeaveAction
 import org.home.mvc.contoller.server.action.MissAction
 import org.home.mvc.contoller.server.action.NotReadyAction
-import org.home.mvc.contoller.server.action.ConnectionAction
 import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.event
+import org.home.mvc.model.removeDestroyedDeck
+import org.home.net.server.Message
+import org.home.net.server.Ping
+import org.home.utils.InfiniteTry.Companion.loop
+import org.home.utils.InfiniteTryBase.Companion.catch
+import org.home.utils.InfiniteTryBase.Companion.doWhile
+import org.home.utils.InfiniteTryBase.Companion.handle
+import org.home.utils.InfiniteTryBase.Companion.stopOnAll
+import org.home.utils.SocketUtils.receive
+import org.home.utils.SocketUtils.send
 import org.home.utils.log
+import org.home.utils.logError
 import org.home.utils.logReceive
 import org.home.utils.singleThreadScope
 import java.io.EOFException
@@ -103,41 +108,49 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
                 messages.drop(1).forEach { process(it as Action) }
             } stopOnAll {
                 SocketException::class + EOFException::class
+            } catch {
+                + ClassCastException::class
+                handle {
+                    logError(it) { messages }
+                }
             } doWhile canProceed
         }
         receiverJob.start()
     }
 
     private fun process(action: Action) {
-        action.event?.also { fire(it); return }
+        action.event?.also {
+            eventbus(it)
+            return
+        }
 
         when (action) {
-            is FleetSettingsAction -> {
-                awaitConditions
-                    .fleetSettingsReceived
-                    .notifyUI { putSettings(action) }
-            }
+            is FleetSettingsAction -> awaitConditions.fleetSettingsReceived.notifyUI { putFleetSettings(action) }
 
             is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
 
             is ShotAction -> {
-                val target = action.target
-                if (target == currentPlayer) {
-                    model
-                        .registersAHit(action.shot)
+                if (action.target == currentPlayer) {
+                    model.registersAHit(action.shot)
                         .yes { onHit(action) }
-                        .no {
-                            MissAction(action).also {
-                                send(it)
-                                eventbus {
-                                    +ThereWasAMiss(it)
-                                }
-                            }
-                        }
+                        .no { onMiss(action) }
                 }
             }
+
+            is BattleContinuationAction -> {
+                awaitConditions.canContinueBattle.notifyUI()
+                eventbus(BattleIsContinued)
+            }
+
             else -> throw ActionTypeAbsentException(action.className, this.className, "process")
+        }
+    }
+
+    private fun onMiss(action: ShotAction) {
+        MissAction(action).also {
+            send(it)
+            eventbus(ThereWasAMiss(it))
         }
     }
 
@@ -149,14 +162,14 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
         val defeatAction = DefeatAction(shotAction.player, currentPlayer)
 
         send {
-            + hitAction
-            ships.isEmpty { + defeatAction }
+            +hitAction
+            ships.isEmpty { +defeatAction }
         }
 
         eventbus {
-            + ShipWasHit(hitAction)
+            +ShipWasHit(hitAction)
             ships.isEmpty {
-                + PlayerWasDefeated(defeatAction)
+                +PlayerWasDefeated(defeatAction)
             }
         }
     }
@@ -212,7 +225,11 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
     private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         action {
             model.setReady(player, isReady)
-            eventbus { + event(this@action) }
+            eventbus(event(this))
         }
+    }
+
+    override fun continueBattle() {
+        awaitConditions.canContinueBattle.await()
     }
 }

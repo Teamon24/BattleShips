@@ -1,11 +1,12 @@
-package home.extensions
+package org.home.utils.extensions
 
+import home.extensions.ifNotEmpty
 import org.home.utils.threadLog
 
 object StringBuildersExtensions {
 
-    fun StringBuilder.ln(s: String = ""): StringBuilder = apply {
-        s.ifNotEmpty { append(s) }
+    fun StringBuilder.ln(s: String? = ""): StringBuilder = apply {
+        s?.ifNotEmpty { append(s) }
         append("\n")
     }
     infix fun StringBuilder.add(s: Any): StringBuilder = append(s)

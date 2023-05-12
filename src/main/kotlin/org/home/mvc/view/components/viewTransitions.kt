@@ -11,7 +11,6 @@ import tornadofx.View
 import tornadofx.ViewTransition
 import tornadofx.ViewTransition.Slide
 import tornadofx.action
-import tornadofx.button
 import tornadofx.find
 import tornadofx.seconds
 
@@ -43,13 +42,19 @@ inline fun <reified T: View> EventTarget.backTransitButton(
 //----------------------------------------------------------------------------------------------------------------------
 
 inline fun <reified T : View> View.transferTo(slide: Slide = forwardSlide) {
-    val replacement = find(T::class, Scopes.gameScope)
-    log { "|////////////////////////////////////////////////| $componentName |/////| |> ${replacement.componentName}" }
-    replaceWith(replacement, slide)
+    find(T::class, Scopes.gameScope).also {
+        logTransit(it)
+        replaceWith(it, slide)
+    }
 }
 
 inline fun <reified T : View> View.transitTo(slide: Slide = forwardSlide) {
-    val replacement = find(T::class)
+    find(T::class).also {
+        logTransit(it)
+        replaceWith(it, slide)
+    }
+}
+
+inline fun <reified T : View> View.logTransit(replacement: T) {
     log { "|////////////////////////////////////////////////| $componentName |/////| |> ${replacement.componentName}" }
-    replaceWith(replacement, slide)
 }

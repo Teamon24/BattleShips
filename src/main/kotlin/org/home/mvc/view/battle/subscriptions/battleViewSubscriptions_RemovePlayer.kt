@@ -15,7 +15,6 @@ import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.mvc.AppView
-import org.home.mvc.ApplicationProperties
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.view.components.BattleButton
 import org.home.mvc.view.components.GridPaneExtensions

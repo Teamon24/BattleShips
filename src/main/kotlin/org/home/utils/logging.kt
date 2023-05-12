@@ -13,10 +13,10 @@ import home.extensions.AnysExtensions.refClass
 import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-import home.extensions.StringBuildersExtensions.LogBuilder
-import home.extensions.StringBuildersExtensions.add
+import org.home.utils.extensions.StringBuildersExtensions.LogBuilder
+import org.home.utils.extensions.StringBuildersExtensions.add
 import home.extensions.AnysExtensions.className
-import home.extensions.StringBuildersExtensions.ln
+import org.home.utils.extensions.StringBuildersExtensions.ln
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope
@@ -40,6 +40,13 @@ fun threadPrintln() = println(threadLog())
 
 fun threadPrintln(message: String) = println(threadLog(message))
 
+fun threadErrorLn(any: Any?) = System.err.println(threadLog(any))
+
+inline fun threadErrorLn(build: StringBuilder.() -> Unit) {
+    val builder = StringBuilder()
+    builder.build()
+    println(threadLog(builder))
+}
 inline fun threadPrintln(build: StringBuilder.() -> Unit) {
     val builder = StringBuilder()
     builder.build()
@@ -81,19 +88,21 @@ inline fun logInject(targetName: String, injection: Component, scope: Scope) {
 
 val Component.componentName get() = "$refClass-[$refNumber]"
 
-fun logError(throwable: Throwable, stackTrace: Boolean = false) {
+fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any = {}) {
     val dot = "."
     val dots = dot.repeat(5)
     val ttl = listOf(dots, throwable.className, dots)
 
     val title = ttl.joinToString(" ")
-    threadPrintln()
-    threadPrintln(dot.repeat(title.length))
-    threadPrintln(title)
-    threadPrintln(dot.repeat(title.length))
-    threadPrintln(if (stackTrace) { throwable.stackTraceToString() } else {throwable.message} )
-    threadPrintln(dot.repeat(ttl.sumOf { it.length } + ttl.size - 1))
-    threadPrintln()
+    threadErrorLn {
+        ln(dot.repeat(title.length))
+        ln(title)
+        ln(dot.repeat(title.length))
+        ln(if (stackTrace) { throwable.stackTraceToString() } else {throwable.message} )
+        body().isNotUnit { ln(it.toString()) }
+        ln(dot.repeat(ttl.sumOf { it.length } + ttl.size - 1))
+        ln()
+    }
 }
 
 inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> Any) {
@@ -105,12 +114,16 @@ inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> A
 @JvmName("logEvent")
 fun View.logEvent(fxEvent: FXEvent, model: BattleModel, body: () -> Any = {}) {
     val title = "${this::class.simpleName}[${model.currentPlayer}] <- $fxEvent"
-    threadPrintln { line(title.length) }
-    threadPrintln { add(title) }
-    body().isNotUnit {
-        threadPrintln(it)
+    threadPrintln {
+        ln()
+        ln(line(title.length))
+        ln(title)
+        body().isNotUnit {
+            ln(it.toString())
+        }
+        ln(line(title.length))
+        ln()
     }
-    threadPrintln { line(title.length) }
 }
 
 inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block: () -> Any = {}) {
@@ -129,7 +142,7 @@ inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block:
     }
 }
 
-fun StringBuilder.line(length: Int) = repeat(length) { append(UI_EVENT_SIGN) }
+fun line(length: Int) = UI_EVENT_SIGN.repeat(length)
 
 
 

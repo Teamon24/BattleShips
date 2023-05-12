@@ -19,12 +19,10 @@ import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
 import org.home.mvc.contoller.server.action.Action
 import org.home.style.AppStyles
-import tornadofx.View
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.label
 import tornadofx.textfield
-import kotlin.reflect.KClass
 
 class BattleJoinView : AbstractGameView("Присоединиться к битве") {
     private val battleClient: BattleController<Action> by di()
@@ -67,10 +65,6 @@ class BattleJoinView : AbstractGameView("Присоединиться к бит�
         }
 
         cell(2, 1) { backTransitButton<AppView>(currentView) }
-    }
-
-    fun transit(from: View, to: KClass<BattleView>) {
-        from.replaceWith(tornadofx.find(to), forwardSlide)
     }
 
     private fun extract(): Pair<String, Int> {
