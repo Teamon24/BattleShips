@@ -1,7 +1,10 @@
 package org.home.mvc.view.battle
 
+import home.extensions.AnysExtensions.invoke
+import home.extensions.BooleansExtensions.invoke
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.beans.value.ChangeListener
 import javafx.event.EventTarget
 import javafx.scene.control.Button
 import javafx.scene.control.CheckBox
@@ -11,6 +14,7 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
 import org.home.app.AbstractApp.Companion.newGame
+import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.battleFieldCreationMenuTitle
 import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.mvc.ApplicationProperties.Companion.heightFieldLabel
@@ -20,8 +24,9 @@ import org.home.mvc.ApplicationProperties.Companion.squareSize
 import org.home.mvc.ApplicationProperties.Companion.widthFieldLabel
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
@@ -32,7 +37,6 @@ import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.exitButton
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.mvc.contoller.server.action.Action
 import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
@@ -44,8 +48,6 @@ import tornadofx.textfield
 class BattleCreationView : AbstractGameView("Настройки боя") {
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
     private val battleController: BattleController<Action> by di()
-
-
 
     override val root = Form()
         .addClass(AppStyles.form)
@@ -118,13 +120,13 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
 
     fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
         return battleButton("", ImageView("/icons/clipboard.png")) {
-                action {
-                    ClipboardContent().apply {
-                        putString(ipAddress.value)
-                        Clipboard.getSystemClipboard().setContent(this)
-                    }
+            action {
+                ClipboardContent().apply {
+                    putString(ipAddress.value)
+                    Clipboard.getSystemClipboard().setContent(this)
                 }
             }
+        }
     }
 
 
@@ -143,26 +145,36 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
         val checkBox = CheckBox(squareSize).apply {
             selectedProperty().set(true)
             action {
-                if (isSelected) { model.equalizeSizes() }
+                isSelected { model.equalizeSizes() }
             }
         }
 
-        model.width.addListener(
-            ChangeListener { _, _, newValue ->
-                if (checkBox.isSelected) {
-                    model.height.value = newValue as Int?
-                }
-                model.width.value = newValue as Int?
-            })
-
-        model.height.addListener(ChangeListener { _, _, newValue ->
-            if (checkBox.isSelected) {
-                model.width.value = newValue as Int?
-            }
-            model.height.value = newValue as Int?
-        })
+        model {
+            width.addListener(changeListener(checkBox, ::setHeight, ::setWidth))
+            height.addListener(changeListener(checkBox, ::setWidth, ::setHeight))
+        }
 
         return checkBox
+    }
+
+    private fun BattleModel.changeListener(
+        checkBox: CheckBox,
+        setter: (BattleModel, Number?) -> Unit,
+        setter2: (BattleModel, Number?) -> Unit
+    ): ChangeListener<Number> {
+        val battleModel = this@changeListener
+        return ChangeListener { _, _, newValue ->
+            checkBox.isSelected { setter(battleModel, newValue) }
+            setter2(battleModel, newValue)
+        }
+    }
+
+    private fun setHeight(model: BattleModel, newValue: Number?) {
+        model.height.value = newValue as Int?
+    }
+
+    private fun setWidth(model: BattleModel, newValue: Number?) {
+        model.width.value = newValue as Int?
     }
 }
 
