@@ -1,4 +1,4 @@
-package home.extensions
+package org.home.utils.extensions
 
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
@@ -16,19 +16,18 @@ object ObservablePropertiesExtensions {
         SimpleListProperty<E>(FXCollections.observableList(mutableListOf()))
 
     fun <K, V> SimpleMapProperty<K, V>.copy() = toMutableMap().toObservable()
+}
 
+class ObservableValueMap<K, V> : HashMap<K, V>() {
+    private val ps = PropertyChangeSupport(this)
 
-    class ObservableValueMap<K, V> : HashMap<K, V>() {
-        private val ps = PropertyChangeSupport(this)
+    fun addValueListener(pcl: PropertyChangeListener) = ps.addPropertyChangeListener(pcl)
 
-        fun addValueListener(pcl: PropertyChangeListener) = ps.addPropertyChangeListener(pcl)
-
-        override fun put(key: K, new: V): V? {
-            if (get(key) != new) {
-                val old = super.put(key, new)
-                ps.firePropertyChange("map", old, new)
-            }
-            return new
+    override fun put(key: K, new: V): V? {
+        if (get(key) != new) {
+            val old = super.put(key, new)
+            ps.firePropertyChange("map", old, new)
         }
+        return new
     }
 }

@@ -14,7 +14,7 @@ class FleetGrid : GridPane() {
     fun addTitleCellClass(cssRule: CssRule) = onEachTitleCells { it.addClass(cssRule) }
 
     fun addShips(ships: Ships): FleetGrid {
-        ships.forEach { ship -> ship.forEach { this.getCell(it).addSelectionColor() } }
+        ships.forEach { ship -> ship.forEach { getCell(it).addSelectionColor() } }
         return this
     }
 

@@ -7,7 +7,7 @@ import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.mvc.model.addIfAbsent
-import home.extensions.ObservablePropertiesExtensions.copy
+import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.log
 
 class ShipsTypesController: AbstractGameBean() {

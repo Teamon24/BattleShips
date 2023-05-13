@@ -83,7 +83,7 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override fun run() {
         multiServer {
-            Thread.sleep(100)
+            Thread.sleep(25)
             sockets.receiveInLoop { socket, messages ->
                 logReceive(socket, messages)
                 socketsMessages.add(socket to messages.drop(1) as Collection<M>)

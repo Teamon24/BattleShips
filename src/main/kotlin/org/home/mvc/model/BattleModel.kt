@@ -11,36 +11,38 @@ import org.home.mvc.contoller.server.action.FleetSettingsAction
 import org.home.mvc.contoller.server.action.HasAShot
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.removeFrom
+import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.yes
 import home.extensions.CollectionsExtensions.exclude
-import home.extensions.ObservablePropertiesExtensions.ObservableValueMap
-import home.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
-import home.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
+import org.home.mvc.contoller.events.FleetEditEvent
+import org.home.utils.extensions.ObservableValueMap
+import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
+import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
 import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.utils.log
 import tornadofx.ViewModel
 import tornadofx.onChange
 import java.util.concurrent.ConcurrentHashMap
 
-typealias PlayersAndShips = SimpleMapProperty<String, MutableList<Ship>>
+typealias PlayersAndShips = SimpleMapProperty<String, MutableCollection<Ship>>
 typealias ShipsTypes = SimpleMapProperty<Int, Int>
 
 class BattleModel : ViewModel {
 
-    companion object {
-        const val size = 2
-        const val initialMaxShipsTypes = 1
-        const val initialPlayersNumber = 3
+    val applicationProperties: ApplicationProperties by di()
+    val currentPlayer = applicationProperties.currentPlayer
 
-        fun fleetReadiness(shipsTypes: Map<Int, Int>): MutableMap<Int, SimpleIntegerProperty> {
-            return shipsTypes
-                .map { (shipType, number) -> shipType to SimpleIntegerProperty(number) }
-                .toMap()
-                .toMutableMap()
-        }
+    private val size = applicationProperties.size
+    private val maxShipType = applicationProperties.maxShipType
+    private val playersNumbers = applicationProperties.playersNumber
 
-        inline operator fun BattleModel.invoke(crossinline b: BattleModel.() -> Unit) = this.b()
+    private fun initFleetsReadiness(shipsTypes: Map<Int, Int>): MutableMap<Int, SimpleIntegerProperty> {
+        return shipsTypes
+            .mapValues { SimpleIntegerProperty(it.value) }
+            .toMutableMap()
     }
+
+    inline operator fun BattleModel.invoke(crossinline b: BattleModel.() -> Unit) = this.b()
 
     private val widthProp: SimpleIntegerProperty
     private val heightProp: SimpleIntegerProperty
@@ -50,20 +52,10 @@ class BattleModel : ViewModel {
     val height: SimpleIntegerProperty
     val playersNumber: SimpleIntegerProperty
 
-    constructor(): super() {
+    constructor() : super() {
         widthProp = SimpleIntegerProperty(size)
         heightProp = SimpleIntegerProperty(size)
-        playersNumberProp = SimpleIntegerProperty(initialPlayersNumber)
-        width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
-        height = bind { heightProp }.apply { onChange { log { "height - $value" } } }
-        playersNumber = bind { playersNumberProp }.apply { onChange { log { "playersNumber - $value" } } }
-    }
-
-    constructor(model: BattleModel): super() {
-        widthProp = SimpleIntegerProperty(model.width.value)
-        heightProp = SimpleIntegerProperty(model.height.value)
-        playersNumberProp = SimpleIntegerProperty(model.playersNumber.value)
-        shipsTypes.putAll(model.shipsTypes)
+        playersNumberProp = SimpleIntegerProperty(playersNumbers)
         width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
         height = bind { heightProp }.apply { onChange { log { "height - $value" } } }
         playersNumber = bind { playersNumberProp }.apply { onChange { log { "playersNumber - $value" } } }
@@ -71,21 +63,13 @@ class BattleModel : ViewModel {
 
     private var _newServer: NewServerInfo? = null
 
-    val hasNoServerTransfer: Boolean
-        get() {
-            return _newServer == null
-        }
+    val hasNoServerTransfer get() = _newServer == null
 
     var newServer: NewServerInfo
         get() = _newServer!!
         set(value) {
             _newServer = value
         }
-
-
-    val applicationProperties: ApplicationProperties by di()
-
-    val currentPlayer = applicationProperties.currentPlayer
 
     fun equalizeSizes() {
         height.value = width.value
@@ -106,18 +90,19 @@ class BattleModel : ViewModel {
     val selectedPlayer = SimpleStringProperty()
     val turn = SimpleStringProperty()
 
+    val fleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>()
+
     val shipsTypes =
         emptySimpleMapProperty<Int, Int>()
-            .putInitials()
             .updateFleetReadiness()
+            .putInitials()
 
-    val players = emptySimpleListProperty<String>().apply { log("players") }
-    val defeatedPlayers = emptySimpleListProperty<String>().apply { log("defeated") }
+    val players = emptySimpleListProperty<String>().apply { logOnChange("players") }
+    val defeatedPlayers = emptySimpleListProperty<String>().apply { logOnChange("defeated") }
 
-    val fleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>()
-    val playersReadiness = ObservableValueMap<String, Boolean>()
+    val playersReadiness = ObservableValueMap<String, Boolean>().apply { logOnChange() }
 
-    val playersAndShips = emptySimpleMapProperty<String, MutableList<Ship>>()
+    val playersAndShips = emptySimpleMapProperty<String, MutableCollection<Ship>>()
         .notifyOnChange()
         .putInitials()
 
@@ -125,7 +110,7 @@ class BattleModel : ViewModel {
         addListener(
             MapChangeListener {
                 fleetsReadiness.keys.forEach { player ->
-                    fleetsReadiness[player] = fleetReadiness(shipsTypes)
+                    fleetsReadiness[player] = initFleetsReadiness(shipsTypes)
                 }
             })
 
@@ -141,7 +126,7 @@ class BattleModel : ViewModel {
     }
 
     private fun SimpleMapProperty<Int, Int>.putInitials(): SimpleMapProperty<Int, Int> {
-        (0 until initialMaxShipsTypes).forEach { this[it + 1] = initialMaxShipsTypes - it }
+        (0 until maxShipType).forEach { this[it + 1] = maxShipType - it }
         return this
     }
 
@@ -166,7 +151,7 @@ class BattleModel : ViewModel {
                     change.wasAdded() -> {
                         players.add(player)
                         setNotReady(player)
-                        fleetsReadiness[player] = fleetReadiness(shipsTypes)
+                        fleetsReadiness[player] = initFleetsReadiness(shipsTypes)
                         log { "added \"$player\"" }
                     }
 
@@ -182,6 +167,12 @@ class BattleModel : ViewModel {
                     }
                 }
             })
+    }
+
+    fun updateFleetReadiness(event: FleetEditEvent) {
+        event {
+            fleetsReadiness[player]!![shipType]!!.operation()
+        }
     }
 
     fun putFleetSettings(settings: FleetSettingsAction) {
@@ -207,8 +198,8 @@ class BattleModel : ViewModel {
             .map { it.shot }
     }
 
-    fun hasAllShips(player: String): Boolean {
-        val decks = shipsOf(player).flatten().count()
+    fun String.createdAllShips(): Boolean {
+        val decks = shipsOf(this).flatten().count()
         val shouldBe = shipsTypes.entries.sumOf { it.key * it.value }
         log { "hasAllShips [decks == shouldBe; $decks ? $shouldBe"}
         return decks == shouldBe
@@ -217,18 +208,33 @@ class BattleModel : ViewModel {
     fun hasReady(player: String) = playersReadiness[player]!!
 
     fun setReady(player: String) { playersReadiness[player] = true }
-    fun setReady(player: String, ready: Boolean) { playersReadiness[player] = ready }
     fun setNotReady(player: String) { playersReadiness[player] = false }
+    fun setReadiness(player: String, ready: Boolean) { playersReadiness[player] = ready }
     fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
+
     fun hasAWinner() = players.size - defeatedPlayers.size == 1
-    fun hasNoWinner() = players.size - defeatedPlayers.size > 1
-    fun currentPlayerIs(player: String?) = currentPlayer == player
+    inline fun hasAWinner(onTrue: () -> Unit) = hasAWinner().so(onTrue)
+
+    inline val String?.isCurrent get() = currentPlayer == this
+
+    fun hasCurrent(player: String?) = player.isCurrent
+
+    inline fun hasCurrent(player: String, onTrue: () -> Unit) = player.isCurrent.so(onTrue)
+
+    inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
+
     fun shipsOf(player: String) = playersAndShips[player]!!
 
-    private fun <T> SimpleListProperty<T>.log(name: String) {
+    private fun <T> SimpleListProperty<T>.logOnChange(name: String) {
         addListener(ListChangeListener {
             log { "$name - ${it.list}" }
         })
+    }
+
+    private fun ObservableValueMap<String, Boolean>.logOnChange() {
+        addValueListener {
+            log { "playersReadiness: ${this@BattleModel.playersReadiness}" }
+        }
     }
 }
 

@@ -2,7 +2,7 @@ package org.home.mvc
 
 import javafx.event.EventTarget
 import javafx.scene.layout.VBox
-import org.home.app.My2View
+import org.home.app.Animations.appViewAnimationGrid
 import org.home.app.di.Scopes
 import org.home.app.di.Scopes.inScope
 import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
@@ -37,7 +37,7 @@ class AppView : View("Sea Battle") {
                 content = gridpane {
 
                     cell(0, 0) {
-                        My2View.appViewAnimationGrid(40).also { add(it); }
+                        appViewAnimationGrid(40).also { add(it); }
                     }
 
                     cell(0, 0) {
@@ -50,11 +50,8 @@ class AppView : View("Sea Battle") {
                             toFront()
                         }
                     }
-
                 }
-
             }
-
         }
 
         applicationProperties.players?.also {

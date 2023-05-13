@@ -26,7 +26,6 @@ import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
-import org.home.mvc.model.BattleModel.Companion.invoke
 import org.home.mvc.model.thoseAreReady
 import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
 import org.home.mvc.contoller.server.action.Action
@@ -49,7 +48,7 @@ import org.home.mvc.contoller.server.action.PlayerToRemoveAction
 import org.home.mvc.contoller.server.action.ConnectionsAction
 import org.home.mvc.contoller.server.action.BattleContinuationAction
 import org.home.mvc.contoller.server.action.ReadyAction
-import org.home.mvc.contoller.server.action.ShipAction
+import org.home.mvc.contoller.server.action.FleetEditAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
@@ -74,7 +73,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override val currentPlayer = super.currentPlayer
 
     private fun socket(player: String): PlayerSocket = sockets[player]
-    private fun excluding(player: String) = sockets.exclude(player)
+    private fun BattleServer.excluding(player: String) = sockets.exclude(player)
 
     override fun send(message: Message) = sockets.send(message)
     override fun send(messages: Collection<Message>) = sockets.send(messages)
@@ -105,17 +104,11 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         model {
             if (battleIsStarted && players.size > 1) {
                 playerTurnComponent {
-                    hasATurn(currentPlayer) {
-                        nextTurn()
-                    }
+                    hasATurn(currentPlayer) { nextTurn() }
                 }
                 send(NewServerAction(turnPlayer))
                 awaitConditions.newServerFound.await()
-                excluding(turnPlayer).send(
-                    NewServerConnectionAction(
-                        turnPlayer,
-                        newServer.ip,
-                        newServer.port))
+                excluding(newServer.player).send(NewServerConnectionAction(newServer))
             }
         }
         disconnect()
@@ -209,20 +202,18 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         }
     }
 
-    private fun processFleetEdit(action: ShipAction, event: (ShipAction) -> FleetEditEvent) {
+    private fun processFleetEdit(action: FleetEditAction, event: (FleetEditAction) -> FleetEditEvent) {
         action.let {
             excluding(it.player).send(it)
-            eventbus {
-                +event(it)
-            }
+            eventbus(event(it))
         }
     }
 
     private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         action.let {
             excluding(it.player).send(it)
-            model.setReady(it.player, it.isReady)
-            eventbus { +event(it) }
+            model.setReadiness(it.player, it.isReady)
+            eventbus(event(it))
         }
     }
 

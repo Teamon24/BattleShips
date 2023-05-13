@@ -1,4 +1,3 @@
-import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
 
 import java.util.function.BiConsumer
@@ -7,9 +6,7 @@ import java.util.stream.Collectors
 
 buildscript {
     dependencies {
-        classpath 'org.codehaus.gpars:gpars:1.2.1'
         classpath 'org.apache.commons:commons-lang3:3.12.0'
-        classpath 'commons-io:commons-io:2.11.0'
     }
 }
 
@@ -22,18 +19,9 @@ plugins {
 group = 'home'
 version = '1.0-SNAPSHOT'
 
-
-repositories {
-    mavenCentral()
-}
-
-application {
-    mainClassName = 'org.home.app.Application_devKt'
-}
-
-test {
-    useJUnitPlatform()
-}
+repositories { mavenCentral() }
+application { mainClassName = 'org.home.run.Application_devKt' }
+test { useJUnitPlatform() }
 
 def koin_version = "3.2.0-beta-1"
 
@@ -50,6 +38,8 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    implementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
 
 //    testImplementation("io.insert-koin:koin-test:$koin_version")
 //    testImplementation("io.insert-koin:koin-test-junit5:$koin_version")
@@ -87,43 +77,43 @@ ext {
     close = false
     resourcesFolder = "${projectDir.path}${sl}src${sl}main${sl}resources${sl}"
     playerPropPrefix = "player"
+    application_dev = "application-dev"
 }
 
 def sl = rootProject.ext.sl
-def application = "application"
+def application_dev = rootProject.ext.application_dev
 
 String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
 
-def javaCp =
-[java, "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
+def jarFullpath = "${project.path}\\build\\libs\\${project.name}-${project.version}.jar"
 
-def javaJar =
-[java, "-jar", "${project.path}\\build\\libs\\${project.name}-${project.version}.jar", mainClassName]
+def javaCp = [java, "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
+def javaJar = [java, "-jar", jarFullpath, mainClassName]
 
 def playersNumber = 4
-def propsList = concat(application, toString(createProperties(playersNumber)))
+def propsList = concat(application_dev, toString(createProperties(playersNumber)))
 
 task createProperties {
     deleteProperties()
-    createProperties(playersNumber - 1)
+    createProperties(playersNumber)
 }
 
-task server  { doLast { runApp(concat(javaCp, mainClassName), application, 0, playersNumber - 1) } }
-task player0 { doLast { runApp(concat(javaCp, mainClassName), player(0),   1, playersNumber - 1) } }
-task player1 { doLast { runApp(concat(javaCp, mainClassName), player(1),   2, playersNumber - 1) } }
-task player2 { doLast { runApp(concat(javaCp, mainClassName), player(2),   3, playersNumber - 1) } }
-task player3 { doLast { runApp(concat(javaCp, mainClassName), player(3),   4, playersNumber - 1) } }
-task player4 { doLast { runApp(concat(javaCp, mainClassName), player(4),   5, playersNumber - 1) } }
-task player5 { doLast { runApp(concat(javaCp, mainClassName), player(5),   6, playersNumber - 1) } }
-task player6 { doLast { runApp(concat(javaCp, mainClassName), player(6),   7, playersNumber - 1) } }
+task player0 { doLast { runDev(concat(javaCp, mainClassName), playerProp(0)) } }
+task player1 { doLast { runDev(concat(javaCp, mainClassName), playerProp(1)) } }
+task player2 { doLast { runDev(concat(javaCp, mainClassName), playerProp(2)) } }
+task player3 { doLast { runDev(concat(javaCp, mainClassName), playerProp(3)) } }
+task player4 { doLast { runDev(concat(javaCp, mainClassName), playerProp(4)) } }
+task player5 { doLast { runDev(concat(javaCp, mainClassName), playerProp(5)) } }
+task player6 { doLast { runDev(concat(javaCp, mainClassName), playerProp(6)) } }
+task player7 { doLast { runDev(concat(javaCp, mainClassName), playerProp(7)) } }
 
-task multiscreenCheck { doLast { runApp(concat(javaCp, 'org.home.Multiscreen_checkKt')) } }
+task multiscreenCheck { doLast { runDev(concat(javaCp, 'org.home.Multiscreen_checkKt')) } }
 
-tasks.server.dependsOn(build)
-tasks.server.dependsOn(createProperties)
+tasks.player0.dependsOn(build)
+tasks.player0.dependsOn(createProperties)
 tasks.multiscreenCheck.dependsOn(build)
 
-def runApp(List<String> command, Object... args) {
+def runDev(List<String> command, Object... args) {
     exec { commandLine concat(command, toString(args)) }
 }
 
@@ -131,12 +121,11 @@ def pidsFile = createFile("$projectDir${sl}pids.txt")
 
 task runPlayers {
     doLast {
-        def propsNumber = propsList.size()
         def processes = new ArrayList<Process>()
 
         for (int player = 0; player < propsList.size(); player++) {
             def props = propsList.get(player)
-            def process = process(concat(javaCp, mainClassName), props, player, propsNumber)
+            def process = process(concat(javaCp, mainClassName), props)
             processes.add(process)
         }
 
@@ -162,11 +151,6 @@ task killPlayers {
         }
     }
 }
-
-
-
-
-
 
 static def process(List<String> command, Object... args) {
     def process = new ProcessBuilder(concat(command, toString(args))).start()
@@ -208,18 +192,16 @@ static def createFile(String path) {
 
 def createProperties(Integer playersNumber) {
     def properties = new ArrayList<String>(playersNumber)
-    StringBuilder stringBuilder = new StringBuilder()
+    def applicationProps = new File(propFilepath("application-dev"))
 
-    def applicationProps = new File(propFilepath("application"))
-    readFile(applicationProps, (line) -> stringBuilder.append(line).append("\n"))
-    for (i in 0..<playersNumber) {
-        String playerName = player(i)
-        properties.add(playerName)
-        def filePath = propFilepath(playerName)
+    for (i in 1..<playersNumber) {
+        String playerProp = playerProp(i)
+        properties.add(playerProp)
+        def filePath = propFilepath(playerProp)
         toFile(
                 (writer, content) -> writer.write(content),
                 filePath,
-                content(stringBuilder, playerName)
+                content(applicationProps, playerProp, i, playersNumber)
         )
     }
     return properties
@@ -239,15 +221,22 @@ private static void toFile(BiConsumer<PrintWriter, String> op, String filepath, 
     writer.close()
 }
 
-private String player(i) {
+private String playerProp(i) {
+    if (i == 0) return rootProject.ext.application_dev
     return "${rootProject.ext.playerPropPrefix}-${i}"
 }
 
-private static String content(StringBuilder stringBuilder, String playerName) {
-    def strings = ArrayUtils.remove(stringBuilder.toString().split("\n"), 0)
-    String currentPlayerProp = "currentPlayer=$playerName"
-    def propsContent = ArrayUtils.addFirst(strings, currentPlayerProp)
-    return StringUtils.join(propsContent, "\n")
+private static String content(File file, String playerProp, Integer playerNumber, Integer playersNumber) {
+    StringBuilder fileContent = new StringBuilder()
+    readFile(file, (line) -> fileContent.append(line).append("\n"))
+
+    def lines = Arrays.asList(fileContent.toString().split("\n")) as ArrayList<String>
+
+    lines.set(0               , "currentPlayer=$playerProp")
+    lines.set(lines.size() - 2, "player=$playerNumber")
+    lines.set(lines.size() - 1, "players=$playersNumber")
+
+    return StringUtils.join(lines, "\n")
 }
 
 private String propFilepath(String prop) {

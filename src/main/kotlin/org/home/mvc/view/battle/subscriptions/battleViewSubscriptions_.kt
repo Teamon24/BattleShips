@@ -2,7 +2,6 @@ package org.home.mvc.view.battle.subscriptions
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
-import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import home.extensions.CollectionsExtensions.excludeAll
 import javafx.beans.property.SimpleIntegerProperty
@@ -13,37 +12,21 @@ import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.ConnectedPlayersReceived
-import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.FleetsReadinessReceived
 import org.home.mvc.contoller.events.NewServerReceived
-import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
-import org.home.mvc.contoller.events.PlayerIsReadyReceived
-import org.home.mvc.contoller.events.ReadyPlayersReceived
-import org.home.mvc.contoller.events.ShipWasAdded
-import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
-import org.home.mvc.contoller.server.action.NotReadyAction
-import org.home.mvc.contoller.server.action.ReadyAction
-import org.home.mvc.contoller.server.action.ShipAction
-import org.home.mvc.contoller.server.action.ShipAdditionAction
-import org.home.mvc.contoller.server.action.ShipDeletionAction
-import org.home.mvc.model.BattleModel
-import org.home.mvc.model.BattleModel.Companion.invoke
-import org.home.mvc.model.allAreReady
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.backSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.components.transitTo
 import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles
 import org.home.utils.IpUtils.freePort
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.View
 import tornadofx.action
-import tornadofx.addClass
 import tornadofx.hide
 
 
@@ -67,13 +50,6 @@ fun BattleView.connectedPlayersReceived() {
     }
 }
 
-private fun BattleView.addNewFleet(connectedPlayer: String) {
-    model.playersAndShips[connectedPlayer] = mutableListOf()
-    addSelectedPlayer(connectedPlayer)
-    addEnemyFleetGrid(connectedPlayer)
-    addEnemyFleetReadinessPane(connectedPlayer)
-}
-
 internal fun BattleView.fleetsReadinessReceived() {
     subscribe<FleetsReadinessReceived> { event ->
         logEvent(event, model)
@@ -95,51 +71,10 @@ internal fun BattleView.fleetsReadinessReceived() {
     }
 }
 
-
-internal fun BattleView.playerIsReadyReceived() {
-    subscribe<PlayerIsReadyReceived> {
-        logEvent(it, model)
-
-        if (model.allAreReady && applicationProperties.isServer) {
-            battleStartButton.isDisable = false
-            battleStartButton.addClass(AppStyles.readyButton)
-        }
-
-        model.log { "ready = $playersReadiness" }
-    }
-}
-
-internal fun BattleView.playerIsNotReadyReceived() {
-    also {
-        it.subscribe<PlayerIsNotReadyReceived> { event ->
-            logEvent(event, model)
-            if (applicationProperties.isServer) {
-                battleStartButton.updateStyle(it)
-            }
-            model.log { "ready = $playersReadiness" }
-        }
-    }
-}
-
-fun BattleView.readyPlayersReceived() {
-    this.subscribe<ReadyPlayersReceived> { event ->
-        logEvent(event, model)
-        val playersReadiness = model.playersReadiness
-        val players = event.players
-
-        playersReadiness {
-            when {
-                isEmpty() -> putAll(players.associateWith { true })
-                else -> players.forEach { player -> put(player, true) }
-            }
-        }
-    }
-}
-
 internal fun BattleView.playerTurnToShoot() {
     subscribe<TurnReceived> { event ->
+        logEvent(event, model)
         model {
-            logEvent(event, model)
             turn.value = event.player
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
@@ -152,59 +87,19 @@ internal fun BattleView.playerTurnToShoot() {
     }
 }
 
-internal fun BattleView.shipWasAdded() {
-    subscribe<ShipWasAdded> {
-        processFleetEdit(it) { shipType, player -> ShipAdditionAction(shipType, player) }
-        if (it.player == currentPlayer) {
-            if (model.hasAllShips(currentPlayer)) {
-                model.setReady(it.player)
-                battleController.send(ReadyAction(it.player))
-            }
-        }
-    }
-}
-
-internal fun BattleView.shipWasDeleted() {
-    subscribe<ShipWasDeleted> {
-        processFleetEdit(it) { shipType, player -> ShipDeletionAction(shipType, player) }
-        if (it.player == currentPlayer) {
-            if (model.hasAllShips(currentPlayer)) {
-                model.setNotReady(it.player)
-                battleController.send(NotReadyAction(it.player))
-            }
-        }
-    }
-}
-
-private fun BattleView.processFleetEdit(event: FleetEditEvent, action: (Int, String) -> ShipAction) {
-    event {
-        logEvent(event, model)
-        if (event.player == currentPlayer) {
-            battleController.send(action(event.shipType, currentPlayer))
-        }
-        model.updateFleetsReadiness(event)
-    }
-}
-
-private fun BattleModel.updateFleetsReadiness(event: FleetEditEvent) {
-    val operation = event.operation
-    fleetsReadiness[event.player]!![event.shipType]!!.operation()
-}
-
 internal fun BattleView.battleIsStarted() {
     subscribe<BattleIsStarted> { event ->
         model.battleIsStarted = true
         logEvent(event, model)
         battleViewExitButton.text = leaveBattleText
+
         battleViewExitButton.action {
             battleController.leaveBattle()
             transitTo<AppView>(backSlide)
         }
 
-        model {
-            playersReadiness.forEach { (player, _) ->
-                setNotReady(player)
-            }
+        model.playersReadiness {
+            mapValuesTo(this) { false }
         }
 
         battleStartButton.hide()
@@ -217,10 +112,12 @@ internal fun BattleView.battleIsStarted() {
 }
 
 internal fun BattleView.battleIsEnded() {
-    subscribe<BattleIsEnded> {
-        logEvent(it, model)
+    subscribe<BattleIsEnded> { event ->
+        logEvent(event, model)
+
         openMessageWindow {
-            model.currentPlayerIs(it.player) then "Вы победили" or "Победил \"${it.player}\""
+            val player = event.player
+            model.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
         }
 
         battleViewExitButton.text = leaveBattleFieldText
@@ -233,13 +130,15 @@ internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> { event ->
         logEvent(event, model)
         model {
-            newServer = NewServerInfo(event.player, applicationProperties.ip, freePort())
-            playersNumber.value -= 1
-            currentPlayerIs(event.player).so {
-                applicationProperties.isServer = true
-                battleController {
-                    send(NewServerConnectionAction(currentPlayer, newServer.ip, newServer.port))
-                    disconnect()
+            event {
+                newServer = NewServerInfo(player, applicationProperties.ip, freePort())
+                playersNumber.value -= 1
+                player.isCurrent {
+                    applicationProperties.isServer = true
+                    battleController {
+                        send(NewServerConnectionAction(newServer))
+                        disconnect()
+                    }
                 }
             }
         }

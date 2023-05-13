@@ -1,4 +1,4 @@
-package org.home.app
+package org.home.run
 
 import javafx.geometry.Rectangle2D
 import javafx.scene.Parent

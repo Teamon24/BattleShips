@@ -28,7 +28,7 @@ class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, List
 
                 text = playerName
 
-                isDisable = model.currentPlayerIs(text)
+                isDisable = model.hasCurrent(text)
                     .yes { currentPlayerListViewColors.setStyle(model) }
                     .no { enemyListViewColors.setStyle(model) }
             }

@@ -6,9 +6,7 @@ import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
 import org.home.utils.dslContainer
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.name
 import org.home.mvc.contoller.server.action.PlayerAction
-import org.home.utils.log
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope

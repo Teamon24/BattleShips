@@ -1,17 +1,20 @@
 package org.home.mvc
 
+import com.eclipsesource.json.Json
+import com.eclipsesource.json.JsonValue
+import org.home.mvc.model.Ships
+import org.home.mvc.model.ship
 import org.home.utils.extensions.StringBuildersExtensions.ln
-import org.home.utils.log
 import org.home.utils.logEach
 import org.home.utils.logging
 import java.util.*
 
+class ApplicationProperties(private val appPropsFileName: String = "application") {
 
-class ApplicationProperties(
-    private val appPropsFileName: String = "application",
-    val player: Int? = null,
-    val players: Int? = null
-) {
+    private val Any?.asString get() = this as String?
+
+    private val Any?.asInt get() = asString?.toInt()
+    private val Any?.asBool get() = asString?.toBoolean()
 
     private val props = Properties().apply {
         put(gameTypeProperty, "")
@@ -19,13 +22,20 @@ class ApplicationProperties(
 
     init {
         try {
-            val propertiesName = "/${appPropsFileName}.properties"
-             Companion::class.java
-                    .getResourceAsStream(propertiesName)
-                    .use { stream -> props.load(stream) }
+            Companion::class.java
+                .getResourceAsStream("/${appPropsFileName}.properties")
+                .use { stream -> props.load(stream) }
 
-            props[portProperty] = (props[portProperty] as String).toInt()
-            props[isToNotifyAllProperty] = (props[isToNotifyAllProperty] as String).toBoolean()
+            props["ships"]
+                ?.let { prop ->
+                    Json.parse(prop as String)
+                        .asArray()
+                        .map { ships ->
+                            ships.asCollection().ship { it.asCoord() } } }
+                ?.let { props["ships"] = it }
+
+            props[portProperty] = props[portProperty].asInt!!
+            props[isToNotifyAllProperty] = props[isToNotifyAllProperty].asBool!!
 
             logging {
                 ln("\"${appPropsFileName}.properties\"")
@@ -36,6 +46,17 @@ class ApplicationProperties(
         }
     }
 
+    private fun JsonValue.asCoord() = asArray().run { (get(0).asInt() to get(1).asInt()) }
+    private fun JsonValue.asCollection(): MutableCollection<JsonValue> = asArray().toMutableList()
+
+    val player: Int? get() = props["player"].asInt
+    val players: Int? get() = props["players"].asInt
+
+    val size: Int get() = props["size"].asInt!!
+    val maxShipType: Int get() = props["maxShipType"].asInt!!
+    val playersNumber: Int get() = props["playersNumber"].asInt!!
+    val ships: Ships? get() = props["ships"] as Ships?
+
     val ip: String get() = props["ip"] as String
     val port: Int get() = props["port"] as Int
 
@@ -44,18 +65,10 @@ class ApplicationProperties(
 
     var isServer: Boolean = false
         set(value) {
-            props[isServerProperty] = value; field = value
-            log { "$isServerProperty = $value" }
-
+            props[isServerProperty] = value;
+            field = value
         }
         get() { return props[isServerProperty] as Boolean }
-
-    private operator fun get(propName: String) =
-        props.getProperty(propName) ?: throw RuntimeException("Property '$propName' is absent")
-
-    operator fun <T> set(property: String, value: T) {
-        props[property] = value
-    }
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(property: String) = props[property] as T

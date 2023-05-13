@@ -224,7 +224,7 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
 
     private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         action {
-            model.setReady(player, isReady)
+            model.setReadiness(player, isReady)
             eventbus(event(this))
         }
     }

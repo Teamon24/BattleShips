@@ -18,9 +18,9 @@ import org.home.net.server.MessageReceiver
 import org.home.net.server.MultiServer
 import org.koin.dsl.module
 
-val diDev = { props: String, player: Int, players: Int ->
+val diDev = { props: String ->
     module {
-        single { ApplicationProperties(props, player, players) }
+        single { ApplicationProperties(props) }
 
         single { ShotNotifierStrategies }
         single { BattleEventEmitter }

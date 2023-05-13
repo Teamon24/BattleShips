@@ -1,5 +1,6 @@
 package org.home.mvc.contoller
 
+import home.extensions.AnysExtensions.invoke
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
@@ -86,18 +87,32 @@ class ShipTypePaneComponent: AbstractGameBean() {
         }
 
     fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: SimpleIntegerProperty): FleetCellLabel {
-        return FleetCellLabel(shipsNumber.value.toString()).apply {
-            val textProperty = textProperty()
-            shipsNumber.onChange { textProperty.value = it.toString() }
-            gridPane.add(this, shipType, 1)
-            gridPane.minWidth = Region.USE_PREF_SIZE
-            textProperty.onChange {
-                when {
-                    it == "0" -> addClass(AppStyles.titleCell)
-                    0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeAnyColor()
-                    else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
+        val fleetCellLabel = FleetCellLabel(shipsNumber.value.toString())
+
+        gridPane.add(fleetCellLabel, shipType, 1)
+        gridPane.minWidth = Region.USE_PREF_SIZE
+
+        val textProperty = fleetCellLabel.textProperty()
+
+        fleetCellLabel {
+            textProperty {
+                shipsNumber.onChange { value = it.toString() }
+                updateClass(value, shipType)
+
+                onChange {
+                    updateClass(it, shipType)
                 }
             }
+        }
+
+        return fleetCellLabel
+    }
+
+    private fun FleetCellLabel.updateClass(it: String?, shipType: Int) {
+        when {
+            it == "0" -> addClass(AppStyles.titleCell)
+            0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeAnyColor()
+            else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
         }
     }
 

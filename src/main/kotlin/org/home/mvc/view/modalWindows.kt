@@ -9,7 +9,6 @@ import org.home.style.AppStyles
 import tornadofx.UIComponent
 import tornadofx.action
 import tornadofx.addClass
-import tornadofx.button
 import tornadofx.label
 
 fun openAlertWindow(message: () -> String) = window(message).openWindow(modality = APPLICATION_MODAL)

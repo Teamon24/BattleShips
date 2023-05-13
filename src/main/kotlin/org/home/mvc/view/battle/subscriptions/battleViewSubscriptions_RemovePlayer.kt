@@ -5,7 +5,6 @@ import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
-import org.home.mvc.model.BattleModel.Companion.invoke
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
@@ -18,6 +17,7 @@ import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.view.components.BattleButton
 import org.home.mvc.view.components.GridPaneExtensions
+import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.mvc.view.components.backSlide
 import org.home.mvc.view.components.transferTo
@@ -41,19 +41,19 @@ internal fun BattleView.playerLeaved() {
 
 internal fun BattleView.playerWasDefeated() {
     subscribe<PlayerWasDefeated> { event ->
-        val battleView = this@playerWasDefeated
         model {
 
             logEvent(event, this)
             val defeated = event.player
             defeatedPlayers.add(defeated)
 
-            val (fleetReadiness, fleetGrid) = when (currentPlayerIs(defeated)) {
-                true -> currentPlayerFleetReadinessPane to
-                        (currentPlayerFleetGridPane.center as FleetGrid)
-                else -> enemiesFleetsReadinessPanes[defeated]!! to
-                        enemiesFleetGridsPanes[defeated]!!.disable()
-            }
+            val (fleetReadiness, fleetGrid) =
+                when (defeated.isCurrent) {
+                    true -> currentPlayerFleetReadinessPane to
+                            (currentPlayerFleetGridPane.center as FleetGrid)
+                    else -> enemiesFleetsReadinessPanes[defeated]!! to
+                            enemiesFleetGridsPanes[defeated]!!.disable()
+                }
 
             fleetGrid
                 .addTitleCellClass(defeatedTitleCell)
@@ -68,19 +68,21 @@ internal fun BattleView.playerWasDefeated() {
                 .forEach { it.addClass(defeatedTitleCell) }
 
             openMessageWindow {
-                val args = when (currentPlayerIs(defeated)) {
+                val args = when (defeated.isCurrent) {
                     true -> listOf("Вы", "и")
                     else -> listOf(defeated, "")
                 }
                 "${args[0]} проиграл${args[1]}"
             }
 
-            currentPlayerIs(defeated).so {
+            val battleView = this@playerWasDefeated
+
+            hasCurrent(defeated) {
                 (battleViewExitButton as BattleButton).disableHover()
                 battleView.updateLeaveBattleFieldButton()
             }
 
-            hasAWinner().so {
+            hasAWinner {
                 battleController.endBattle()
             }
         }
@@ -115,22 +117,19 @@ private fun BattleView.removePlayer(player: String) {
 }
 
 fun BattleView.updateLeaveBattleFieldButton() {
+    val buttonIndices = battleViewExitButtonIndices
+    root {
+        children.removeIf { getIndices(it) == buttonIndices }
 
-    this {
-        val buttonIndices = battleViewExitButtonIndices
-        root {
-            children.removeIf { getIndices(it) == buttonIndices }
-
-            GridPaneExtensions.cell(buttonIndices.first, buttonIndices.second) {
-                button(leaveBattleFieldText) {
-                    addClass(defeatedTitleCell)
-                    action {
-                        battleController.onBattleViewExit()
-                        transferTo<AppView>(backSlide)
-                    }
-                }.also {
-                    battleViewExitButton = it
+        cell(buttonIndices.first, buttonIndices.second) {
+            button(leaveBattleFieldText) {
+                addClass(defeatedTitleCell)
+                action {
+                    battleController.onBattleViewExit()
+                    transferTo<AppView>(backSlide)
                 }
+            }.also {
+                battleViewExitButton = it
             }
         }
     }

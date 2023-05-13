@@ -62,9 +62,6 @@ import kotlin.collections.set
 
 class BattleView : AbstractGameView("Battle View") {
     internal val battleController: BattleController<Action> by di()
-    init {
-        model.playersAndShips[currentPlayer] = mutableListOf()
-    }
 
     private val fleetGridController: FleetGridController by newGame()
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
@@ -84,12 +81,26 @@ class BattleView : AbstractGameView("Battle View") {
     internal val enemiesFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
     private val selectedEnemyFleetReadinessPane = BorderPane()
 
-    private val emptyFleetGrid = createEmptyFleetGreed()
+    private val emptyFleetGrid = fleetGridController
+        .fleetGrid()
+        .addFleetCellClass(AppStyles.titleCell)
+        .disable()
+
+    internal fun FleetGrid.disable(): FleetGrid {
+        isDisable = true
+        return this
+    }
+
+    internal fun restoreCurrentPlayerFleetGrid() {
+        currentPlayerFleetGridPane.center =
+            fleetGridController
+                .fleetGrid()
+                .addShips(model.shipsOf(currentPlayer))
+    }
 
     private val selectedEnemyFleetPane = BorderPane().apply { center = emptyFleetGrid }
 
     private val playersListView: ListView<String> = ListView(model.players).apply {
-        playersListView = this
         cellFactory = MarkReadyPlayers(model)
 
         changeEnemyFleetOnSelection()
@@ -105,11 +116,6 @@ class BattleView : AbstractGameView("Battle View") {
     internal lateinit var battleViewExitButton: Button
 
     internal lateinit var battleStartButton: BattleStartButton
-    private fun createEmptyFleetGreed() =
-        fleetGridController
-            .fleetGrid()
-            .addFleetCellClass(AppStyles.titleCell)
-            .disable()
 
     init {
         title = currentPlayer.uppercase()
@@ -146,15 +152,17 @@ class BattleView : AbstractGameView("Battle View") {
         playersNodes: Map<String, N>,
         afterInit: N.() -> Unit = {},
     ) {
-        model.players
-            .exclude(currentPlayer)
-            .firstOrNull()
-            ?.also { player ->
-                model.selectedPlayer.value = player
-                val node = playersNodes[player]!!
-                center = node
-                node.afterInit()
-            }
+        model {
+            players
+                .exclude(currentPlayer)
+                .firstOrNull()
+                ?.also { player ->
+                    selectedPlayer.value = player
+                    val node = playersNodes[player]!!
+                    center = node
+                    node.afterInit()
+                }
+        }
     }
 
     override val root: GridPane
@@ -187,7 +195,7 @@ class BattleView : AbstractGameView("Battle View") {
             serverTransferReceived()
         }
 
-        root = centerGrid root@{
+        root = centerGrid {
             addClass(AppStyles.debugClass)
             row(0) {
                 col(0) {
@@ -251,7 +259,23 @@ class BattleView : AbstractGameView("Battle View") {
     }
 
 
-    internal fun addEnemyFleetGrid(enemy: String) {
+    internal fun addNewFleet(connectedPlayer: String) {
+        model.playersAndShips[connectedPlayer] = mutableListOf()
+        addSelectedPlayer(connectedPlayer)
+        addEnemyFleetGrid(connectedPlayer)
+        addEnemyFleetReadinessPane(connectedPlayer)
+    }
+
+
+    private fun addSelectedPlayer(player: String) {
+        model.selectedPlayer {
+            value ?: run { value = player; return }
+            value.ifBlank { value = player }
+        }
+    }
+
+
+    private fun addEnemyFleetGrid(enemy: String) {
         enemiesFleetGridsPanes[enemy] =
             enemyFleetGrid().apply {
                 isDisable = true
@@ -261,7 +285,7 @@ class BattleView : AbstractGameView("Battle View") {
             }
     }
 
-    internal fun addEnemyFleetReadinessPane(enemy: String) {
+    private fun addEnemyFleetReadinessPane(enemy: String) {
         enemiesFleetsReadinessPanes[enemy] =
             enemyFleetReadinessPane(enemy).apply {
                 selectedEnemyFleetReadinessPane.center ?: run {
@@ -305,7 +329,14 @@ class BattleView : AbstractGameView("Battle View") {
     }
 
     private fun EventTarget.currentPlayerFleet() =
-        currentPlayerFleetGridPane.addClass(AppStyles.currentPlayerCell).also { add(it) }
+        currentPlayerFleetGridPane
+            .addClass(AppStyles.currentPlayerCell)
+            .also { add(it) }
+            .also {
+                applicationProperties.ships?.apply {
+                    (it.center as FleetGrid).addShips(this)
+                }
+            }
 
 
     private fun enemyFleetGrid() =
@@ -338,25 +369,6 @@ class BattleView : AbstractGameView("Battle View") {
         forEach { (_, fleetField) ->
             fleetField.isDisable = true
         }
-    }
-
-    fun FleetGrid.disable(): FleetGrid {
-        isDisable = true
-        return this
-    }
-
-    fun addSelectedPlayer(player: String) {
-        model.selectedPlayer {
-            value ?: run { value = player; return }
-            value.ifBlank { value = player }
-        }
-    }
-
-    fun restoreCurrentPlayerFleetGrid() {
-        currentPlayerFleetGridPane.center =
-            fleetGridController
-                .fleetGrid()
-                .addShips(model.shipsOf(currentPlayer))
     }
 }
 

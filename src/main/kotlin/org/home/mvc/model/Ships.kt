@@ -4,18 +4,19 @@ import org.home.utils.log
 
 typealias Ships = MutableCollection<Ship>
 
-class Ship(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
-    override fun toString() = super.toString()
-
+class Ship
+constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
     constructor(coordinate: Coord) : this(listOf(coordinate))
     constructor(vararg coordinates: Coord) : this(coordinates.toList())
+
     fun copy() = Ship(this.toMutableList())
     fun hasDecks(i: Int) = size == i
-    fun crosses(another: Ship): Boolean {
+
+    fun crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
+
+    private fun crosses(another: Ship): Boolean {
         return this.any { deck -> deck in another }
     }
-
-    fun crosses(ships: Collection<Ship>) = ships.any { crosses(it) }
 
     fun withBorder(): HashSet<Coord> {
         return this
@@ -63,6 +64,8 @@ fun logShips(ships: Ships, action: String = "") {
     log { action }
     ships.forEach { log { it } }
 }
+
+inline fun <T> Iterable<T>.ship(transform: (T) -> Coord) = map { transform(it) }.toShip()
 
 fun Collection<Coord>.toShip() = Ship(this)
 fun Coord.toShip() = Ship(this)
