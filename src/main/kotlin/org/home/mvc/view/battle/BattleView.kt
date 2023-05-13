@@ -47,6 +47,7 @@ import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.battle.subscriptions.serverTransferReceived
+import org.home.mvc.view.battle.subscriptions.shipWasSunk
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
@@ -187,6 +188,7 @@ class BattleView : AbstractGameView("Battle View") {
             battleIsStarted()
             playerTurnToShoot()
             shipWasHit()
+            shipWasSunk()
             thereWasAMiss()
             playerLeaved()
             playerWasDefeated()

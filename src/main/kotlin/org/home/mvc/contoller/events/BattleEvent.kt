@@ -31,6 +31,7 @@ sealed class BattleEvent: FXEvent() {
             is ReadyPlayersReceived -> "AreReady($players)"
             is TurnReceived -> "GotATurn($player)"
             is ShipWasHit -> "GotHit(${hasAShot.toStr})"
+            is ShipWasSunk -> "GotSunk(${hasAShot.toStr})"
             is ThereWasAMiss -> "Missed(${hasAShot.toStr})"
             is PlayerWasDefeated -> "Defeated($player)"
             is PlayerLeaved -> "Leaved($player)"

@@ -8,6 +8,7 @@ import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.MissAction
 import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.utils.PlayersSockets
 import tornadofx.Controller
 import kotlin.reflect.KClass
@@ -24,6 +25,7 @@ object ShotNotifierStrategies: Controller() {
                 .Builder(sockets)
                 .notifyAll(MissAction::class)
                 .notifyAll(HitAction::class)
+                .notifyAll(SinkingAction::class)
                 .build()
                 .also { notifyAll = it }
         } else {
@@ -39,9 +41,9 @@ abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
 
     protected val map = HashMap<KClass<out HasAShot>, Boolean>().apply {
         val notifyOnlyWhoMadeAShot = true
-        put(ShotAction::class, notifyOnlyWhoMadeAShot)
         put(MissAction::class, notifyOnlyWhoMadeAShot)
         put(HitAction::class, notifyOnlyWhoMadeAShot)
+        put(SinkingAction::class, notifyOnlyWhoMadeAShot)
     }
 
     fun shouldNotifyAll(action: KClass<out HasAShot>) { map[action] = false }

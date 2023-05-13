@@ -16,7 +16,6 @@ import home.extensions.BooleansExtensions.then
 import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.view.components.BattleButton
-import org.home.mvc.view.components.GridPaneExtensions
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.mvc.view.components.backSlide
@@ -57,10 +56,10 @@ internal fun BattleView.playerWasDefeated() {
 
             fleetGrid
                 .addTitleCellClass(defeatedTitleCell)
-                .onEachFleetCells {
-                    it.coord
-                        .notIn(getShots(defeated))
-                        .so { it.addClass(AppStyles.defeatedCell) }
+                .onEachFleetCells { fleetCell ->
+                    fleetCell.coord
+                        .notIn(getShotsAt(defeated))
+                        .so { fleetCell.addClass(AppStyles.defeatedCell) }
                 }
 
             fleetReadiness

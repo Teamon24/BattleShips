@@ -14,6 +14,8 @@ object FleetGridStyleComponent {
     fun Node.removeAnyColor() = this
         .removeClass(
             AppStyles.chosenCell,
+            AppStyles.sunkCell,
+            AppStyles.hitCell,
             AppStyles.incorrectCell,
             AppStyles.shipBorderCell,
             AppStyles.titleCell)

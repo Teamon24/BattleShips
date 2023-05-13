@@ -102,6 +102,7 @@ class AppStyles : Stylesheet() {
         val fieldSize by cssclass()
 
         val chosenCell by cssclass()
+        val sunkCell by cssclass()
         val animationCell by cssclass()
 
         val gridMargin by cssclass()
@@ -167,6 +168,7 @@ class AppStyles : Stylesheet() {
         animationGridMargin + gridMargin(10.px)
 
         //---- fleet  cells style --------------------------------------------------------------------------------------
+        sunkCell          + background(BLACK)
         chosenCell        + background(chosenCellColor)  + text(WHITE) + noBorder
         titleCell         + background(LIGHTSLATEGRAY)   + text(WHITE) + border
         defeatedTitleCell + background("A93638F4".color) + text(WHITE)

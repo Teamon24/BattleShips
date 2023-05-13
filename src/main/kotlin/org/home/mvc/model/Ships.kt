@@ -1,8 +1,11 @@
 package org.home.mvc.model
 
+import home.extensions.BooleansExtensions.so
+import home.extensions.CollectionsExtensions.isEmpty
 import org.home.utils.log
 
 typealias Ships = MutableCollection<Ship>
+inline fun Ships.areDestroyed(onTrue: () -> Unit) = isEmpty.so(onTrue)
 
 class Ship
 constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
@@ -11,6 +14,7 @@ constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>
 
     fun copy() = Ship(this.toMutableList())
     fun hasDecks(i: Int) = size == i
+    inline val isDestroyed get() = isEmpty
 
     fun crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
 
@@ -39,16 +43,16 @@ constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>
 }
 
 
-fun Ships.areHit(shot: Coord): Boolean {
-    return firstOrNull { it.contains(shot) } != null
-}
+fun Ships.gotHitBy(shot: Coord) = any { shot in it }
 
-fun Ships.removeDestroyedDeck(shot: Coord) {
+fun Ships.removeAndGetBy(shot: Coord): Ship {
     val hitShip = first { it.contains(shot) }
     hitShip.remove(shot)
     if (hitShip.isEmpty()) {
         remove(hitShip)
     }
+
+    return hitShip
 }
 
 fun Coord.withinAnyBorder(ships: Collection<Ship>) = ships.any { ship -> ship.withBorder().contains(this) }

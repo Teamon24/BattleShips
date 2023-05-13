@@ -17,6 +17,7 @@ import org.home.mvc.contoller.events.ReadyPlayersReceived
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ShipWasSunk
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.net.server.Message
@@ -36,6 +37,7 @@ sealed class Action: Message {
             is TurnAction -> "$prefix($player)"
             is ShotAction -> "$prefix(${this.toStr})"
             is HitAction -> "$prefix(${this.toStr})"
+            is SinkingAction -> "$prefix(${this.toStr})"
             is MissAction -> "$prefix(${this.toStr})"
             is DefeatAction -> "$prefix(${player})"
             is LeaveAction -> "$prefix(${player})"
@@ -71,6 +73,7 @@ inline val Action.event get() = when (this) {
     is DisconnectAction -> PlayerWasDisconnected(this)
     is FleetsReadinessAction -> FleetsReadinessReceived(this)
     is HitAction -> ShipWasHit(this)
+    is SinkingAction -> ShipWasSunk(this)
     is LeaveAction -> PlayerLeaved(this)
     is MissAction -> ThereWasAMiss(this)
     is NewServerAction -> NewServerReceived(this)

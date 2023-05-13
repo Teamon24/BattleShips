@@ -1,14 +1,15 @@
 package org.home.mvc.contoller.server
 
 import home.extensions.BooleansExtensions.invoke
-import home.extensions.BooleansExtensions.no
-import home.extensions.BooleansExtensions.yes
+import home.extensions.BooleansExtensions.otherwise
+import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.hasElements
 import home.extensions.CollectionsExtensions.isEmpty
 import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ShipWasSunk
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
@@ -17,9 +18,10 @@ import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.MissAction
 import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
-import org.home.mvc.model.areHit
-import org.home.mvc.model.removeDestroyedDeck
+import org.home.mvc.model.aintHit
+import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.MultiServer
 import org.home.utils.PlayerSocketUtils.send
 import org.home.utils.PlayersSocketsExtensions.get
@@ -43,12 +45,22 @@ class ShotProcessingComponent: AbstractGameBean() {
     fun onShot(action: ShotAction) {
         val target = action.target
         if (target == currentPlayer) {
-            val ships = model.shipsOf(target)
-            val shot = action.shot
-            ships.areHit(shot).yes {
-                onHit(HitAction(action))
-                ships.removeDestroyedDeck(shot)
-                ships.isEmpty.invoke {
+            onShotAtServer(target, action)
+        } else {
+            socket(target).send(action)
+        }
+    }
+
+    private fun onShotAtServer(target: String, action: ShotAction) {
+        val ships = model.shipsOf(target)
+        val shot = action.shot
+
+        shot.aintHit(ships)
+            .thus { onMiss(action) }
+            .otherwise {
+                val hitShip = ships.removeAndGetBy(shot)
+
+                ships.isEmpty {
                     playerTurnComponent.remove(target)
                     val shooter = action.player
                     val defeatAction = DefeatAction(shooter, target)
@@ -59,16 +71,34 @@ class ShotProcessingComponent: AbstractGameBean() {
                         socket(shooter).send(TurnAction(shooter))
                     }
 
-                    eventbus { +PlayerWasDefeated(defeatAction) }
+                    eventbus(PlayerWasDefeated(defeatAction) )
+                    return@onShotAtServer
                 }
-            } no {
-                onMissedShot(action)
+
+                when(hitShip.isEmpty) {
+                    true -> onSinking(SinkingAction(action))
+                    else -> onHit(HitAction(action))
+                }
             }
-        } else {
-            sockets.send(shotNotifier.messages(action))
-            socket(target).send(action)
+
+    }
+
+    fun onSinking(sinkingAction: SinkingAction) {
+        val notifications = shotNotifier.messages(sinkingAction)
+        sockets.send(notifications)
+        eventbus {
+            +ShipWasSunk(sinkingAction)
         }
     }
+
+    fun onHit(hitAction: HitAction) {
+        val notifications = shotNotifier.messages(hitAction)
+        sockets.send(notifications)
+        eventbus {
+            +ShipWasHit(hitAction)
+        }
+    }
+
 
     fun onMiss(action: MissAction) {
         val nextTurn = notifyAboutShotAndSendNextTurn(action)
@@ -79,8 +109,7 @@ class ShotProcessingComponent: AbstractGameBean() {
         }
     }
 
-
-    private fun onMissedShot(action: ShotAction) {
+    private fun onMiss(action: ShotAction) {
         val missAction = MissAction(action)
         val nextTurn = playerTurnComponent.nextTurn()
 
@@ -92,14 +121,6 @@ class ShotProcessingComponent: AbstractGameBean() {
         eventbus {
             +ThereWasAMiss(missAction)
             +TurnReceived(TurnAction(nextTurn))
-        }
-    }
-
-    fun onHit(hitAction: HitAction) {
-        val notifications = shotNotifier.messages(hitAction)
-        sockets.send(notifications)
-        eventbus {
-            +ShipWasHit(hitAction)
         }
     }
 

@@ -5,3 +5,4 @@
 /gradle
 pids.txt
 /src/main/resources/player-*.properties
+/.run

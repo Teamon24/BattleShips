@@ -11,14 +11,15 @@ import tornadofx.action
 import tornadofx.addClass
 import tornadofx.label
 
-fun openAlertWindow(message: () -> String) = window(message).openWindow(modality = APPLICATION_MODAL)
-fun openMessageWindow(message: () -> String) = window(message).openWindow(modality = APPLICATION_MODAL)
+fun openAlertWindow(message: () -> String) = window(message()).openWindow(modality = APPLICATION_MODAL)
+fun openMessageWindow(message: () -> String) = window(message()).openWindow(modality = APPLICATION_MODAL)
+fun openMessageWindow(message: String) = window(message).openWindow(modality = APPLICATION_MODAL)
 
-private fun window(message: () -> String) = object : UIComponent() {
+private fun window(message: String) = object : UIComponent() {
 
     override val root = centerGrid {
         cell(0, 0) {
-            label(message()) {
+            label(message) {
                 addClass(AppStyles.errorLabel)
                 alignment = Pos.CENTER
             }

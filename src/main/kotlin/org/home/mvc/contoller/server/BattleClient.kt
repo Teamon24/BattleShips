@@ -8,9 +8,10 @@ import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.no
+import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.thus
 import home.extensions.BooleansExtensions.yes
-import home.extensions.CollectionsExtensions.isEmpty
 import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
+import org.home.mvc.contoller.events.ShipWasSunk
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.action.Action
@@ -39,8 +41,11 @@ import org.home.mvc.contoller.server.action.NotReadyAction
 import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.event
-import org.home.mvc.model.removeDestroyedDeck
+import org.home.mvc.model.areDestroyed
+import org.home.mvc.model.logShips
+import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.Message
 import org.home.net.server.Ping
 import org.home.utils.InfiniteTry.Companion.loop
@@ -62,7 +67,7 @@ import java.net.Socket
 import java.net.SocketException
 import java.net.UnknownHostException
 
-class BattleClient: AbstractGameBean(), BattleController<Action> {
+class BattleClient : AbstractGameBean(), BattleController<Action> {
 
     override val currentPlayer: String get() = super.currentPlayer
 
@@ -78,8 +83,8 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
     private lateinit var receiverJob: Job
     private val canProceed = true.atomic
 
-    class ActionTypeAbsentException(any: Any, className: String, method: String):
-    RuntimeException("There is no when-branch for $any in $className#$method")
+    class ActionTypeAbsentException(any: Any, className: String, method: String) :
+        RuntimeException("There is no when-branch for $any in $className#$method")
 
     override fun send(message: Message) = serverSocket { isNotClosed { send(message) } }
     override fun send(messages: Collection<Message>) = serverSocket { isNotClosed { send(messages) } }
@@ -109,7 +114,7 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
             } stopOnAll {
                 SocketException::class + EOFException::class
             } catch {
-                + ClassCastException::class
+                +ClassCastException::class
                 handle {
                     logError(it) { messages }
                 }
@@ -156,20 +161,28 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
 
     private fun onHit(shotAction: ShotAction) {
         val ships = model.shipsOf(currentPlayer)
-        ships.removeDestroyedDeck(shotAction.shot)
-        val hitAction = HitAction(shotAction)
-
-        val defeatAction = DefeatAction(shotAction.player, currentPlayer)
-
-        send {
-            +hitAction
-            ships.isEmpty { +defeatAction }
-        }
+        val hitShip = ships.removeAndGetBy(shotAction.shot)
 
         eventbus {
-            +ShipWasHit(hitAction)
-            ships.isEmpty {
-                +PlayerWasDefeated(defeatAction)
+            send {
+                hitShip.isDestroyed.thus {
+                    SinkingAction(shotAction).also {
+                        +it
+                        +ShipWasSunk(it)
+                    }
+                } otherwise {
+                    HitAction(shotAction).also {
+                        +it
+                        +ShipWasHit(it)
+                    }
+                }
+
+                ships.areDestroyed {
+                    DefeatAction(shotAction.player, currentPlayer).also {
+                        +it
+                        +PlayerWasDefeated(it)
+                    }
+                }
             }
         }
     }
@@ -206,7 +219,7 @@ class BattleClient: AbstractGameBean(), BattleController<Action> {
         canProceed(false)
         runBlocking {
             receiverJob.cancel()
-            log { "receiver's ${receiverJob.name } is canceled" }
+            log { "receiver's ${receiverJob.name} is canceled" }
         }
         input.close()
         output.close()

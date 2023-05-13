@@ -52,6 +52,7 @@ import org.home.mvc.contoller.server.action.FleetEditAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
+import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
 import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.net.server.Message
@@ -160,6 +161,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             is ShipAdditionAction -> processFleetEdit(action, ::ShipWasAdded)
             is ShipDeletionAction -> processFleetEdit(action, ::ShipWasDeleted)
 
+            is SinkingAction -> shotProcessingComponent.onSinking(action)
             is ShotAction -> shotProcessingComponent.onShot(action)
             is HitAction -> shotProcessingComponent.onHit(action)
             is MissAction -> shotProcessingComponent.onMiss(action)

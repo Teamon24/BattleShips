@@ -15,6 +15,7 @@ import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.yes
 import home.extensions.CollectionsExtensions.exclude
 import org.home.mvc.contoller.events.FleetEditEvent
+import org.home.mvc.contoller.server.action.HitAction
 import org.home.utils.extensions.ObservableValueMap
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
@@ -102,7 +103,7 @@ class BattleModel : ViewModel {
 
     val playersReadiness = ObservableValueMap<String, Boolean>().apply { logOnChange() }
 
-    val playersAndShips = emptySimpleMapProperty<String, MutableCollection<Ship>>()
+    val playersAndShips = emptySimpleMapProperty<String, Ships>()
         .notifyOnChange()
         .putInitials()
 
@@ -139,8 +140,16 @@ class BattleModel : ViewModel {
     private val statistics = mutableListOf<HasAShot>()
 
 
-    fun getShots(player: String): List<Coord> {
-        return statistics.filter { it.target == player }.map { it.shot }
+    fun getHits(): List<Coord> {
+        return getShots { it is HitAction }
+    }
+
+    fun getShotsAt(target: String): List<Coord> {
+        return getShots { it.target == target }
+    }
+
+    private fun getShots(function: (HasAShot) -> Boolean): List<Coord> {
+        return statistics.filter(function).map { it.shot }
     }
 
     private fun PlayersAndShips.notifyOnChange() = apply {
@@ -186,20 +195,17 @@ class BattleModel : ViewModel {
         statistics.add(hasAShot)
     }
 
-    fun registersAHit(shot: Coord): Boolean {
-        return shipsOf(currentPlayer).areHit(shot)
-    }
+    fun registersAHit(shot: Coord) = currentPlayer.ships().gotHitBy(shot)
 
-    fun hasNo(enemyToHit: String, hitCoord: Coord): Boolean {
+    fun hasNo(target: String, hitCoord: Coord): Boolean {
         return hitCoord !in statistics
             .asSequence()
-            .filter { it.player == currentPlayer }
-            .filter { it.target == enemyToHit }
+            .filter { it.target == target }
             .map { it.shot }
     }
 
-    fun String.createdAllShips(): Boolean {
-        val decks = shipsOf(this).flatten().count()
+    fun String.addedAllShips(): Boolean {
+        val decks = this.ships().flatten().count()
         val shouldBe = shipsTypes.entries.sumOf { it.key * it.value }
         log { "hasAllShips [decks == shouldBe; $decks ? $shouldBe"}
         return decks == shouldBe
@@ -224,6 +230,7 @@ class BattleModel : ViewModel {
     inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
 
     fun shipsOf(player: String) = playersAndShips[player]!!
+    fun String.ships() = playersAndShips[this]!!
 
     private fun <T> SimpleListProperty<T>.logOnChange(name: String) {
         addListener(ListChangeListener {

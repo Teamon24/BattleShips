@@ -40,7 +40,7 @@ private fun BattleView.processFleetEdit(
             }
 
             updateFleetReadiness(event)
-            if (player.isCurrent && player.createdAllShips()) {
+            if (player.isCurrent && player.addedAllShips()) {
                 setReadiness(player)
                 battleController.send(createReadinessAction(player))
             }
