@@ -1,13 +1,11 @@
 package org.home.mvc.view.battle.subscriptions
 
-import home.extensions.AnysExtensions.invoke
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.ReadyPlayersReceived
 import org.home.mvc.view.battle.BattleView
 import org.home.utils.log
 import org.home.utils.logEvent
-
 
 internal fun BattleView.playerIsReadyReceived() {
     val battleView = this@playerIsReadyReceived
@@ -30,12 +28,6 @@ fun BattleView.readyPlayersReceived() {
         logEvent(event, model)
         val playersReadiness = model.playersReadiness
         val players = event.players
-
-        playersReadiness {
-            when {
-                isEmpty() -> putAll(players.associateWith { true })
-                else -> players.forEach { player -> put(player, true) }
-            }
-        }
+        playersReadiness.putAll(players.associateWith { true })
     }
 }

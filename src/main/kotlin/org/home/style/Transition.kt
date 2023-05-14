@@ -10,12 +10,12 @@ import home.extensions.BooleansExtensions.then
 import home.extensions.BooleansExtensions.yes
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
-import org.home.style.HoverTransition.ColorComponent.RED
-import org.home.style.HoverTransition.ColorComponent.GREEN
-import org.home.style.HoverTransition.ColorComponent.BLUE
-import org.home.style.HoverTransition.ColorComponent.OPACITY
-import org.home.style.HoverTransition.Step.DECR
-import org.home.style.HoverTransition.Step.INCR
+import org.home.style.Transition.ColorComponent.RED
+import org.home.style.Transition.ColorComponent.GREEN
+import org.home.style.Transition.ColorComponent.BLUE
+import org.home.style.Transition.ColorComponent.OPACITY
+import org.home.style.Transition.Step.DECR
+import org.home.style.Transition.Step.INCR
 import org.home.utils.log
 import tornadofx.InlineCss
 import tornadofx.onHover
@@ -23,9 +23,54 @@ import tornadofx.runLater
 import tornadofx.style
 import kotlin.concurrent.thread
 import kotlin.math.abs
+class FillTransition(region: Region): Transition(region) {
+    override fun enable() {
+        colorCounters = colorIncrementors
+        counter = Int::inc
+        playInThread()
+    }
 
-class HoverTransition(private val region: Region) {
+    override fun getCounter() = 0
 
+    override fun getColors(): MutableList<Color> {
+        return transitionInfo.map { it.first }.toMutableList()
+    }
+}
+
+class HoverTransition(region: Region) : Transition(region) {
+
+    var hovered: Boolean = false
+
+    override fun enable() {
+        super.region.onHover {
+            disabled().otherwise {
+                hovered = it
+                it yes {
+                    colorCounters = colorIncrementors
+                    counter = Int::inc
+                    if (!isPlaying() && !disabled()) playInThread()
+                } no {
+                    colorCounters =  colorDecrementors
+                    counter = Int::dec
+                    if (!isPlaying() && !disabled()) playInThread()
+                }
+            }
+        }
+    }
+
+    override fun getCounter(): Int {
+        return hovered then 0 or steps
+    }
+
+    override fun getColors(): MutableList<Color> {
+        return when(hovered) {
+            true -> transitionInfo.map { it.first }.toMutableList()
+            else -> transitionInfo.map { it.second }.toMutableList()
+        }
+    }
+}
+
+abstract class Transition {
     @JvmInline
     value class FromTo(val fromTo: Pair<Color, Color>)
 
@@ -38,26 +83,49 @@ class HoverTransition(private val region: Region) {
 
     enum class Step { INCR, DECR }
 
-    private val hoversInfo: MutableList<Pair<Color, Color>> = mutableListOf()
-    private val steps = 50
+    protected val region: Region
+    protected val transitionInfo: MutableList<Pair<Color, Color>>
+    protected val steps = 50
     var millis = 0L
-    set(value) {
-        field = value
-        stepSleep = (value / steps)
+        set(value) {
+            field = value
+            stepSleep = (value / steps)
+        }
+
+    private var stepSleep: Long
+
+    protected val colorIncrementors: MutableList<(Color) -> Color>
+    protected val colorDecrementors: MutableList<(Color) -> Color>
+    private val transformations: MutableList<InlineCss.(Color) -> Unit>
+    private val colorSteps: HashMap<Pair<ColorComponent, FromTo>, Double>
+
+    private var thread: Thread? = null
+
+    protected var disabled = false.atomic
+    protected var isPlaying = false.atomic
+    protected lateinit var counter: (Int) -> Int
+    protected var colorCounters: MutableList<(Color) -> Color>
+
+    constructor(region: Region) {
+        this.region = region
+        transitionInfo = mutableListOf()
+        stepSleep = (millis / steps)
+        colorIncrementors = mutableListOf()
+        colorDecrementors = mutableListOf()
+        transformations = mutableListOf()
+        colorSteps = hashMapOf()
+        colorCounters = mutableListOf()
     }
 
-    private var stepSleep = (millis / steps)
-
-    private val colorIncrementors = mutableListOf<(Color) -> Color>()
-    private val colorDecrementors = mutableListOf<(Color) -> Color>()
-    private val transformations = mutableListOf<InlineCss.(Color) -> Unit>()
-    private val colorSteps = hashMapOf<Pair<ColorComponent, FromTo>, Double>()
+    abstract fun enable()
+    abstract fun getCounter(): Int
+    abstract fun getColors(): MutableList<Color>
 
     private fun getColorInc(from: Color, to: Color) = { c: Color -> c.incr(from, to) }
     private fun getColorDecr(from: Color, to: Color) = { c: Color -> c.decr(from, to) }
 
     fun add(fromTo: Pair<Color, Color>, cssProp: InlineCss.(Color) -> Unit) {
-        hoversInfo.add(fromTo)
+        transitionInfo.add(fromTo)
 
         val from = fromTo.first
         val to = fromTo.second
@@ -113,52 +181,22 @@ class HoverTransition(private val region: Region) {
         }
     }
 
-    private var disabled = false.atomic
-    private var isPlaying = false.atomic
-    private var hovered = true
-    private lateinit var counter: (Int) -> Int
-    private var colorCounters = mutableListOf<(Color) -> Color>()
-
     fun disable() {
         log { "${region.name} disabling hover transition" }
         disabled(true)
         thread?.interrupt()
     }
 
-    init {
-        region.onHover {
-            disabled().otherwise {
-                hovered = it
-                it yes {
-                    colorCounters = colorIncrementors
-                    counter = Int::inc
-                    if (!isPlaying() && !disabled()) playInThread()
-                } no {
-                    colorCounters =  colorDecrementors
-                    counter = Int::dec
-                    if (!isPlaying() && !disabled()) playInThread()
-                }
-            }
-        }
-    }
 
-
-    private var thread: Thread? = null
-
-    private fun playInThread() {
-        thread = thread {
-            play()
-        }
+    protected fun playInThread() {
+        thread = thread(block = ::play)
     }
 
     private fun play() {
         isPlaying(true)
-        var count = hovered then 0 or steps
-
-        val colors = when(hovered) {
-            true -> hoversInfo.map { it.first }.toMutableList()
-            else -> hoversInfo.map { it.second }.toMutableList()
-        }
+        log { "${this.name} is playing" }
+        var count = getCounter()
+        val colors = getColors()
 
         do {
             try {
@@ -166,8 +204,10 @@ class HoverTransition(private val region: Region) {
             } catch (e: InterruptedException) {
                 log { "${region.name} transition is stopped" }
                 disabled(true)
+                isPlaying(false)
                 return
             }
+
             colorCounters.forEachIndexed { index, colorCounter ->
                 colors[index] = colorCounter(colors[index])
             }
@@ -184,5 +224,6 @@ class HoverTransition(private val region: Region) {
         } while (count in 1..steps && !disabled())
 
         isPlaying(false)
+        log { "${this.name} is finished" }
     }
 }

@@ -3,13 +3,9 @@ package org.home.mvc.view.components
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.yes
-import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.control.Button
-import javafx.scene.image.ImageView
-import javafx.scene.input.Clipboard
-import javafx.scene.input.ClipboardContent
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
 import org.home.mvc.ApplicationProperties.Companion.exitText
@@ -18,9 +14,9 @@ import org.home.mvc.view.AbstractGameView
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.buttonColor
 import org.home.style.AppStyles.Companion.chosenCellColor
-import org.home.style.HoverTransitionDSL.hover
-import org.home.style.HoverTransitionDSL.transition
-import org.home.style.HoverTransition
+import org.home.style.Transition
+import org.home.style.TransitionDSL.hovering
+import org.home.style.TransitionDSL.transition
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.attachTo
@@ -45,7 +41,7 @@ fun EventTarget.battleButton(text: String = "", graphic: Node? = null, op: Butto
 
 class BattleButton(text: String): Button(text) {
     private val currentNode = this@BattleButton
-    var hoverTransition: HoverTransition? = null
+    var hoverTransition: Transition? = null
 
     fun disableHover() {
         hoverTransition?.disable()
@@ -54,7 +50,7 @@ class BattleButton(text: String): Button(text) {
 
     init {
         style {
-            hover(currentNode) {
+            hovering(currentNode) {
                 millis = 50L
                 transition(buttonColor, chosenCellColor) { backgroundColor += it }
                 transition(BLACK, WHITE) { textFill = it }

@@ -4,8 +4,15 @@ import javafx.css.Styleable
 import javafx.geometry.Pos
 import javafx.scene.Node
 import javafx.scene.Parent
+import javafx.scene.control.Labeled
+import javafx.scene.layout.Region
+import javafx.scene.paint.Color
+import org.home.style.ColorUtils.color
+import org.home.style.TransitionDSL.filling
+import org.home.style.TransitionDSL.transition
 import org.home.utils.NodeUtils
 import tornadofx.CssRule
+import tornadofx.InlineCss
 import tornadofx.addClass
 import tornadofx.box
 import tornadofx.getChildList
@@ -13,6 +20,20 @@ import tornadofx.px
 import tornadofx.style
 
 object StyleUtils {
+
+    val Region.backgroundColor get() = background?.fills?.get(0)?.fill?.color ?: Color.WHITE
+    val Labeled.textColor get() = textFill?.color ?: Color.WHITE
+
+    fun Region.fillBackground(from: Color = backgroundColor, to: Color) = filling(from, to) { backgroundColor += it }
+
+    fun Region.filling(from: Color, to: Color, cssProp: InlineCss.(Color) -> Unit) {
+        style {
+            filling(this@filling) {
+                millis = 100
+                transition(from, to, cssProp)
+            }
+        }
+    }
 
     fun Node.addChildrenClass(vararg cssRule: CssRule) {
         this.getChildList()?.forEach {

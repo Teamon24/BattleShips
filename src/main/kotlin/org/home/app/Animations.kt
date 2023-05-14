@@ -7,6 +7,7 @@ import javafx.scene.shape.Rectangle
 import javafx.util.Duration
 import org.home.mvc.view.components.GridPaneExtensions
 import org.home.mvc.view.components.GridPaneExtensions.getCell
+import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
 import org.home.style.ColorUtils.withOpacity
 import tornadofx.addChildIfPossible
@@ -49,7 +50,7 @@ object Animations {
 
     fun randomCellFill(gridPane: GridPane, time: Double) {
         gridPane.children.forEach {
-            val (i, j) = GridPaneExtensions.getIndices(it)
+            val (i, j) = it.getIndices()
             val rectangle = gridPane.getCell(i, j) as Rectangle
             randomFillAnimation(rectangle, AppStyles.chosenCellColor.withOpacity(0.001), time)
         }
@@ -57,7 +58,7 @@ object Animations {
 
     fun waveCellFill(gridPane: GridPane, rows: Int, cols: Int, time: Double) {
         gridPane.children.forEach {
-            val (i, j) = GridPaneExtensions.getIndices(it)
+            val (i, j) = it.getIndices()
             val rectangle = gridPane.getCell(i, j) as Rectangle
             waveAnimation(rectangle, i, j, rows, cols, rows / 2, AppStyles.chosenCellColor.withOpacity(0.5), time)
         }

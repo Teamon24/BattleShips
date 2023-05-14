@@ -45,40 +45,39 @@ object GridPaneExtensions {
 
     inline fun cell(row: Int, column: Int, node: () -> Node) {
         val child = node()
-        setIndices(child, row, column)
+        child.setIndices(row, column)
     }
 
     inline fun Row.col(column: Int, node: GridPane.() -> Node) {
         val row = this
         val child = row.gridPane.node()
-        setIndices(child, row.index, column)
+        child.setIndices(row.index, column)
     }
 
     inline fun GridPane.row(index: Int, function: Row.() -> Unit) {
         Row(index, this).function()
     }
 
-    fun getIndices(it: Node): Coord {
-        return GridPane.getRowIndex(it) to GridPane.getColumnIndex(it)
+    fun Node.getIndices(): Coord {
+        return GridPane.getRowIndex(this) to GridPane.getColumnIndex(this)
     }
 
-    fun setIndices(child: Node, row: Int, column: Int) {
-        GridPane.setRowIndex(child, row)
-        GridPane.setColumnIndex(child, column)
+    fun Node.setIndices(row: Int, column: Int) {
+        GridPane.setRowIndex(this, row)
+        GridPane.setColumnIndex(this, column)
     }
 
-    fun setIndices(child: Node, coord: Coord) {
-        GridPane.setRowIndex(child, coord.first)
-        GridPane.setColumnIndex(child, coord.second)
+    fun Node.setIndices(coord: Coord) {
+        GridPane.setRowIndex(this, coord.first)
+        GridPane.setColumnIndex(this, coord.second)
     }
 
-    fun <T : GridPane> transpose(t: T): T {
-        t.children.forEach {
-            val (row, col) = getIndices(it)
-            setIndices(it, col, row)
+    fun <T : GridPane> T.transpose(): T {
+        children.forEach {
+            val (row, col) = it.getIndices()
+            it.setIndices(col, row)
         }
 
-        return t
+        return this
     }
-
 }

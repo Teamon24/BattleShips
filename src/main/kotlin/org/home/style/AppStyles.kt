@@ -1,6 +1,5 @@
 package org.home.style
 
-import javafx.geometry.Pos
 import javafx.scene.Cursor
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
@@ -15,7 +14,7 @@ import javafx.scene.paint.Color.PINK
 import javafx.scene.paint.Color.RED
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Color.rgb
-import javafx.scene.paint.Paint
+import org.home.style.ColorUtils.color
 import org.home.style.ColorUtils.withOpacity
 import org.home.style.CssUtils.background
 import org.home.style.CssUtils.border
@@ -51,16 +50,22 @@ class AppStyles : Stylesheet() {
     )
 
     companion object {
-        private val String.color get() = Paint.valueOf(this) as Color
         private const val targetIconPath = "/icons/target-3699.svg"
 
         val chosenCellColor = "#085191".color.withOpacity(0.7)
-        val readyPlayerCellColor: Color = MEDIUMSEAGREEN
+        val missCellColor = "A4A5A6FF".color
+        val hitCellColor = ORANGERED
+        val titleCellColor = LIGHTSLATEGRAY
+        val sunkCellColor = BLACK
+        val readyColor: Color = MEDIUMSEAGREEN
         val wrongCellColor: Color = RED
         val buttonColor = "EAE5E5FF".color
+        val defeatedCellColor = PINK
+        val defeatedTitleCellColor = "A93638F4".color
+
 
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
-        val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyPlayerCellColor, BLACK)
+        val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyColor, BLACK)
 
         private const val fontName = "JetBrainsMono-Light.ttf"
 
@@ -159,7 +164,7 @@ class AppStyles : Stylesheet() {
         shipsTypesInfoPane + background(rgb(58, 132, 192, 0.35)) + margin(10.px)
 
         //---- buttons style -------------------------------------------------------------------------------------------
-        readyButton + background(readyPlayerCellColor) + text(WHITE)
+        readyButton + background(readyColor) + text(WHITE)
 
         //---- grids style ---------------------------------------------------------------------------------------------
         centerGrid          + center
@@ -168,15 +173,15 @@ class AppStyles : Stylesheet() {
         animationGridMargin + gridMargin(10.px)
 
         //---- fleet  cells style --------------------------------------------------------------------------------------
-        sunkCell          + background(BLACK)
-        chosenCell        + background(chosenCellColor)  + text(WHITE) + noBorder
-        titleCell         + background(LIGHTSLATEGRAY)   + text(WHITE) + border
-        defeatedTitleCell + background("A93638F4".color) + text(WHITE)
+        sunkCell          + background(sunkCellColor)
+        defeatedTitleCell + background(defeatedTitleCellColor) + text(WHITE)
+        chosenCell        + background(chosenCellColor)  + noBorder    + text(WHITE)
+        titleCell         + background(titleCellColor)   + border      + text(WHITE)
         incorrectCell     + background(wrongCellColor)   + noBorder
         animationCell     + background(chosenCellColor)  + noBorder
-        missCell          + background("A4A5A6FF".color) + border
-        hitCell           + background(ORANGERED)        + border
-        defeatedCell      + background(PINK)             + border
+        missCell          + background(missCellColor)    + border
+        hitCell           + background(hitCellColor)     + border
+        defeatedCell      + background(defeatedCellColor)             + border
 
 
         val shipBorderCellColor = RED

@@ -1,6 +1,7 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
+import org.home.mvc.model.Coord
 import org.home.mvc.model.Ships
 import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
@@ -10,11 +11,15 @@ import tornadofx.addClass
 
 class FleetGrid : GridPane() {
 
+    fun cell(cell: Coord): FleetCell {
+        return getCell(cell) as FleetCell
+    }
+
     fun addFleetCellClass(cssRule: CssRule) = onEachFleetCells { it.addClass(cssRule) }
     fun addTitleCellClass(cssRule: CssRule) = onEachTitleCells { it.addClass(cssRule) }
 
     fun addShips(ships: Ships): FleetGrid {
-        ships.forEach { ship -> ship.forEach { getCell(it).addSelectionColor() } }
+        ships.forEach { ship -> ship.forEach { cell(it).addSelectionColor() } }
         return this
     }
 
@@ -33,7 +38,7 @@ class FleetGrid : GridPane() {
             .asSequence()
             .filterIsInstance<FleetCell>()
             .filter {
-                val (row, col) = getIndices(it)
+                val (row, col) = it.getIndices()
                 row > 0 && col > 0
             }
             .forEach {
@@ -46,7 +51,7 @@ class FleetGrid : GridPane() {
             .asSequence()
             .filterIsInstance<FleetCell>()
             .filter {
-                val (row, col) = getIndices(it)
+                val (row, col) = it.getIndices()
                 row == 0 || col == 0
             }
             .forEach {

@@ -70,12 +70,12 @@ class BattleView : AbstractGameView("Battle View") {
 
     internal val currentPlayerFleetReadinessPane = currentPlayerFleetReadinessPane(currentPlayer)
     private fun currentPlayerFleetReadinessPane(player: String) =
-        shipsTypesPaneController.shipTypesPane(player).transpose().apply { leftPadding(10) }
+        shipsTypesPaneController.shipTypesPane(player).transposed().apply { leftPadding(10) }
 
     private val selectedEnemyLabel: Label
 
     private fun enemyFleetReadinessPane(player: String) =
-        shipsTypesPaneController.shipTypesPane(player).transpose().flip().apply { rightPadding(10) }
+        shipsTypesPaneController.shipTypesPane(player).transposed().flip().apply { rightPadding(10) }
 
     internal val enemiesFleetGridsPanes = hashMapOf<String, FleetGrid>()
 
@@ -247,8 +247,8 @@ class BattleView : AbstractGameView("Battle View") {
 
             cell(2, 1) {
                 battleStartButton(if (applicationProperties.isServer) "В бой" else "Готов") {
-                    if (!applicationProperties.isServer) isDisable = true
-                    updateStyle(this@BattleView)
+                    isDisable = true
+
                     action {
                        log { "battleController: ${battleController.name}" }
                        battleController.startBattle()

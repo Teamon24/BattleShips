@@ -1,41 +1,26 @@
 package org.home.mvc.view.battle.subscriptions
 
-import org.home.mvc.contoller.events.ShipWasHit
-import org.home.mvc.contoller.events.ThereWasAMiss
-import org.home.mvc.contoller.events.ThereWasAShot
-import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.GridPaneExtensions.getCell
-import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
-import org.home.mvc.view.openMessageWindow
-import org.home.mvc.contoller.server.action.HasAShot
-import org.home.style.AppStyles
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-
+import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ShipWasSunk
+import org.home.mvc.contoller.events.ThereWasAMiss
+import org.home.mvc.contoller.events.ThereWasAShot
+import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
-import org.home.mvc.model.isRightNextTo
-import org.home.utils.log
+import org.home.mvc.model.getRightNextTo
+import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.fleet.FleetGrid
+import org.home.mvc.view.openMessageWindow
+import org.home.style.AppStyles.Companion.hitCellColor
+import org.home.style.AppStyles.Companion.missCellColor
+import org.home.style.AppStyles.Companion.sunkCellColor
+import org.home.style.StyleUtils.fillBackground
 import org.home.utils.logEvent
-import tornadofx.addClass
 
-internal fun BattleView.shipWasHit() {
-    subscribe<ShipWasHit> { event ->
-        logEvent(event, model)
-        model.addShot(event.hasAShot)
-        processShot(event) { shot.markHit(it) }
-    }
-}
-
-internal fun BattleView.thereWasAMiss() {
-    subscribe<ThereWasAMiss> { event ->
-        logEvent(event, model)
-        model.addShot(event.hasAShot)
-        processShot(event) { shot.markMiss(it) }
-    }
-}
+internal fun BattleView.shipWasHit() = subscribe<ShipWasHit>(::markHit)
+internal fun BattleView.thereWasAMiss() = subscribe<ThereWasAMiss>(::markMiss)
 
 internal fun BattleView.shipWasSunk() {
     subscribe<ShipWasSunk> { event ->
@@ -47,27 +32,22 @@ internal fun BattleView.shipWasSunk() {
     }
 }
 
+fun markMiss(fleetGrid: FleetGrid, shot: Coord) = fleetGrid.cell(shot).fillBackground(to = missCellColor)
+fun markHit (fleetGrid: FleetGrid, shot: Coord) = fleetGrid.cell(shot).fillBackground(to = hitCellColor)
 
-fun Coord.markMiss(fleetGrid: FleetGrid) {
-    fleetGrid.getCell(this).addClass(AppStyles.missCell)
-}
+fun FleetGrid.markSunk(shot: Coord) = cell(shot).fillBackground(to = sunkCellColor)
+fun FleetGrid.markSunk(sunkShip: Collection<Coord>) = sunkShip.forEach { markSunk(it) }
 
-fun Coord.markHit(fleetGrid: FleetGrid) {
-    fleetGrid.getCell(this).removeAnyColor().addClass(AppStyles.hitCell)
-}
-
-fun Coord.markSunk(fleetGrid: FleetGrid) {
-    log { "marking as sunk - $this" }
-    fleetGrid.getCell(this).removeAnyColor().addClass(AppStyles.sunkCell)
-}
-
-fun Collection<Coord>.markSunk(fleetGrid: FleetGrid) {
-    forEach { it.markSunk(fleetGrid) }
+private inline fun <reified E: ThereWasAShot> BattleView.subscribe(crossinline markShot: (FleetGrid, Coord) -> Unit) {
+    subscribe<E> { event ->
+        logEvent(event, model)
+        model.addShot(event.hasAShot)
+        processShot(event, markShot)
+    }
 }
 
 private inline fun BattleView.processShot(event: ThereWasAShot,
-                                          crossinline markShot: HasAShot.(FleetGrid) -> Unit
-) {
+                                          markShot: (FleetGrid, Coord) -> Unit) {
     event {
         hasAShot {
             val message = when (target == currentPlayer) {
@@ -82,7 +62,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
                 else -> enemiesFleetGridsPanes[target]!!
             }
 
-            markShot(fleetGrid)
+            markShot(fleetGrid, hasAShot.shot)
         }
     }
 }
@@ -103,20 +83,22 @@ private fun BattleView.processSunk(event: ThereWasAShot) {
                 else -> enemiesFleetGridsPanes[target]!!
             }
 
-            shot.markSunk(fleetGrid)
-            hashSetOf<Coord>().also {
-                getRightNextTo(shot, it)
-                it.markSunk(fleetGrid)
+            fleetGrid{
+                markSunk(shot)
+                hashSetOf<Coord>().also {
+                    model.getRightNextTo(shot, it)
+                    markSunk(it)
+                }
             }
         }
     }
 }
 
-private fun BattleView.getRightNextTo(
+private fun BattleModel.getRightNextTo(
     coord: Coord,
     container: MutableSet<Coord>
 ) {
-    var tempCont = getRightNextTo(coord)
+    var tempCont = getHits().getRightNextTo(coord)
     if (container.containsAll(tempCont)) return
     container.addAll(tempCont)
 
@@ -125,6 +107,4 @@ private fun BattleView.getRightNextTo(
     }
 }
 
-private fun BattleView.getRightNextTo(pair: Coord): MutableList<Coord> {
-    return model.getHits().filter { it.isRightNextTo(pair) }.toMutableList()
-}
+

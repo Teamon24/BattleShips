@@ -28,12 +28,13 @@ import java.net.SocketTimeoutException
 import kotlin.concurrent.thread
 
 sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
+    protected val sleepTime = 50L
     abstract val name: String
     protected val multiServer: MultiServer<M, S> by di()
     private lateinit var thread: Thread
     internal val canProceed = true.atomic
-    abstract fun run()
 
+    abstract fun run()
     fun start() {
         canProceed(true)
         thread = thread(start = false, name = name, block = this::run)
@@ -42,26 +43,25 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
                 logTitle("$name is STARTED")
             }
     }
+
     fun interrupt() {
         canProceed(false)
         log { "interrupting $name" }
         thread.interrupt()
     }
-
     val isAlive get() = thread.isAlive
-    val isInterrupted get() = thread.isInterrupted
 
+    val isInterrupted get() = thread.isInterrupted
     fun onSocketException(socket: S) = multiServer.onDisconnect(socket)
 }
 
-
 class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
-    override val name get() = "connector"
 
+    override val name get() = "connector"
     override fun run() {
         multiServer {
             loop {
-                Thread.sleep(100)
+                Thread.sleep(sleepTime)
                 sockets.add(accept().withTimeout(readTimeout))
                 log { "waiting for connection permission ..." }
                 connectionBarrier().await()
@@ -79,11 +79,11 @@ class ConnectionsListener<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
 @Suppress("UNCHECKED_CAST")
 class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
-    override val name get() = "receiver"
 
+    override val name get() = "receiver"
     override fun run() {
         multiServer {
-            Thread.sleep(25)
+            Thread.sleep(sleepTime)
             sockets.receiveInLoop { socket, messages ->
                 logReceive(socket, messages)
                 socketsMessages.add(socket to messages.drop(1) as Collection<M>)
@@ -113,7 +113,7 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
     override fun run() {
         multiServer {
             loop {
-                Thread.sleep(100)
+                Thread.sleep(sleepTime)
                 val (socket, messages) = socketsMessages.take()
 
                 socket.isNotClosed {

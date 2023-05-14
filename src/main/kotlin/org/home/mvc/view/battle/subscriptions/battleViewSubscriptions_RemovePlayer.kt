@@ -1,30 +1,38 @@
 package org.home.mvc.view.battle.subscriptions
 
 import home.extensions.AnysExtensions.invoke
-import org.home.mvc.contoller.events.HasAPlayer
-import org.home.mvc.contoller.events.PlayerLeaved
-import org.home.mvc.contoller.events.PlayerWasDefeated
-import org.home.mvc.contoller.events.PlayerWasDisconnected
-import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
+import org.home.mvc.contoller.events.HasAPlayer
+import org.home.mvc.contoller.events.PlayerLeaved
+import org.home.mvc.contoller.events.PlayerWasDefeated
+import org.home.mvc.contoller.events.PlayerWasDisconnected
+import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.BattleButton
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
 import org.home.mvc.view.components.backSlide
 import org.home.mvc.view.components.transferTo
+import org.home.mvc.view.fleet.FleetGrid
+import org.home.mvc.view.openMessageWindow
+import org.home.style.AppStyles.Companion.defeatedCellColor
 import org.home.style.AppStyles.Companion.defeatedTitleCell
+import org.home.style.AppStyles.Companion.defeatedTitleCellColor
+import org.home.style.AppStyles.Companion.sunkCellColor
+import org.home.style.StyleUtils.backgroundColor
+import org.home.style.StyleUtils.fillBackground
+import org.home.style.StyleUtils.textColor
+import org.home.style.TransitionDSL.filling
+import org.home.style.TransitionDSL.transition
 import org.home.utils.logEvent
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.button
+import tornadofx.style
 
 internal fun BattleView.playerWasDisconnected() {
     subscribeToRemove<PlayerWasDisconnected> {
@@ -55,16 +63,29 @@ internal fun BattleView.playerWasDefeated() {
                 }
 
             fleetGrid
-                .addTitleCellClass(defeatedTitleCell)
-                .onEachFleetCells { fleetCell ->
-                    fleetCell.coord
+                .onEachTitleCells { fleetCell ->
+                    fleetCell.style {
+                        filling(fleetCell) {
+                            millis = 150
+                            transition(fleetCell.backgroundColor, defeatedTitleCellColor) { backgroundColor += it }
+                            transition(fleetCell.textColor, sunkCellColor) { textFill = it }
+                        }
+                    }
+                }
+                .onEachFleetCells {
+                    it.coord
                         .notIn(getShotsAt(defeated))
-                        .so { fleetCell.addClass(AppStyles.defeatedCell) }
+                        .so {
+                            it.fillBackground(to = defeatedCellColor)
+                        }
                 }
 
             fleetReadiness
                 .getTypeLabels()
-                .forEach { it.addClass(defeatedTitleCell) }
+                .forEach {
+                    it.fillBackground(it.backgroundColor, defeatedTitleCellColor)
+                }
+
 
             openMessageWindow {
                 val args = when (defeated.isCurrent) {
@@ -118,7 +139,7 @@ private fun BattleView.removePlayer(player: String) {
 fun BattleView.updateLeaveBattleFieldButton() {
     val buttonIndices = battleViewExitButtonIndices
     root {
-        children.removeIf { getIndices(it) == buttonIndices }
+        children.removeIf { it.getIndices() == buttonIndices }
 
         cell(buttonIndices.first, buttonIndices.second) {
             button(leaveBattleFieldText) {

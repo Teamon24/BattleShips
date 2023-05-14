@@ -60,6 +60,11 @@ class ShotProcessingComponent: AbstractGameBean() {
             .otherwise {
                 val hitShip = ships.removeAndGetBy(shot)
 
+                when(hitShip.isEmpty) {
+                    true -> onSinking(SinkingAction(action))
+                    else -> onHit(HitAction(action))
+                }
+
                 ships.isEmpty {
                     playerTurnComponent.remove(target)
                     val shooter = action.player
@@ -74,13 +79,7 @@ class ShotProcessingComponent: AbstractGameBean() {
                     eventbus(PlayerWasDefeated(defeatAction) )
                     return@onShotAtServer
                 }
-
-                when(hitShip.isEmpty) {
-                    true -> onSinking(SinkingAction(action))
-                    else -> onHit(HitAction(action))
-                }
             }
-
     }
 
     fun onSinking(sinkingAction: SinkingAction) {

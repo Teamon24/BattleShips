@@ -1,9 +1,11 @@
 package org.home.style
 
 import javafx.scene.paint.Color
+import javafx.scene.paint.Paint
 
 object ColorUtils {
-    fun Color.brighter(i: Int) = apply { repeat(i) { this.brighter() } }
+    val String.color get() = Paint.valueOf(this) as Color
+    val Paint.color get() = this as Color
 
     fun Color.withOpacity(d: Double): Color {
         return Color.color(red, green, blue, d)
