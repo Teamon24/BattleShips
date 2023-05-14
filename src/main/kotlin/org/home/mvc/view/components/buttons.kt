@@ -104,7 +104,6 @@ class BattleStartButton(text: String): Button(text) {
     }
 
     private fun fillTransition(from: Color, to: Color, textFrom: Color, textTo: Color, onFinish: () -> Unit) {
-        background = Background(BackgroundFill(from, null, null))
         style {
             filling(thisButton) {
                 millis = startButtonTransitionTime

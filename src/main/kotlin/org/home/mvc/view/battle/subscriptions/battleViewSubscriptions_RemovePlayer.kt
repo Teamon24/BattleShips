@@ -17,7 +17,7 @@ import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.components.BattleButton
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
-import org.home.mvc.view.components.backSlide
+import org.home.mvc.view.components.Transit
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
@@ -154,7 +154,7 @@ fun BattleView.updateLeaveBattleFieldButton() {
                 }
                 action {
                     battleController.onBattleViewExit()
-                    transferTo<AppView>(backSlide)
+                    transferTo<AppView>(Transit.BACKWARD)
                 }
             }.also {
                 battleViewExitButton = it

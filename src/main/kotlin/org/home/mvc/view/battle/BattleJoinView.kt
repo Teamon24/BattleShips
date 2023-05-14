@@ -14,7 +14,6 @@ import org.home.mvc.view.components.GridPaneExtensions.col
 import org.home.mvc.view.components.GridPaneExtensions.row
 import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.battleButton
-import org.home.mvc.view.components.forwardSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
 import org.home.mvc.contoller.server.action.Action
@@ -53,7 +52,7 @@ class BattleJoinView : AbstractGameView("Присоединиться к бит�
                         val (ip, port) = extract()
                         battleClient.connect(ip, port)
                         awaitConditions.fleetSettingsReceived.await()
-                        currentView.transferTo<BattleView>(forwardSlide)
+                        currentView.transferTo<BattleView>()
                     } catch (e: Exception) {
                         e.printStackTrace()
                         openAlertWindow {

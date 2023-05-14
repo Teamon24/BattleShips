@@ -5,6 +5,8 @@ import javafx.scene.layout.GridPane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.util.Duration
+import org.home.mvc.ApplicationProperties.Companion.appViewAnimationCellSize
+import org.home.mvc.ApplicationProperties.Companion.appViewAnimationTime
 import org.home.mvc.view.components.GridPaneExtensions
 import org.home.mvc.view.components.GridPaneExtensions.getCell
 import org.home.mvc.view.components.GridPaneExtensions.getIndices
@@ -34,7 +36,7 @@ object Animations {
             init {
                 alignment = Pos.CENTER
                 addClass(AppStyles.animationGridMargin)
-                val cellSize = 40.0
+                val cellSize = appViewAnimationCellSize
                 (1..rows).doubleFor { row, col ->
                     GridPaneExtensions.cell(row, col) {
                         Rectangle(cellSize, cellSize)
@@ -43,7 +45,7 @@ object Animations {
                             .also { addChildIfPossible(it) }
                     }
                 }
-                randomCellFill(this, 30000.0)
+                randomCellFill(this, appViewAnimationTime)
             }
         }
     }

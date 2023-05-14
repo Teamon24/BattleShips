@@ -18,7 +18,7 @@ import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.backSlide
+import org.home.mvc.view.components.Transit.BACKWARD
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.components.transitTo
 import org.home.mvc.view.openMessageWindow
@@ -95,7 +95,7 @@ internal fun BattleView.battleIsStarted() {
 
         battleViewExitButton.action {
             battleController.leaveBattle()
-            transitTo<AppView>(backSlide)
+            transitTo<AppView>(BACKWARD)
         }
 
         model.readyPlayers.clear()
@@ -140,6 +140,6 @@ internal fun BattleView.serverTransferReceived() {
                 }
             }
         }
-        transferTo<NewServerView>(backSlide)
+        transferTo<NewServerView>(BACKWARD)
     }
 }

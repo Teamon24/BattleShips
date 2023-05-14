@@ -12,7 +12,6 @@ import java.util.*
 class ApplicationProperties(private val appPropsFileName: String = "application") {
 
     private val Any?.asString get() = this as String?
-
     private val Any?.asInt get() = asString?.toInt()
     private val Any?.asBool get() = asString?.toBoolean()
 
@@ -74,14 +73,15 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     operator fun <T> get(property: String) = props[property] as T
 
     companion object {
+        //properties names
         private const val isServerProperty = "isServer"
         private const val gameTypeProperty = "gameType"
         private const val portProperty = "port"
         private const val currentPlayerProperty = "currentPlayer"
         private const val isToNotifyAllProperty = "isToNotifyAll"
 
+        //ui
         const val connectionButtonText = "Подключиться"
-
         const val squareSize = "квадрат"
         const val widthFieldLabel = "ширина"
         const val heightFieldLabel = "высота"
@@ -90,22 +90,26 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val leaveBattleFieldText = "Покинуть поле боя"
         const val leaveBattleText = "Покинуть бой"
         const val exitText = "Выход"
-
         const val ipAddressFieldLabel = "ip"
         const val backButtonText = "Назад"
         const val createNewGameButtonText = "Создать"
         const val joinButtonText = "Присоединиться"
 
-        const val transitionSteps = 50
-
+        //fleet grid values
         const val incorrectCellRemovingTime = 100L
 
+        //transitions
+        const val transitionSteps = 50
         const val fillingTransitionTime = 150L
         const val startButtonTransitionTime = 150L
         const val leaveBattleFieldButtonTransitionTime = 150L
         const val defeatFillTransitionTime = 150L
-
         const val buttonHoverTransitionTime = 50L
+
+        //app view animation
+        const val appViewAnimationGridSize = 40
+        const val appViewAnimationCellSize = 40.0
+        const val appViewAnimationTime = 30000.0
     }
 }
 
