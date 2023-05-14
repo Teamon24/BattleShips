@@ -6,6 +6,8 @@ import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.mvc.AppView
+import org.home.mvc.ApplicationProperties.Companion.defeatFillTransitionTime
+import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
@@ -19,18 +21,18 @@ import org.home.mvc.view.components.backSlide
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
+import org.home.style.AppStyles.Companion.buttonColor
 import org.home.style.AppStyles.Companion.defeatedCellColor
-import org.home.style.AppStyles.Companion.defeatedTitleCell
 import org.home.style.AppStyles.Companion.defeatedTitleCellColor
 import org.home.style.AppStyles.Companion.sunkCellColor
 import org.home.style.StyleUtils.backgroundColor
 import org.home.style.StyleUtils.fillBackground
 import org.home.style.StyleUtils.textColor
+import org.home.style.StyleUtils.textFillTransition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
 import org.home.utils.logEvent
 import tornadofx.action
-import tornadofx.addClass
 import tornadofx.button
 import tornadofx.style
 
@@ -66,7 +68,7 @@ internal fun BattleView.playerWasDefeated() {
                 .onEachTitleCells { fleetCell ->
                     fleetCell.style {
                         filling(fleetCell) {
-                            millis = 150
+                            millis = defeatFillTransitionTime
                             transition(fleetCell.backgroundColor, defeatedTitleCellColor) { backgroundColor += it }
                             transition(fleetCell.textColor, sunkCellColor) { textFill = it }
                         }
@@ -143,7 +145,13 @@ fun BattleView.updateLeaveBattleFieldButton() {
 
         cell(buttonIndices.first, buttonIndices.second) {
             button(leaveBattleFieldText) {
-                addClass(defeatedTitleCell)
+                style {
+                    filling(this@button) {
+                        millis = leaveBattleFieldButtonTransitionTime
+                        transition(buttonColor, defeatedTitleCellColor) { backgroundColor += it }
+                        textFillTransition()
+                    }
+                }
                 action {
                     battleController.onBattleViewExit()
                     transferTo<AppView>(backSlide)

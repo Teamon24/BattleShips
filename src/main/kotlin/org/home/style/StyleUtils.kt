@@ -7,6 +7,9 @@ import javafx.scene.Parent
 import javafx.scene.control.Labeled
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
+import javafx.scene.paint.Color.BLACK
+import javafx.scene.paint.Color.WHITE
+import org.home.mvc.ApplicationProperties.Companion.fillingTransitionTime
 import org.home.style.ColorUtils.color
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
@@ -29,11 +32,14 @@ object StyleUtils {
     fun Region.filling(from: Color, to: Color, cssProp: InlineCss.(Color) -> Unit) {
         style {
             filling(this@filling) {
-                millis = 100
+                millis = fillingTransitionTime
                 transition(from, to, cssProp)
             }
         }
     }
+
+    fun Transition.textFillTransition() = transition(BLACK, WHITE) { textFill = it }
+    fun Transition.textFillBackTransition() = transition(WHITE, BLACK) { textFill = it }
 
     fun Node.addChildrenClass(vararg cssRule: CssRule) {
         this.getChildList()?.forEach {

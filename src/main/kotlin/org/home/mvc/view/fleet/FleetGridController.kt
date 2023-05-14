@@ -10,7 +10,7 @@ import javafx.scene.input.MouseDragEvent.MOUSE_RELEASED
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
-import org.home.mvc.ApplicationProperties.Companion.delayTime
+import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
@@ -110,7 +110,7 @@ class FleetGridController : AbstractGameBean() {
         if (dragged()) {
             event.logCoordinate()
             threadScopeLaunch {
-                delay(delayTime)
+                delay(incorrectCellRemovingTime)
                 removeAnyColor(currentShip.filter { it !in ships.flatten() })
                 ships.forEach { removeIncorrectColor(it) }
                 currentShip.clear()

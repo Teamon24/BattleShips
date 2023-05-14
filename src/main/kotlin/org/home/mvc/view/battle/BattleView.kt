@@ -2,8 +2,11 @@ package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
+import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.exclude
+import javafx.collections.ListChangeListener
 import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -52,6 +55,7 @@ import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
 import org.home.utils.log
+import tornadofx.ChangeListener
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.flowpane
@@ -125,14 +129,26 @@ class BattleView : AbstractGameView("Battle View") {
 
         model {
 
-            listOf(turn, defeatedPlayers).forEach {
+            listOf(turn, defeatedPlayers, readyPlayers).forEach {
                 it.addListener { _, _, new -> new?.run { playersListView.refresh() } }
             }
 
-            playersReadiness.addValueListener {
-                battleStartButton.updateStyle(this@BattleView)
-                playersListView.refresh()
-            }
+            readyPlayers.addListener(ListChangeListener { change ->
+                applicationProperties.isServer.thus {
+                    battleStartButton.updateStyle(this@BattleView)
+                } otherwise {
+                    change.next()
+                    val player = when {
+                        change.wasAdded() -> change.addedSubList[0]
+                        change.wasRemoved() -> change.removed[0]
+                        else -> throw RuntimeException("\"readyPlayers\" list underwent unappropriate operation")
+                    }
+
+                    if (currentPlayer == player) {
+                        battleStartButton.updateStyle(this@BattleView)
+                    }
+                }
+            })
 
             players
                 .exclude(currentPlayer)
@@ -248,7 +264,6 @@ class BattleView : AbstractGameView("Battle View") {
             cell(2, 1) {
                 battleStartButton(if (applicationProperties.isServer) "В бой" else "Готов") {
                     isDisable = true
-
                     action {
                        log { "battleController: ${battleController.name}" }
                        battleController.startBattle()

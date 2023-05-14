@@ -7,7 +7,7 @@ import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
-import org.home.mvc.ApplicationProperties.Companion.delayTime
+import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
@@ -131,7 +131,7 @@ class FleetGridHandlers(
                 }
 
                 threadScopeLaunch {
-                    delay(delayTime)
+                    delay(incorrectCellRemovingTime)
                     toRemove.forEach { gridPane.getCell(it).removeIncorrectColor() }
                     gridPane.removeIncorrectColor(beingConstructed)
                     beingConstructed.clear()
@@ -206,7 +206,7 @@ class FleetGridHandlers(
                     gridPane.removeSelectionColor(filter)
                     gridPane.addIncorrectColor(filter)
                     gridPane.addBorderColor(border)
-                    delay(delayTime)
+                    delay(incorrectCellRemovingTime)
                     gridPane.removeAnyColor(filter)
                     gridPane.removeBorderColor(border)
                     startWithinBorder(false)

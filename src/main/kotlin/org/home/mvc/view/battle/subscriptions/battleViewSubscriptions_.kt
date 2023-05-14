@@ -98,9 +98,7 @@ internal fun BattleView.battleIsStarted() {
             transitTo<AppView>(backSlide)
         }
 
-        model.playersReadiness {
-            mapValuesTo(this) { false }
-        }
+        model.readyPlayers.clear()
 
         battleStartButton.hide()
 

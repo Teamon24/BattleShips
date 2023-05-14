@@ -1,6 +1,7 @@
 package org.home.mvc.view.battle.subscriptions
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.BooleansExtensions.so
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
@@ -35,14 +36,15 @@ private fun BattleView.processFleetEdit(
 
     event {
         model {
-            player.isCurrent {
-                battleController.send(action(shipType, currentPlayer))
-            }
-
             updateFleetReadiness(event)
-            if (player.isCurrent && player.addedAllShips()) {
-                setReadiness(player)
-                battleController.send(createReadinessAction(player))
+            battleController.send {
+                player.isCurrent {
+                    + action(shipType, currentPlayer)
+                    player.addedAllShips {
+                        setReadiness(player)
+                        + createReadinessAction(player)
+                    }
+                }
             }
         }
     }

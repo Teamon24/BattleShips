@@ -101,7 +101,7 @@ class BattleModel : ViewModel {
     val players = emptySimpleListProperty<String>().apply { logOnChange("players") }
     val defeatedPlayers = emptySimpleListProperty<String>().apply { logOnChange("defeated") }
 
-    val playersReadiness = ObservableValueMap<String, Boolean>().apply { logOnChange() }
+    val readyPlayers = emptySimpleListProperty<String>().apply { logOnChange("ready players") }
 
     val playersAndShips = emptySimpleMapProperty<String, Ships>()
         .notifyOnChange()
@@ -167,7 +167,7 @@ class BattleModel : ViewModel {
                     change.wasRemoved() -> {
                         player {
                             removeFrom(players)
-                            removeFrom(playersReadiness)
+                            removeFrom(readyPlayers)
                             removeFrom(fleetsReadiness)
                             removeFrom(defeatedPlayers)
                             log { "removed \"$this\"" }
@@ -211,11 +211,20 @@ class BattleModel : ViewModel {
         return decks == shouldBe
     }
 
-    fun hasReady(player: String) = playersReadiness[player]!!
+    inline fun String.addedAllShips(onTrue: () -> Unit) = addedAllShips().so(onTrue)
 
-    fun setReady(player: String) { playersReadiness[player] = true }
-    fun setNotReady(player: String) { playersReadiness[player] = false }
-    fun setReadiness(player: String, ready: Boolean) { playersReadiness[player] = ready }
+    fun hasReady(player: String) = player in readyPlayers
+
+    fun setReady(player: String) { readyPlayers.add(player) }
+    fun setNotReady(player: String) { readyPlayers.remove(player) }
+
+    fun setReadiness(player: String, ready: Boolean) {
+        when {
+            ready -> setReady(player)
+            else -> setNotReady(player)
+        }
+    }
+
     fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
 
     fun hasAWinner() = players.size - defeatedPlayers.size == 1
@@ -233,24 +242,16 @@ class BattleModel : ViewModel {
     fun String.ships() = playersAndShips[this]!!
 
     private fun <T> SimpleListProperty<T>.logOnChange(name: String) {
-        addListener(ListChangeListener {
-            log { "$name - ${it.list}" }
-        })
+        addListener(ListChangeListener { log { "$name - ${it.list}" } })
     }
 
     private fun ObservableValueMap<String, Boolean>.logOnChange() {
         addValueListener {
-            log { "playersReadiness: ${this@BattleModel.playersReadiness}" }
+            log { "ready players - ${this@BattleModel.readyPlayers}" }
         }
     }
 }
 
-val BattleModel.notAllReady get() =
-    playersReadiness.any(::isNotReady) || (playersReadiness.size != playersNumber.value)
-
-val BattleModel.allAreReady get() = playersReadiness.all(::isReady) && playersReadiness.size == playersNumber.value
-val BattleModel.thoseAreReady get() = playersReadiness.filter(::isReady).keys.toSet()
-
-private fun isReady(it: Map.Entry<String, Boolean>) = it.value
-private fun isNotReady(it: Map.Entry<String, Boolean>) = !it.value
-
+inline val BattleModel.allAreReady get() = readyPlayers.size == playersNumber.value
+//SimpleListProperty readyPlayer не сериализуется, поэтому - toMutableList
+inline val BattleModel.thoseAreReady get() = readyPlayers.toMutableList()

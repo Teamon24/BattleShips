@@ -59,7 +59,7 @@ class AppStyles : Stylesheet() {
         val sunkCellColor = BLACK
         val readyColor: Color = MEDIUMSEAGREEN
         val wrongCellColor: Color = RED
-        val buttonColor = "EAE5E5FF".color
+        val buttonColor = "E8E3E4FF".color
         val defeatedCellColor = PINK
         val defeatedTitleCellColor = "A93638F4".color
 

@@ -95,7 +95,17 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val backButtonText = "Назад"
         const val createNewGameButtonText = "Создать"
         const val joinButtonText = "Присоединиться"
-        const val delayTime = 100L
+
+        const val transitionSteps = 50
+
+        const val incorrectCellRemovingTime = 100L
+
+        const val fillingTransitionTime = 150L
+        const val startButtonTransitionTime = 150L
+        const val leaveBattleFieldButtonTransitionTime = 150L
+        const val defeatFillTransitionTime = 150L
+
+        const val buttonHoverTransitionTime = 50L
     }
 }
 

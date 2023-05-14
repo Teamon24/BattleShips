@@ -18,7 +18,8 @@ object FleetGridStyleComponent {
             AppStyles.hitCell,
             AppStyles.incorrectCell,
             AppStyles.shipBorderCell,
-            AppStyles.titleCell)
+            AppStyles.titleCell
+        )
 
     fun Node.addSelectionColor() =  addClass(AppStyles.chosenCell)
     fun Node.addIncorrectColor() =  addClass(AppStyles.incorrectCell)

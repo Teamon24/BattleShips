@@ -1,6 +1,7 @@
 package org.home.utils
 
 import home.extensions.BooleansExtensions.invoke
+import home.extensions.CollectionsExtensions.isNotEmpty
 import org.home.mvc.contoller.server.isNotClosed
 import org.home.net.server.Message
 import org.home.net.server.MessagesDSL.Messages
@@ -26,7 +27,7 @@ object SocketUtils {
         }
 
     fun Socket.send(message: Message) = send(withInfo(message))
-    fun Socket.send(messages: Collection<Message>) = send(withInfo(messages))
+    fun Socket.send(messages: Collection<Message>) = messages.isNotEmpty { send(withInfo(messages)) }
 
     fun <T: Message, S: Socket> Collection<S>.send(message: T) = forEach { it.send(withInfo(message)) }
     fun <T: Message, S: Socket> Collection<S>.send(messages: Collection<T>) = forEach { it.send(messages) }

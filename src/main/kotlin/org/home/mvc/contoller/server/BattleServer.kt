@@ -6,6 +6,7 @@ import home.extensions.AtomicBooleansExtensions.invoke
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.CollectionsExtensions.exclude
+import home.extensions.CollectionsExtensions.isNotEmpty
 import org.home.app.AbstractApp.Companion.newGame
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
@@ -26,7 +27,6 @@ import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.BattleModel
-import org.home.mvc.model.thoseAreReady
 import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.AreReadyAction
@@ -54,6 +54,7 @@ import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
+import org.home.mvc.model.thoseAreReady
 import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
@@ -197,7 +198,9 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                         +FleetSettingsAction(model)
                         +ConnectionsAction(players.exclude(connected))
                         +fleetsReadinessExcept(connected, model)
-                        +AreReadyAction(thoseAreReady)
+                        readyPlayers.isNotEmpty {
+                            +AreReadyAction(thoseAreReady)
+                        }
                     }
                 }
             }

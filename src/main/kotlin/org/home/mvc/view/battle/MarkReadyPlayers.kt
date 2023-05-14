@@ -4,7 +4,6 @@ import javafx.scene.control.ListCell
 import javafx.scene.control.ListView
 import javafx.util.Callback
 import org.home.mvc.model.BattleModel
-import org.home.mvc.model.thoseAreReady
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.currentPlayerListViewColors
 import org.home.style.AppStyles.Companion.enemyListViewColors
@@ -39,7 +38,7 @@ class MarkReadyPlayers(val model: BattleModel) : Callback<ListView<String>, List
                         textFill = when {
                             turn.value == text -> turnColor
                             text in defeatedPlayers -> defeatedColor
-                            text in thoseAreReady -> readyColor
+                            text in readyPlayers -> readyColor
                             else -> defaultColor
                         }
                     }

@@ -10,12 +10,14 @@ import home.extensions.BooleansExtensions.then
 import home.extensions.BooleansExtensions.yes
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
+import org.home.mvc.ApplicationProperties.Companion.transitionSteps
+import org.home.style.Transition.ColorComponent
 import org.home.style.Transition.ColorComponent.RED
 import org.home.style.Transition.ColorComponent.GREEN
 import org.home.style.Transition.ColorComponent.BLUE
 import org.home.style.Transition.ColorComponent.OPACITY
-import org.home.style.Transition.Step.DECR
-import org.home.style.Transition.Step.INCR
+import org.home.style.Transition.StepOperation.DECR
+import org.home.style.Transition.StepOperation.INCR
 import org.home.utils.log
 import tornadofx.InlineCss
 import tornadofx.onHover
@@ -23,6 +25,7 @@ import tornadofx.runLater
 import tornadofx.style
 import kotlin.concurrent.thread
 import kotlin.math.abs
+
 class FillTransition(region: Region): Transition(region) {
     override fun enable() {
         colorCounters = colorIncrementors
@@ -31,10 +34,7 @@ class FillTransition(region: Region): Transition(region) {
     }
 
     override fun getCounter() = 0
-
-    override fun getColors(): MutableList<Color> {
-        return transitionInfo.map { it.first }.toMutableList()
-    }
+    override fun getColors() = colorTransitionInfo.map { it.first }.toMutableList()
 }
 
 class HoverTransition(region: Region) : Transition(region) {
@@ -58,64 +58,56 @@ class HoverTransition(region: Region) : Transition(region) {
         }
     }
 
-    override fun getCounter(): Int {
-        return hovered then 0 or steps
-    }
+    override fun getCounter() = hovered then 0 or steps
 
-    override fun getColors(): MutableList<Color> {
-        return when(hovered) {
-            true -> transitionInfo.map { it.first }.toMutableList()
-            else -> transitionInfo.map { it.second }.toMutableList()
-        }
+    override fun getColors() = when(hovered) {
+        true -> colorTransitionInfo.map { it.first }.toMutableList()
+        else -> colorTransitionInfo.map { it.second }.toMutableList()
     }
 }
 
-abstract class Transition {
-    @JvmInline
-    value class FromTo(val fromTo: Pair<Color, Color>)
+typealias ColorComponentKey = Pair<ColorComponent, ColorTransition>
+typealias ColorStep = Double
+typealias ColorComponentValue = Double
+typealias ColorTransition = Pair<Color, Color>
+typealias ColorCounter = (Color) -> Color
+typealias ColorCounters = MutableList<ColorCounter>
 
-    enum class ColorComponent(val getter: Color.() -> Double) {
+abstract class Transition(protected val region: Region) {
+
+    enum class ColorComponent(val getter: Color.() -> ColorComponentValue) {
         RED({red}),
         GREEN({green}),
         BLUE({blue}),
         OPACITY({opacity})
     }
 
-    enum class Step { INCR, DECR }
+    enum class StepOperation { INCR, DECR }
 
-    protected val region: Region
-    protected val transitionInfo: MutableList<Pair<Color, Color>>
-    protected val steps = 50
+    protected val steps = transitionSteps
+
     var millis = 0L
         set(value) {
             field = value
             stepSleep = (value / steps)
         }
 
-    private var stepSleep: Long
+    private var stepSleep = (millis / steps)
 
-    protected val colorIncrementors: MutableList<(Color) -> Color>
-    protected val colorDecrementors: MutableList<(Color) -> Color>
-    private val transformations: MutableList<InlineCss.(Color) -> Unit>
-    private val colorSteps: HashMap<Pair<ColorComponent, FromTo>, Double>
+    protected val colorTransitionInfo: MutableList<ColorTransition> = mutableListOf()
+    protected val colorIncrementors: ColorCounters = mutableListOf()
+    protected val colorDecrementors: ColorCounters = mutableListOf()
+    protected var colorCounters: ColorCounters = mutableListOf()
 
-    private var thread: Thread? = null
+    private val cssProps: MutableList<InlineCss.(Color) -> Unit> = mutableListOf()
+    private val colorSteps: HashMap<ColorComponentKey, ColorStep> = hashMapOf()
 
     protected var disabled = false.atomic
     protected var isPlaying = false.atomic
     protected lateinit var counter: (Int) -> Int
-    protected var colorCounters: MutableList<(Color) -> Color>
+    private var onFinish: () -> Unit = {}
 
-    constructor(region: Region) {
-        this.region = region
-        transitionInfo = mutableListOf()
-        stepSleep = (millis / steps)
-        colorIncrementors = mutableListOf()
-        colorDecrementors = mutableListOf()
-        transformations = mutableListOf()
-        colorSteps = hashMapOf()
-        colorCounters = mutableListOf()
-    }
+    private var thread: Thread? = null
 
     abstract fun enable()
     abstract fun getCounter(): Int
@@ -124,20 +116,20 @@ abstract class Transition {
     private fun getColorInc(from: Color, to: Color) = { c: Color -> c.incr(from, to) }
     private fun getColorDecr(from: Color, to: Color) = { c: Color -> c.decr(from, to) }
 
-    fun add(fromTo: Pair<Color, Color>, cssProp: InlineCss.(Color) -> Unit) {
-        transitionInfo.add(fromTo)
+    fun add(colorTransition: ColorTransition, cssProp: InlineCss.(Color) -> Unit) {
+        colorTransitionInfo.add(colorTransition)
+        cssProps.add(cssProp)
 
-        val from = fromTo.first
-        val to = fromTo.second
+        val from = colorTransition.first
+        val to = colorTransition.second
 
         colorIncrementors.add(getColorInc(from, to))
         colorDecrementors.add(getColorDecr(from, to))
-        transformations.add(cssProp)
 
-        colorSteps[RED      to FromTo(fromTo)] = abs(from.red     - to.red) / steps
-        colorSteps[GREEN    to FromTo(fromTo)] = abs(from.green   - to.green) / steps
-        colorSteps[BLUE     to FromTo(fromTo)] = abs(from.blue    - to.blue) / steps
-        colorSteps[OPACITY  to FromTo(fromTo)] = abs(from.opacity - to.opacity) / steps
+        colorSteps[RED      to colorTransition] = abs(from.red     - to.red) / steps
+        colorSteps[GREEN    to colorTransition] = abs(from.green   - to.green) / steps
+        colorSteps[BLUE     to colorTransition] = abs(from.blue    - to.blue) / steps
+        colorSteps[OPACITY  to colorTransition] = abs(from.opacity - to.opacity) / steps
     }
 
     private fun Color.incr(from: Color, to: Color): Color {
@@ -158,25 +150,25 @@ abstract class Transition {
         )
     }
 
-    private fun Color.decrement(component: ColorComponent, from: Color, to: Color) =
-        makeAStep(component, DECR, from, to)
+    private fun Color.decrement(comp: ColorComponent, from: Color, to: Color) = makeAStep(comp, DECR, from, to)
+    private fun Color.increment(comp: ColorComponent, from: Color, to: Color) = makeAStep(comp, INCR, from, to)
 
-    private fun Color.increment(component: ColorComponent, from: Color, to: Color) =
-        makeAStep(component, INCR, from, to)
+    private fun Color.makeAStep(component: ColorComponent,
+                                counter: StepOperation,
+                                from: Color,
+                                to: Color): ColorComponentValue {
 
-    private fun Color.makeAStep(component: ColorComponent, counter: Step, from: Color, to: Color): Double {
-
-        val colorStep = colorSteps[component to FromTo(from to to)]!!
+        val colorStep = colorSteps[component to (from to to)]!!
         val getComponent = component.getter
 
         return when (counter) {
             INCR -> when(from.getComponent() < to.getComponent()) {
-                true -> 1.0.coerceAtMost(getComponent() + colorStep)
-                else -> 0.0.coerceAtLeast(getComponent() - colorStep)
+                true -> 1.0.coerceAtMost(this.getComponent() + colorStep)
+                else -> 0.0.coerceAtLeast(this.getComponent() - colorStep)
             }
             DECR -> when(from.getComponent() < to.getComponent()) {
-                true -> 0.0.coerceAtLeast(getComponent() - colorStep)
-                else -> 1.0.coerceAtMost(getComponent() + colorStep)
+                true -> 0.0.coerceAtLeast(this.getComponent() - colorStep)
+                else -> 1.0.coerceAtMost(this.getComponent() + colorStep)
             }
         }
     }
@@ -214,7 +206,7 @@ abstract class Transition {
 
             runLater {
                 region.style {
-                    transformations.zip(colors).forEach { (transformation, color) ->
+                    cssProps.zip(colors).forEach { (transformation, color) ->
                         transformation(color)
                     }
                 }
@@ -225,5 +217,10 @@ abstract class Transition {
 
         isPlaying(false)
         log { "${this.name} is finished" }
+        onFinish()
+    }
+
+    fun onFinish(function: () -> Unit) {
+        this.onFinish = function
     }
 }
