@@ -7,7 +7,7 @@ import org.home.app.AbstractApp.Companion.newGame
 
 class ShipsTypesPaneController: AbstractGameBean() {
 
-    private val component: ShipTypePaneComponent by newGame()
+    private val component: ShipsTypesPaneComponent by newGame()
 
     fun shipTypesPaneControl(): ShipsTypesPane {
         return ShipsTypesPane().apply {

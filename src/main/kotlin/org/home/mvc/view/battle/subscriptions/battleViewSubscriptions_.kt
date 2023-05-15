@@ -102,7 +102,7 @@ internal fun BattleView.battleIsStarted() {
 
         battleStartButton.hide()
 
-        restoreCurrentPlayerFleetGrid()
+        updateCurrentPlayerFleetGrid()
 
         //НАЙТИ КАК УДАЛИТЬ EventHandler'ы у FleetGreed
         openMessageWindow { "Бой начался" }

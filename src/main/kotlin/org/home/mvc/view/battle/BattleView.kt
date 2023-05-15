@@ -55,7 +55,6 @@ import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
 import org.home.utils.log
-import tornadofx.ChangeListener
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.flowpane
@@ -96,7 +95,7 @@ class BattleView : AbstractGameView("Battle View") {
         return this
     }
 
-    internal fun restoreCurrentPlayerFleetGrid() {
+    internal fun updateCurrentPlayerFleetGrid() {
         currentPlayerFleetGridPane.center =
             fleetGridController
                 .fleetGrid()
@@ -116,6 +115,7 @@ class BattleView : AbstractGameView("Battle View") {
         }
 
         selectedEnemyLabel = label(selectionModel.selectedItemProperty())
+        this.refresh()
     }
 
     internal lateinit var battleViewExitButton: Button
@@ -189,7 +189,8 @@ class BattleView : AbstractGameView("Battle View") {
         super.exit()
     }
 
-    val battleViewExitButtonIndices = 2 to 0
+    private val battleViewExitButtonRow = 2
+    val battleViewExitButtonIndices = battleViewExitButtonRow to 0
 
     init {
         subscriptions {
@@ -214,6 +215,8 @@ class BattleView : AbstractGameView("Battle View") {
         }
 
         root = centerGrid {
+            initRow(battleViewExitButtonIndices)
+
             addClass(AppStyles.debugClass)
             row(0) {
                 col(0) {
@@ -252,37 +255,39 @@ class BattleView : AbstractGameView("Battle View") {
                     }
                 }
             }
+        }
+    }
 
-            cell(battleViewExitButtonIndices.first, battleViewExitButtonIndices.second) {
-                backTransitButton<AppView>(this@BattleView) {
-                    battleController.onBattleViewExit()
-                }.also {
-                    battleViewExitButton = it
-                }
+    private fun GridPane.initRow(indices: Pair<Int, Int>) {
+        val row = indices.first
+        cell(row, indices.second) {
+            backTransitButton<AppView>(this@BattleView) {
+                battleController.onBattleViewExit()
+            }.also {
+                battleViewExitButton = it
             }
+        }
 
-            cell(2, 1) {
-                battleStartButton(if (applicationProperties.isServer) "В бой" else "Готов") {
-                    isDisable = true
-                    action {
-                       log { "battleController: ${battleController.name}" }
-                       battleController.startBattle()
-                    }
-                }.also {
-                    battleStartButton = it
+        cell(row, 1) {
+            battleStartButton(if (applicationProperties.isServer) "В бой" else "Готов") {
+                isDisable = true
+                action {
+                    log { "battleController: ${battleController.name}" }
+                    battleController.startBattle()
                 }
+            }.also {
+                battleStartButton = it
+                battleStartButton.updateStyle(this@BattleView)
             }
         }
     }
 
-
     internal fun addNewFleet(connectedPlayer: String) {
-        model.playersAndShips[connectedPlayer] = mutableListOf()
+        model.initShips(connectedPlayer)
         addSelectedPlayer(connectedPlayer)
         addEnemyFleetGrid(connectedPlayer)
         addEnemyFleetReadinessPane(connectedPlayer)
     }
-
 
     private fun addSelectedPlayer(player: String) {
         model.selectedPlayer {
@@ -349,9 +354,9 @@ class BattleView : AbstractGameView("Battle View") {
         currentPlayerFleetGridPane
             .addClass(AppStyles.currentPlayerCell)
             .also { add(it) }
-            .also {
-                applicationProperties.ships?.apply {
-                    (it.center as FleetGrid).addShips(this)
+            .also { pane ->
+                model.shipsOf(currentPlayer).let {
+                    (pane.center as FleetGrid).addShips(it)
                 }
             }
 

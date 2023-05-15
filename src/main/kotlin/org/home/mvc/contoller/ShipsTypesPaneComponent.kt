@@ -20,7 +20,7 @@ import tornadofx.addClass
 import tornadofx.onChange
 import tornadofx.runLater
 
-class ShipTypePaneComponent: AbstractGameBean() {
+class ShipsTypesPaneComponent: AbstractGameBean() {
     private fun lastShipType() = model.shipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
     fun addShipTypeButton(gridPane: GridPane) {

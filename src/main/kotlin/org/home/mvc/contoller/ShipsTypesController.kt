@@ -1,6 +1,7 @@
 package org.home.mvc.contoller
 
 
+import home.extensions.AnysExtensions.name
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.eventbus
@@ -33,9 +34,10 @@ class ShipsTypesController: AbstractGameBean() {
             .onEach { ship -> shipsTypes[ship.size] = shipsTypes[ship.size]?.minus(1) }
             .forEach {
                 model.shipsOf(currentPlayer).addIfAbsent(it.copy())
-                log { "after addition ${ships.joinToString(",")}" }
+                log { "${this.name} ships addition ${ships.joinToString(",")}" }
+
                 eventbus {
-                    +ShipWasAdded(it.size, currentPlayer)
+                    +ShipWasAdded(currentPlayer, it.size)
                 }
             }
 
@@ -50,7 +52,7 @@ class ShipsTypesController: AbstractGameBean() {
                     +ShipWasDeleted(it.size, currentPlayer)
                 }
                 model.shipsOf(currentPlayer).remove(it)
-                log { "after deletion $ships" }
+                log { "${this.name} ships deletion ${ships.joinToString(",")}" }
             }
     }
 }

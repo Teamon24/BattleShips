@@ -37,11 +37,8 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     abstract fun run()
     fun start() {
         canProceed(true)
-        thread = thread(start = false, name = name, block = this::run)
-            .apply {
-                start()
-                logTitle("$name is STARTED")
-            }
+        thread = thread(name = name, block = ::run)
+        logTitle("$name is STARTED")
     }
 
     fun interrupt() {

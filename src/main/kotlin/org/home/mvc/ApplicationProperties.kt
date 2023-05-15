@@ -33,9 +33,6 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
                             ships.asCollection().ship { it.asCoord() } } }
                 ?.let { props["ships"] = it }
 
-            props[portProperty] = props[portProperty].asInt!!
-            props[isToNotifyAllProperty] = props[isToNotifyAllProperty].asBool!!
-
             logging {
                 ln("\"${appPropsFileName}.properties\"")
                 props.entries.logEach { "${it.key} = ${it.value}" }
@@ -54,13 +51,12 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     val size: Int get() = props["size"].asInt!!
     val maxShipType: Int get() = props["maxShipType"].asInt!!
     val playersNumber: Int get() = props["playersNumber"].asInt!!
-    val ships: Ships? get() = props["ships"] as Ships?
+    val port: Int get() = props[portProperty].asInt!!
+    val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty].asBool!!
 
     val ip: String get() = props["ip"] as String
-    val port: Int get() = props["port"] as Int
-
+    val ships: Ships? get() = props["ships"] as Ships?
     val currentPlayer: String get() = props[currentPlayerProperty] as String
-    val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty] as Boolean
 
     var isServer: Boolean = false
         set(value) {
@@ -107,7 +103,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val buttonHoverTransitionTime = 50L
 
         //app view animation
-        const val appViewAnimationGridSize = 40
+        const val appViewAnimationGridSize = 20
         const val appViewAnimationCellSize = 40.0
         const val appViewAnimationTime = 30000.0
     }

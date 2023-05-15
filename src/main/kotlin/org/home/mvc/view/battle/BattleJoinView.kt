@@ -23,7 +23,6 @@ import tornadofx.textfield
 
 class BattleJoinView : AbstractGameView("Присоединиться к битве") {
     private val battleClient: BattleController<Action> by di()
-    private val awaitConditions: AwaitConditions by newGame()
 
     private val ipAddress = SimpleStringProperty().apply {
         value = "${applicationProperties.ip}:${applicationProperties.port}"
@@ -48,7 +47,6 @@ class BattleJoinView : AbstractGameView("Присоединиться к бит�
                     try {
                         val (ip, port) = extract()
                         battleClient.connect(ip, port)
-                        awaitConditions.fleetSettingsReceived.await()
                         currentView.transferTo<BattleView>()
                     } catch (e: Exception) {
                         e.printStackTrace()

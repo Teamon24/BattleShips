@@ -63,7 +63,6 @@ class AppStyles : Stylesheet() {
         val defeatedCellColor = PINK
         val defeatedTitleCellColor = "A93638F4".color
 
-
         val currentPlayerListViewColors = PlayerListViewColors(DARKCYAN, DARKRED, DARKGREEN, GREY)
         val enemyListViewColors = PlayerListViewColors(chosenCellColor, RED, readyColor, BLACK)
 
@@ -170,7 +169,7 @@ class AppStyles : Stylesheet() {
         animationCell     + background(chosenCellColor)        + noBorder
         hitCell           + background(hitCellColor)           + border
         defeatedCell      + background(defeatedCellColor)      + border
-        missCell          + radius(fleetCellSize.value/4)      + border
+        missCell          + radius(fleetCellSize / 4)          + border
 
         val shipBorderCellColor = RED
         (shipBorderCell + background(shipBorderCellColor.withOpacity(0.3))) {
