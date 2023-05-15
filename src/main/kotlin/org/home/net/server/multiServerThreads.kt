@@ -79,11 +79,13 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
 
     override val name get() = "receiver"
     override fun run() {
+
         multiServer {
             Thread.sleep(sleepTime)
             sockets.receiveInLoop { socket, messages ->
                 logReceive(socket, messages)
                 socketsMessages.add(socket to messages.drop(1) as Collection<M>)
+                log { "added to queue - $messages" }
             } ignore {
                 SocketTimeoutException::class
             } stopOn {
@@ -92,7 +94,7 @@ class MessageReceiver<M: Message, S: Socket>: MultiServerThread<M, S>() {
                 +SocketException::class
                 +EOFException::class
                 handle { ex, socket ->
-                    logError(ex)
+                    logError(ex, stackTrace = true)
                     socket {
                         removeFrom(sockets)
                         isNotClosed { close() }
@@ -112,13 +114,12 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
             loop {
                 Thread.sleep(sleepTime)
                 val (socket, messages) = socketsMessages.take()
+                log { "taken - $messages" }
 
-                socket.isNotClosed {
-                    messages.forEach { message ->
-                        when (message) {
-                            is Ping -> Unit
-                            else -> process(socket, message)
-                        }
+                messages.forEach { message ->
+                    when (message) {
+                        is Ping -> Unit
+                        else -> process(socket, message)
                     }
                 }
             } stopOn {

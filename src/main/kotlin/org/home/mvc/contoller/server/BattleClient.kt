@@ -34,6 +34,7 @@ import org.home.mvc.contoller.server.action.BattleContinuationAction
 import org.home.mvc.contoller.server.action.ConnectionAction
 import org.home.mvc.contoller.server.action.DefeatAction
 import org.home.mvc.contoller.server.action.FleetSettingsAction
+import org.home.mvc.contoller.server.action.FleetsReadinessAction
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.LeaveAction
 import org.home.mvc.contoller.server.action.MissAction
@@ -44,7 +45,6 @@ import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.event
 import org.home.mvc.model.areDestroyed
-import org.home.mvc.model.logShips
 import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.Message
 import org.home.net.server.Ping
@@ -95,8 +95,20 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
         output = serverSocket.getOutputStream()
         input = serverSocket.getInputStream()
         log { "connected to $ip:$port" }
-        send(ConnectionAction(currentPlayer))
-        listen()
+        send {
+            +ConnectionAction(currentPlayer)
+            model.hasReady(currentPlayer) {
+
+                val fleetReadiness = model
+                    .fleetsReadiness[currentPlayer]!!
+                    .map { it.key to it.value.value }
+                    .toMap()
+
+                +ReadyAction(currentPlayer)
+                +FleetsReadinessAction(mapOf(currentPlayer to fleetReadiness))
+            }
+            listen()
+        }
     }
 
     @Throws(IOException::class)

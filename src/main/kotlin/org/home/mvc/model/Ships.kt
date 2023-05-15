@@ -6,6 +6,7 @@ import org.home.utils.log
 
 typealias Ships = MutableCollection<Ship>
 inline fun Ships.areDestroyed(onTrue: () -> Unit) = isEmpty.so(onTrue)
+fun Ships.copy() = map { ship -> ship.copy() }.toMutableList()
 
 class Ship
 constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
@@ -18,28 +19,19 @@ constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>
 
     fun crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
 
-    private fun crosses(another: Ship): Boolean {
-        return this.any { deck -> deck in another }
-    }
+    private fun crosses(another: Ship) = any { deck -> deck in another }
 
-    fun withBorder(): HashSet<Coord> {
-        return this
-            .flatMap { it.border() }
-            .toHashSet()
-    }
+    fun withBorder() = flatMap { it.border() }.toHashSet()
 
     fun addIfAbsent(coord: Coord) {
-        this.find { it == coord } ?: this.add(coord)
+        find { it == coord } ?: this.add(coord)
     }
 
-    fun border(rows: Int, cols: Int): HashSet<Coord> {
-        return this
-            .flatMap { it.border() }
+    fun border(rows: Int, cols: Int) =
+        flatMap { it.border() }
             .filter { it.first <= rows && it.second <= cols }
             .filter { it.first >= 1 && it.second >= 1 }
             .toHashSet().also { it.removeAll(this) }
-    }
-
 }
 
 
@@ -56,7 +48,6 @@ fun Ships.removeAndGetBy(shot: Coord): Ship {
 }
 
 fun Coord.withinAnyBorder(ships: Collection<Ship>) = ships.any { ship -> ship.withBorder().contains(this) }
-
 fun Coord.withinAnyBorder(vararg ships: Ship) = ships.any { ship -> ship.withBorder().contains(this) }
 
 fun Ships.addIfAbsent(ship: Ship) {

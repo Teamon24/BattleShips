@@ -18,5 +18,5 @@ fun main() {
 class AnimationCheck: AbstractApp<My2View>(My2View::class)
 
 class My2View: View() {
-    override val root = appViewAnimationGrid(50)
+    override val root = appViewAnimationGrid(50, 50)
 }

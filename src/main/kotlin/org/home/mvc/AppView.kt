@@ -5,7 +5,8 @@ import javafx.geometry.Pos
 import org.home.app.Animations.appViewAnimationGrid
 import org.home.app.di.Scopes
 import org.home.app.di.Scopes.inScope
-import org.home.mvc.ApplicationProperties.Companion.appViewAnimationGridSize
+import org.home.mvc.ApplicationProperties.Companion.appViewAnimationGridHeight
+import org.home.mvc.ApplicationProperties.Companion.appViewAnimationGridWidth
 import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.mvc.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.model.BattleModel
@@ -38,7 +39,10 @@ class AppView : View("Sea Battle") {
                 content = gridpane {
 
                     cell(0, 0) {
-                        appViewAnimationGrid(appViewAnimationGridSize).also { add(it); }
+                        appViewAnimationGrid(
+                            appViewAnimationGridWidth,
+                            appViewAnimationGridHeight
+                        ).also { add(it); }
                     }
 
                     cell(0, 0) {

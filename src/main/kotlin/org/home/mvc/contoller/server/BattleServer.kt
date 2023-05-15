@@ -15,6 +15,7 @@ import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.FleetEditEvent
+import org.home.mvc.contoller.events.FleetsReadinessReceived
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
@@ -158,6 +159,12 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             is ConnectionAction -> onConnect(socket, action)
             is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
+            is FleetsReadinessAction -> {
+                eventbus { +FleetsReadinessReceived(action) }
+                action.states.keys.forEach { player ->
+                    excluding(player).send(action)
+                }
+            }
 
             is ShipAdditionAction -> processFleetEdit(action, ::ShipWasAdded)
             is ShipDeletionAction -> processFleetEdit(action, ::ShipWasDeleted)

@@ -3,6 +3,7 @@ package org.home.mvc
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
 import org.home.mvc.model.Ships
+import org.home.mvc.model.copy
 import org.home.mvc.model.ship
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import org.home.utils.logEach
@@ -31,7 +32,11 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
                         .asArray()
                         .map { ships ->
                             ships.asCollection().ship { it.asCoord() } } }
-                ?.let { props["ships"] = it }
+                ?.let { ships ->
+                    props["ships"] = ships
+                    props["size"] = (ships.maxOf { it.size } + 2).toString()
+                    props["maxShipType"] = (ships.maxOf { it.size }).toString()
+                }
 
             logging {
                 ln("\"${appPropsFileName}.properties\"")
@@ -55,7 +60,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty].asBool!!
 
     val ip: String get() = props["ip"] as String
-    val ships: Ships? get() = props["ships"] as Ships?
+    val ships: Ships? get() = (props["ships"] as Ships?)?.copy()
     val currentPlayer: String get() = props[currentPlayerProperty] as String
 
     var isServer: Boolean = false
@@ -103,7 +108,8 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val buttonHoverTransitionTime = 50L
 
         //app view animation
-        const val appViewAnimationGridSize = 20
+        const val appViewAnimationGridWidth = 20
+        const val appViewAnimationGridHeight = 10
         const val appViewAnimationCellSize = 40.0
         const val appViewAnimationTime = 30000.0
     }

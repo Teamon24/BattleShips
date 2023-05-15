@@ -14,6 +14,9 @@ import home.extensions.AnysExtensions.removeFrom
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.yes
 import home.extensions.CollectionsExtensions.exclude
+import home.extensions.CollectionsExtensions.hasElements
+import home.extensions.CollectionsExtensions.isEmpty
+import javafx.collections.ObservableMap
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.server.action.HitAction
@@ -21,6 +24,7 @@ import org.home.utils.extensions.ObservableValueMap
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
 import org.home.mvc.view.battle.subscriptions.NewServerInfo
+import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.extensions.addMapChange
 import org.home.utils.log
 import tornadofx.ViewModel
@@ -29,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 typealias PlayersAndShips = SimpleMapProperty<String, MutableCollection<Ship>>
 typealias ShipsTypes = SimpleMapProperty<Int, Int>
-typealias FleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>
+private typealias FleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>
 typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
 
 class BattleModel : ViewModel() {
@@ -83,9 +87,20 @@ class BattleModel : ViewModel() {
 
     //SHIPS TYPES
     val fleetsReadiness = FleetsReadiness()
+
     val shipsTypes = emptySimpleMapProperty<Int, Int>()
         .updateFleetReadiness()
         .putInitials()
+
+    fun copyShipsTypes(): ObservableMap<Int, Int> {
+        val copy = shipsTypes.copy()
+        applicationProperties.ships?.let { ships ->
+            ships.forEach {
+                copy[it.size] = copy[it.size]!! - 1
+            }
+        }
+        return copy
+    }
 
     //PLAYERS
     val players = emptySimpleListProperty<String>().logOnChange("players")
@@ -102,36 +117,32 @@ class BattleModel : ViewModel() {
 
     fun getWinner(): String = players.first { it !in defeatedPlayers }
 
-    fun lastButNotDefeated(player: String) = player !in defeatedPlayers &&
-            defeatedPlayers.containsAll(players.exclude(player, currentPlayer))
-
     val playersAndShips = emptySimpleMapProperty<String, Ships>()
         .notifyOnChange()
         .putInitials()
 
     private fun PlayersAndShips.notifyOnChange() = apply {
-        addListener(
-            MapChangeListener { change ->
-                val player = change.key
-                when {
-                    change.wasAdded() -> {
-                        players.add(player)
-                        setNotReady(player)
-                        fleetsReadiness[player] = initFleetsReadiness(shipsTypes)
-                        log { "added \"$player\"" }
-                    }
+        addMapChange { change ->
+            val player = change.key
+            when {
+                change.wasAdded() -> {
+                    players.add(player)
+                    setNotReady(player)
+                    fleetsReadiness[player] = initFleetsReadiness(shipsTypes)
+                    log { "added \"$player\"" }
+                }
 
-                    change.wasRemoved() -> {
-                        player {
-                            removeFrom(players)
-                            removeFrom(readyPlayers)
-                            removeFrom(fleetsReadiness)
-                            removeFrom(defeatedPlayers)
-                            log { "removed \"$this\"" }
-                        }
+                change.wasRemoved() -> {
+                    player {
+                        removeFrom(players)
+                        removeFrom(readyPlayers)
+                        removeFrom(fleetsReadiness)
+                        removeFrom(defeatedPlayers)
+                        log { "removed \"$this\"" }
                     }
                 }
-            })
+            }
+        }
     }
 
 
@@ -155,8 +166,7 @@ class BattleModel : ViewModel() {
     private fun PlayersAndShips.putInitials(): PlayersAndShips {
         applicationProperties.ships?.let { ships ->
             set(currentPlayer, ships)
-            width.value = ships.maxOf { it.size } + 2
-            height.value = width.value
+            log { "init ships from app props - $ships" }
             fleetsReadiness {
                 val initialFleetReadiness = fleetReadiness(ships)
                 if (initialFleetReadiness == shipsTypes) {
@@ -226,6 +236,7 @@ class BattleModel : ViewModel() {
     inline fun String.addedAllShips(onTrue: () -> Unit) = addedAllShips().so(onTrue)
 
     fun hasReady(player: String) = player in readyPlayers
+    inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
 
     fun setReady(player: String) { readyPlayers.add(player) }
     fun setNotReady(player: String) { readyPlayers.remove(player) }

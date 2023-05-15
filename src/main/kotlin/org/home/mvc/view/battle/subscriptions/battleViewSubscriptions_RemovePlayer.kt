@@ -31,6 +31,7 @@ import org.home.style.StyleUtils.textColor
 import org.home.style.StyleUtils.textFillTransition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
+import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.action
 import tornadofx.button
@@ -124,16 +125,11 @@ private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
 private fun BattleView.removePlayer(player: String) {
     model {
 
-        lastButNotDefeated(player)
-            .and(currentPlayer !in defeatedPlayers)
-            .and(battleIsStarted)
-            .so {
-                battleController.endBattle()
-            }
-
         playersAndShips.remove(player)
+        hasAWinner().and(battleIsStarted).so {
+            battleController.endBattle()
+        }
         removeEnemyFleet(player)
-
         hasOnePlayerLeft().so { battleController.disconnect() }
     }
 }

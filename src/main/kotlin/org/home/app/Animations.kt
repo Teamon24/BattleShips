@@ -31,18 +31,20 @@ object Animations {
     private fun random(incl: Double, excl: Double) = Random().nextDouble(incl, excl)
     private const val twoPi = 2 * PI
 
-    fun appViewAnimationGrid(rows: Int): GridPane {
+    fun appViewAnimationGrid(rows: Int, cols: Int): GridPane {
         return object : GridPane() {
             init {
                 alignment = Pos.CENTER
                 addClass(AppStyles.animationGridMargin)
                 val cellSize = appViewAnimationCellSize
-                (1..rows).doubleFor { row, col ->
-                    GridPaneExtensions.cell(row, col) {
-                        Rectangle(cellSize, cellSize)
-                            .addClass(AppStyles.animationCell)
-                            .addClass(AppStyles.fleetLabel)
-                            .also { addChildIfPossible(it) }
+                (1..cols).forEach { col ->
+                    (1..rows).forEach { row ->
+                        GridPaneExtensions.cell(col, row) {
+                            Rectangle(cellSize, cellSize)
+                                .addClass(AppStyles.animationCell)
+                                .addClass(AppStyles.fleetLabel)
+                                .also { addChildIfPossible(it) }
+                        }
                     }
                 }
                 randomCellFill(this, appViewAnimationTime)
