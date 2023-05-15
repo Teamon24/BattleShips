@@ -2,12 +2,13 @@ package org.home.mvc.view.battle
 
 import javafx.beans.property.SimpleStringProperty
 import org.home.app.AbstractApp.Companion.newGame
+import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.AbstractGameView
-import org.home.mvc.AppView
 import org.home.mvc.view.components.GridPaneExtensions.cell
 import org.home.mvc.view.components.GridPaneExtensions.centerGrid
 import org.home.mvc.view.components.GridPaneExtensions.col
@@ -16,10 +17,7 @@ import org.home.mvc.view.components.backTransitButton
 import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.mvc.contoller.server.action.Action
-import org.home.style.AppStyles
 import tornadofx.action
-import tornadofx.addClass
 import tornadofx.label
 import tornadofx.textfield
 
@@ -39,7 +37,6 @@ class BattleJoinView : AbstractGameView("Присоединиться к бит�
     }
 
     override val root = centerGrid {
-        addClass(AppStyles.form)
         row(0) {
             col(0) { label(ipAddressFieldLabel) }
             col(1) { textfield(ipAddress) }

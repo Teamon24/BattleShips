@@ -35,6 +35,10 @@ object CssUtils {
         }
         }
 
+    fun radius(value: Double): CssSelectionBlock.() -> Unit {
+        return { backgroundRadius += box(value.px) }
+    }
+
     fun gridMargin(dimension: LinearUnits): CssSelectionBlock.() -> Unit {
         return { hgap = dimension
             vgap = hgap }

@@ -1,7 +1,7 @@
 package org.home.mvc
 
 import javafx.event.EventTarget
-import javafx.scene.layout.VBox
+import javafx.geometry.Pos
 import org.home.app.Animations.appViewAnimationGrid
 import org.home.app.di.Scopes
 import org.home.app.di.Scopes.inScope
@@ -18,22 +18,22 @@ import org.home.mvc.view.components.PannableScrollPane.Companion.pannableScrollP
 import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.exitButton
 import org.home.mvc.view.components.transferTo
-import org.home.style.AppStyles
+import tornadofx.Form
 import tornadofx.View
 import tornadofx.action
-import tornadofx.addClass
 import tornadofx.gridpane
 import java.awt.Dimension
 import kotlin.math.roundToInt
 
 class AppView : View("Sea Battle") {
 
-    override val root = VBox()
+    override val root = Form()
     private val applicationProperties: ApplicationProperties by di()
 
     init {
+
         with(root) {
-            addClass(AppStyles.form)
+            alignment = Pos.CENTER
             pannableScrollPane {
                 content = gridpane {
 

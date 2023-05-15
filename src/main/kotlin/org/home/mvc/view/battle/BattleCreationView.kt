@@ -37,11 +37,9 @@ import org.home.mvc.view.components.battleButton
 import org.home.mvc.view.components.exitButton
 import org.home.mvc.view.components.transferTo
 import org.home.mvc.view.openAlertWindow
-import org.home.style.AppStyles
 import tornadofx.ChangeListener
 import tornadofx.Form
 import tornadofx.action
-import tornadofx.addClass
 import tornadofx.label
 import tornadofx.textfield
 
@@ -49,9 +47,9 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
     private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
     private val battleController: BattleController<Action> by di()
 
-    override val root = Form()
-        .addClass(AppStyles.form)
-        .apply { title = battleFieldCreationMenuTitle }
+    override val root = Form().apply {
+        title = battleFieldCreationMenuTitle
+    }
 
     private val ip = applicationProperties.ip
     private val freePort = applicationProperties.port

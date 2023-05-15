@@ -14,10 +14,12 @@ import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles.Companion.hitCellColor
+import org.home.style.AppStyles.Companion.missCell
 import org.home.style.AppStyles.Companion.missCellColor
 import org.home.style.AppStyles.Companion.sunkCellColor
 import org.home.style.StyleUtils.fillBackground
 import org.home.utils.logEvent
+import tornadofx.addClass
 
 internal fun BattleView.shipWasHit() = subscribe<ShipWasHit>(::markHit)
 internal fun BattleView.thereWasAMiss() = subscribe<ThereWasAMiss>(::markMiss)
@@ -32,7 +34,12 @@ internal fun BattleView.shipWasSunk() {
     }
 }
 
-fun markMiss(fleetGrid: FleetGrid, shot: Coord) = fleetGrid.cell(shot).fillBackground(to = missCellColor)
+fun markMiss(fleetGrid: FleetGrid, shot: Coord) =
+    fleetGrid
+        .cell(shot)
+        .apply { addClass(missCell) }
+        .fillBackground(to = missCellColor)
+
 fun markHit (fleetGrid: FleetGrid, shot: Coord) = fleetGrid.cell(shot).fillBackground(to = hitCellColor)
 
 fun FleetGrid.markSunk(shot: Coord) = cell(shot).fillBackground(to = sunkCellColor)

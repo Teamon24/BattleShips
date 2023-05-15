@@ -26,6 +26,7 @@ import org.home.style.CssUtils.jetBrainFont
 import org.home.style.CssUtils.margin
 import org.home.style.CssUtils.noBorder
 import org.home.style.CssUtils.padding
+import org.home.style.CssUtils.radius
 import org.home.style.CssUtils.square
 import org.home.style.CssUtils.text
 import tornadofx.CssRule
@@ -39,7 +40,6 @@ import tornadofx.mixin
 import tornadofx.px
 import java.net.URI
 
-@Suppress("MAGIC_NUMBER")
 class AppStyles : Stylesheet() {
 
     class PlayerListViewColors(
@@ -88,7 +88,6 @@ class AppStyles : Stylesheet() {
 
         const val fleetBorderWidth = 0.5
 
-        val form by cssclass()
         val fleetGrid by cssclass()
 
         val shipTypeLabel by cssclass()
@@ -104,7 +103,6 @@ class AppStyles : Stylesheet() {
         val titleCell by cssclass()
 
         val incorrectCell by cssclass()
-        val fieldSize by cssclass()
 
         val chosenCell by cssclass()
         val sunkCell by cssclass()
@@ -129,10 +127,6 @@ class AppStyles : Stylesheet() {
     }
 
     init {
-        fieldSize {
-            maxWidth = 400.px
-            maxHeight = 400.px
-        }
 
         //---- components style ----------------------------------------------------------------------------------------
         label     + jetBrainFont
@@ -143,11 +137,6 @@ class AppStyles : Stylesheet() {
 
         form {
             center()
-            with(600.px) {
-                prefHeight = this
-                prefWidth = this
-            }
-
             fontSize = 15.px
         }
 
@@ -175,17 +164,16 @@ class AppStyles : Stylesheet() {
         //---- fleet  cells style --------------------------------------------------------------------------------------
         sunkCell          + background(sunkCellColor)
         defeatedTitleCell + background(defeatedTitleCellColor) + text(WHITE)
-        chosenCell        + background(chosenCellColor)  + noBorder    + text(WHITE)
-        titleCell         + background(titleCellColor)   + border      + text(WHITE)
-        incorrectCell     + background(wrongCellColor)   + noBorder
-        animationCell     + background(chosenCellColor)  + noBorder
-        missCell          + background(missCellColor)    + border
-        hitCell           + background(hitCellColor)     + border
-        defeatedCell      + background(defeatedCellColor)             + border
-
+        chosenCell        + background(chosenCellColor)        + text(WHITE) + noBorder
+        titleCell         + background(titleCellColor)         + text(WHITE) + border
+        incorrectCell     + background(wrongCellColor)         + noBorder
+        animationCell     + background(chosenCellColor)        + noBorder
+        hitCell           + background(hitCellColor)           + border
+        defeatedCell      + background(defeatedCellColor)      + border
+        missCell          + radius(fleetCellSize.value/4)      + border
 
         val shipBorderCellColor = RED
-        (shipBorderCell + shipBorderCellColor.withOpacity(0.3).background) {
+        (shipBorderCell + background(shipBorderCellColor.withOpacity(0.3))) {
             borderColor += box(shipBorderCellColor.withOpacity(0.15))
             borderWidth += box(fleetBorderWidth.px)
         }

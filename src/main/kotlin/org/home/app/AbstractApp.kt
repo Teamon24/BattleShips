@@ -2,6 +2,7 @@ package org.home.app
 
 import javafx.stage.Stage
 import org.home.app.di.Scopes
+import org.home.mvc.StageUtils
 import org.home.style.AppStyles
 import org.koin.core.component.KoinComponent
 import tornadofx.App
@@ -27,6 +28,8 @@ abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::cla
 
     override fun start(stage: Stage) {
 //        stage.initStyle(StageStyle.UNDECORATED)
+        stage.width = StageUtils.screenSize().width.toDouble()/2
+        stage.height = StageUtils.screenSize().height.toDouble()/2
         stage.isMaximized = false
         super.start(stage)
     }
