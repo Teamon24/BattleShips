@@ -16,7 +16,7 @@ object GameScope {
         KOIN, FX;
 
         companion object {
-            inline fun GameInject.isKoin(onTrue: () -> Unit) = (this == FX).so(onTrue)
+            inline fun GameInject.isKoin(onTrue: () -> Unit) = (this == KOIN).so(onTrue)
         }
     }
 

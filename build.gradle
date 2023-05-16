@@ -20,7 +20,7 @@ group = 'home'
 version = '1.0-SNAPSHOT'
 
 repositories { mavenCentral() }
-application { mainClassName = 'org.home.run.Application_devKt' }
+application { mainClassName = 'org.home.app.run.Application_devKt' }
 test { useJUnitPlatform() }
 
 def koin_version = "3.2.0-beta-1"
@@ -107,7 +107,7 @@ task player5 { doLast { runDev(concat(javaCp, mainClassName), playerProp(5)) } }
 task player6 { doLast { runDev(concat(javaCp, mainClassName), playerProp(6)) } }
 task player7 { doLast { runDev(concat(javaCp, mainClassName), playerProp(7)) } }
 
-task multiscreenCheck { doLast { runDev(concat(javaCp, 'org.home.Multiscreen_checkKt')) } }
+task multiscreenCheck { doLast { runDev(concat(javaCp, 'org.home.app.run.Multiscreen_checkKt')) } }
 
 tasks.player0.dependsOn(build)
 tasks.player0.dependsOn(createProperties)
