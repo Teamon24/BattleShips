@@ -1,19 +1,14 @@
 package org.home.app
 
 import javafx.stage.Stage
-import org.home.app.di.Scopes
 import org.home.mvc.StageUtils
 import org.home.style.AppStyles
 import org.koin.core.component.KoinComponent
 import tornadofx.App
-import tornadofx.Component
 import tornadofx.DIContainer
 import tornadofx.FX
-import tornadofx.ScopedInstance
 import tornadofx.View
-import tornadofx.find
 import tornadofx.importStylesheet
-import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 
 abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::class) {
@@ -32,11 +27,5 @@ abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::cla
         stage.height = StageUtils.screenSize().height.toDouble()/2
         stage.isMaximized = false
         super.start(stage)
-    }
-
-    companion object {
-        inline fun <reified T> newGame(): ReadOnlyProperty<Component, T> where
-                T : Component,
-                T : ScopedInstance = ReadOnlyProperty { _, _ -> find(Scopes.gameScope) }
     }
 }

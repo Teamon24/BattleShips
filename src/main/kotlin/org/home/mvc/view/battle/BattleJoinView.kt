@@ -1,11 +1,9 @@
 package org.home.mvc.view.battle
 
 import javafx.beans.property.SimpleStringProperty
-import org.home.app.AbstractApp.Companion.newGame
 import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.connectionButtonText
 import org.home.mvc.ApplicationProperties.Companion.ipAddressFieldLabel
-import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.AbstractGameView

@@ -1,8 +1,8 @@
 package org.home.run
 
 import org.home.app.AbstractApp
-import org.home.app.Animations.appViewAnimationGrid
-import org.home.app.di.diDev
+import org.home.mvc.view.Animations.appViewAnimationGrid
+import org.home.app.di.singletons
 import org.koin.core.context.GlobalContext
 import tornadofx.View
 import tornadofx.launch
@@ -10,7 +10,7 @@ import tornadofx.launch
 
 fun main() {
     GlobalContext.startKoin {
-        modules(diDev("application-dev"))
+        modules(singletons()("application-dev"))
     }
     launch<AnimationCheck>()
 }

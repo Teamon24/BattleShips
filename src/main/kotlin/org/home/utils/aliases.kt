@@ -1,6 +1,8 @@
 package org.home.utils
 
+import home.extensions.BooleansExtensions.so
 import org.home.mvc.contoller.server.PlayerSocket
+import org.home.utils.SocketUtils.isNotClosed
 import tornadofx.Dimension
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -19,5 +21,9 @@ object PlayersSocketsExtensions {
 
     fun PlayersSockets.exclude(player: String): Collection<PlayerSocket> {
         return filter { it.player != player }
+    }
+
+    inline fun PlayerSocket.isNotClosed(onTrue: PlayerSocket.() -> Unit) {
+        isNotClosed.so { this.onTrue() }
     }
 }

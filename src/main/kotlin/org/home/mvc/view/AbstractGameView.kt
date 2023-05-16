@@ -4,7 +4,7 @@ import home.extensions.AnysExtensions.name
 import javafx.scene.Node
 import javafx.scene.control.Alert
 import javafx.stage.Stage
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 import org.home.mvc.ResizeHelper
 import org.home.mvc.model.BattleModel
 import org.home.utils.log
@@ -16,7 +16,7 @@ import kotlin.system.exitProcess
 
 abstract class AbstractGameView(title: String = ""): View(title = title) {
 
-    internal val model: BattleModel by newGame()
+    internal val model: BattleModel by GameScope.inject()
     internal val applicationProperties = model.applicationProperties
     internal val currentPlayer = applicationProperties.currentPlayer
 

@@ -1,5 +1,7 @@
 package org.home.mvc.view.fleet
 
+import home.extensions.AtomicBooleansExtensions.atomic
+import home.extensions.AtomicBooleansExtensions.invoke
 import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.input.MouseDragEvent.DRAG_DETECTED
@@ -10,6 +12,7 @@ import javafx.scene.input.MouseDragEvent.MOUSE_RELEASED
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
+import org.home.app.di.GameScope
 import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.ShipsTypesController
@@ -17,16 +20,13 @@ import org.home.mvc.model.Ship
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
 import org.home.style.AppStyles
-import home.extensions.AtomicBooleansExtensions.atomic
-import home.extensions.AtomicBooleansExtensions.invoke
-import org.home.app.AbstractApp.Companion.newGame
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch
 
 class FleetGridController : AbstractGameBean() {
 
-    private val shipsTypesController: ShipsTypesController by newGame()
-    private val fleetGridCreator: FleetGridCreator by newGame()
+    private val shipsTypesController: ShipsTypesController by GameScope.inject()
+    private val fleetGridCreator: FleetGridCreator by GameScope.inject()
 
     private val ships by lazy { model.shipsOf(currentPlayer) }
     private val currentShip = Ship()

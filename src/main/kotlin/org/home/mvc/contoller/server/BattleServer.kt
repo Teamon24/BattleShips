@@ -7,7 +7,7 @@ import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.isNotEmpty
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleEvent
@@ -27,13 +27,16 @@ import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
-import org.home.mvc.model.BattleModel
 import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.AreReadyAction
+import org.home.mvc.contoller.server.action.BattleContinuationAction
 import org.home.mvc.contoller.server.action.BattleStartAction
+import org.home.mvc.contoller.server.action.ConnectionAction
+import org.home.mvc.contoller.server.action.ConnectionsAction
 import org.home.mvc.contoller.server.action.DefeatAction
 import org.home.mvc.contoller.server.action.DisconnectAction
+import org.home.mvc.contoller.server.action.FleetEditAction
 import org.home.mvc.contoller.server.action.FleetSettingsAction
 import org.home.mvc.contoller.server.action.FleetsReadinessAction
 import org.home.mvc.contoller.server.action.HitAction
@@ -43,18 +46,15 @@ import org.home.mvc.contoller.server.action.NewServerAction
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.contoller.server.action.NotReadyAction
 import org.home.mvc.contoller.server.action.PlayerAction
-import org.home.mvc.contoller.server.action.ConnectionAction
 import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.PlayerToRemoveAction
-import org.home.mvc.contoller.server.action.ConnectionsAction
-import org.home.mvc.contoller.server.action.BattleContinuationAction
 import org.home.mvc.contoller.server.action.ReadyAction
-import org.home.mvc.contoller.server.action.FleetEditAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
+import org.home.mvc.model.BattleModel
 import org.home.mvc.model.thoseAreReady
 import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.net.server.Message
@@ -62,13 +62,14 @@ import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
 import org.home.utils.PlayersSocketsExtensions.exclude
 import org.home.utils.PlayersSocketsExtensions.get
+import org.home.utils.PlayersSocketsExtensions.isNotClosed
 import org.home.utils.SocketUtils.send
 import org.home.utils.log
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
     private val battleEventEmitter: BattleEventEmitter by di()
-    private val awaitConditions: AwaitConditions by newGame()
+    private val awaitConditions: AwaitConditions by GameScope.inject()
     private val shotProcessingComponent: ShotProcessingComponent by di()
     private val playerTurnComponent: PlayerTurnComponent by di()
 
@@ -142,12 +143,10 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
     override fun onDisconnect(socket: PlayerSocket) {
-        socket {
-            isNotClosed {
-                DisconnectAction(player!!).also {
-                    send(it)
-                    eventbus(PlayerWasDisconnected(it))
-                }
+        socket.isNotClosed {
+            DisconnectAction(player!!).also {
+                send(it)
+                eventbus(PlayerWasDisconnected(it))
             }
         }
     }

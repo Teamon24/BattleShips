@@ -5,7 +5,7 @@ package org.home.mvc.view.components
 import javafx.event.EventTarget
 import javafx.util.Duration
 import org.home.mvc.ApplicationProperties.Companion.backButtonText
-import org.home.app.di.Scopes
+import org.home.app.di.FxScopes
 import org.home.mvc.view.components.Transit.BACKWARD
 import org.home.mvc.view.components.Transit.FORWARD
 import org.home.utils.componentName
@@ -79,7 +79,7 @@ inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(tran
 }
 
 inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(transit: Transit) {
-    find(T::class, Scopes.gameScope).also {
+    find(T::class, FxScopes.gameScope).also {
         logTransit(it)
         replaceWith(it, ward<VT>(transit))
     }

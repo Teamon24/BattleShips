@@ -3,11 +3,11 @@ package org.home.mvc.contoller
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.scene.layout.GridPane
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 
 class ShipsTypesPaneController: AbstractGameBean() {
 
-    private val component: ShipsTypesPaneComponent by newGame()
+    private val component: ShipsTypesPaneComponent by GameScope.inject()
 
     fun shipTypesPaneControl(): ShipsTypesPane {
         return ShipsTypesPane().apply {

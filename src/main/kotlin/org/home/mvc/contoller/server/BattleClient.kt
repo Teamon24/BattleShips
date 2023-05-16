@@ -6,7 +6,6 @@ import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
 import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
-import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
@@ -16,7 +15,7 @@ import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
@@ -53,6 +52,7 @@ import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.doWhile
 import org.home.utils.InfiniteTryBase.Companion.handle
 import org.home.utils.InfiniteTryBase.Companion.stopOnAll
+import org.home.utils.SocketUtils.isNotClosed
 import org.home.utils.SocketUtils.receive
 import org.home.utils.SocketUtils.send
 import org.home.utils.log
@@ -73,7 +73,7 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
 
     private val battleEventEmitter: BattleEventEmitter by di()
 
-    private val awaitConditions: AwaitConditions by newGame()
+    private val awaitConditions: AwaitConditions by GameScope.inject()
 
     private lateinit var input: InputStream
     private lateinit var output: OutputStream
@@ -86,8 +86,8 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
     class ActionTypeAbsentException(any: Any, className: String, method: String) :
         RuntimeException("There is no when-branch for $any in $className#$method")
 
-    override fun send(message: Message) = serverSocket { isNotClosed { send(message) } }
-    override fun send(messages: Collection<Message>) = serverSocket { isNotClosed { send(messages) } }
+    override fun send(message: Message) = serverSocket.isNotClosed { send(message) }
+    override fun send(messages: Collection<Message>) = serverSocket.isNotClosed { send(messages) }
 
     @Throws(UnknownHostException::class, IOException::class)
     override fun connect(ip: String, port: Int) {
@@ -101,14 +101,15 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
 
                 val fleetReadiness = model
                     .fleetsReadiness[currentPlayer]!!
-                    .map { it.key to it.value.value }
-                    .toMap()
+                    .mapValues { it.value.value }
 
                 +ReadyAction(currentPlayer)
                 +FleetsReadinessAction(mapOf(currentPlayer to fleetReadiness))
             }
             listen()
         }
+
+        awaitConditions.fleetSettingsReceived.await()
     }
 
     @Throws(IOException::class)

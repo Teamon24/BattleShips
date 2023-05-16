@@ -1,8 +1,8 @@
 package org.home.utils
 
 import home.extensions.BooleansExtensions.invoke
+import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.isNotEmpty
-import org.home.mvc.contoller.server.isNotClosed
 import org.home.net.server.Message
 import org.home.net.server.MessagesDSL.Messages
 import org.home.net.server.MessagesDSL.Messages.Companion.withInfo
@@ -11,6 +11,12 @@ import org.home.utils.IOUtils.write
 import java.net.Socket
 
 object SocketUtils {
+
+    val Socket.isNotClosed get() = !isClosed
+
+    inline fun Socket.isNotClosed(onTrue: Socket.() -> Unit) {
+        isNotClosed.so { onTrue() }
+    }
 
     fun Socket.receive() = getInputStream().readBatch()
 

@@ -13,7 +13,7 @@ import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.battleFieldCreationMenuTitle
 import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
@@ -44,7 +44,7 @@ import tornadofx.label
 import tornadofx.textfield
 
 class BattleCreationView : AbstractGameView("Настройки боя") {
-    private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
+    private val shipsTypesPaneController: ShipsTypesPaneController by GameScope.inject()
     private val battleController: BattleController<Action> by di()
 
     override val root = Form().apply {

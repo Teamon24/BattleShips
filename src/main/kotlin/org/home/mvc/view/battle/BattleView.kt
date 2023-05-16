@@ -15,11 +15,12 @@ import javafx.scene.control.Label
 import javafx.scene.control.ListView
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
-import org.home.app.AbstractApp.Companion.newGame
+import org.home.app.di.GameScope
 import org.home.mvc.AppView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.battle.subscriptions.battleIsEnded
 import org.home.mvc.view.battle.subscriptions.battleIsStarted
@@ -33,9 +34,11 @@ import org.home.mvc.view.battle.subscriptions.playerWasConnected
 import org.home.mvc.view.battle.subscriptions.playerWasDefeated
 import org.home.mvc.view.battle.subscriptions.playerWasDisconnected
 import org.home.mvc.view.battle.subscriptions.readyPlayersReceived
+import org.home.mvc.view.battle.subscriptions.serverTransferReceived
 import org.home.mvc.view.battle.subscriptions.shipWasAdded
 import org.home.mvc.view.battle.subscriptions.shipWasDeleted
 import org.home.mvc.view.battle.subscriptions.shipWasHit
+import org.home.mvc.view.battle.subscriptions.shipWasSunk
 import org.home.mvc.view.battle.subscriptions.subscriptions
 import org.home.mvc.view.battle.subscriptions.thereWasAMiss
 import org.home.mvc.view.components.BattleStartButton
@@ -48,9 +51,6 @@ import org.home.mvc.view.components.battleStartButton
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
-import org.home.mvc.contoller.server.action.Action
-import org.home.mvc.view.battle.subscriptions.serverTransferReceived
-import org.home.mvc.view.battle.subscriptions.shipWasSunk
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
 import org.home.style.StyleUtils.rightPadding
@@ -67,8 +67,8 @@ import kotlin.collections.set
 class BattleView : AbstractGameView("Battle View") {
     internal val battleController: BattleController<Action> by di()
 
-    private val fleetGridController: FleetGridController by newGame()
-    private val shipsTypesPaneController: ShipsTypesPaneController by newGame()
+    private val fleetGridController: FleetGridController by GameScope.inject()
+    private val shipsTypesPaneController: ShipsTypesPaneController by GameScope.inject()
     internal val currentPlayerFleetGridPane = BorderPane().apply { center = fleetGridController.activeFleetGrid() }
 
     internal val currentPlayerFleetReadinessPane = currentPlayerFleetReadinessPane(currentPlayer)

@@ -85,4 +85,4 @@ class PlayerSocket(private val socket: Socket) : Socket() {
     override fun supportedOptions(): MutableSet<SocketOption<*>?> = socket.supportedOptions()
 }
 
-val Socket.isNotClosed get() = !isClosed
+

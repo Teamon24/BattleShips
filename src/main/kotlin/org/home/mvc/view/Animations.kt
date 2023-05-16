@@ -1,4 +1,4 @@
-package org.home.app
+package org.home.mvc.view
 
 import javafx.geometry.Pos
 import javafx.scene.layout.GridPane

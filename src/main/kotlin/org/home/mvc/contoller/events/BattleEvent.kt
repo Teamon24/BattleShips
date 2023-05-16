@@ -1,6 +1,6 @@
 package org.home.mvc.contoller.events
 
-import org.home.app.di.Scopes
+import org.home.app.di.FxScopes
 import org.home.mvc.contoller.server.action.BattleEndAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
@@ -19,7 +19,7 @@ inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
 
 sealed class BattleEvent: FXEvent() {
 
-    override val scope: Scope get() = Scopes.gameScope
+    override val scope: Scope get() = FxScopes.gameScope
 
     override fun toString(): String {
         return when(this) {
