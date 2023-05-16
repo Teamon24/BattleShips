@@ -19,7 +19,7 @@ inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
 
 sealed class BattleEvent: FXEvent() {
 
-    override val scope: Scope get() = FxScopes.gameScope
+    override val scope: Scope get() = FxScopes.getGameScope()
 
     override fun toString(): String {
         return when(this) {

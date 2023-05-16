@@ -1,46 +1,46 @@
 package org.home.app.di
 
 import home.extensions.AnysExtensions.name
+import org.home.app.di.GameScope.NewGameScope
 import org.home.mvc.model.BattleModel
 import org.home.utils.componentName
 import org.home.utils.log
-import org.koin.java.KoinJavaComponent
+import org.koin.java.KoinJavaComponent.getKoin
 import tornadofx.Component
 import tornadofx.ScopedInstance
 
 typealias KScope = org.koin.core.scope.Scope
 typealias FxScope = tornadofx.Scope
 
-sealed interface Scopes {
-    fun createNew()
-}
+sealed class Scopes<ScopeType> {
+    protected var gameScopeBackingField: ScopeType? = null
 
-object KoinScopes: Scopes {
-    private var gameScopeBackingField: KScope? = null
-    val gameScope
-        get() = gameScopeBackingField ?: run {
-            gameScopeBackingField = KoinJavaComponent.getKoin().createScope<GameScope.NewGameScope>()
-            gameScopeBackingField!!
-        }
-
-    override fun createNew() {
-        gameScopeBackingField?.close()
-        gameScopeBackingField = KoinJavaComponent.getKoin().createScope<GameScope.NewGameScope>()
-    }
-}
-
-
-object FxScopes: Scopes {
-    private var gameScopeBackingField: FxScope? = null
-
-    val gameScope: FxScope get() = gameScopeBackingField ?: run {
-        gameScopeBackingField = FxScope()
+    open fun getGameScope(): ScopeType = gameScopeBackingField ?: run {
+        gameScopeBackingField = getScope()
         gameScopeBackingField!!
     }
 
+    abstract fun getScope(): ScopeType
+    abstract fun createNew()
+}
+
+object KoinScopes: Scopes<KScope>() {
+    override fun getScope() = getKoin().createScope<NewGameScope>()
+
+    override fun createNew() {
+        gameScopeBackingField?.close()
+        gameScopeBackingField = getKoin().createScope<NewGameScope>()
+    }
+}
+
+
+object FxScopes: Scopes<FxScope>() {
+
+    override fun getScope() = FxScope()
+
     override fun createNew() {
         gameScopeBackingField = FxScope()
-        BattleModel().inScope(gameScope)
+        BattleModel().inScope(getGameScope())
     }
 
     private inline fun <reified T> T.inScope(scope: FxScope) where T : Component, T : ScopedInstance {

@@ -10,7 +10,7 @@ import tornadofx.launch
 
 fun main() {
     GlobalContext.startKoin {
-        modules(singletons()("application-dev"))
+        modules(singletons("application-dev"))
     }
     launch<AnimationCheck>()
 }

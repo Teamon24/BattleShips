@@ -68,7 +68,7 @@ import org.home.utils.log
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
-    private val battleEventEmitter: BattleEventEmitter by di()
+    private val battleEventEmitter: BattleEventEmitter by GameScope.inject()
     private val awaitConditions: AwaitConditions by GameScope.inject()
     private val shotProcessingComponent: ShotProcessingComponent by di()
     private val playerTurnComponent: PlayerTurnComponent by di()

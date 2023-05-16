@@ -9,13 +9,12 @@ import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.contoller.ShipsTypesPaneComponent
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.ShotNotifierStrategies
-import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.BattleClient
-import org.home.mvc.contoller.server.BattleEventEmitter
 import org.home.mvc.contoller.server.BattleServer
 import org.home.mvc.contoller.server.PlayerSocket
 import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
+import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
@@ -31,7 +30,6 @@ fun singletons(properties: String): Module {
         single { ApplicationProperties(properties) }
 
         single { ShotNotifierStrategies }
-        single { BattleEventEmitter }
         single { ConnectionsListener<Action, PlayerSocket>() }
         single { MessageReceiver<Action, PlayerSocket>() }
         single { MessageProcessor<Action, PlayerSocket>() }

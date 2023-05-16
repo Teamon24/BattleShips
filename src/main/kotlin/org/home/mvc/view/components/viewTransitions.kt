@@ -79,7 +79,7 @@ inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(tran
 }
 
 inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(transit: Transit) {
-    find(T::class, FxScopes.gameScope).also {
+    find(T::class, FxScopes.getGameScope()).also {
         logTransit(it)
         replaceWith(it, ward<VT>(transit))
     }

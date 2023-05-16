@@ -36,8 +36,8 @@ object GameScope {
             T : ScopedInstance = ReadOnlyProperty { _, _ ->
 
         when (gameInject) {
-            GameInject.KOIN -> KoinScopes.gameScope.get<T>()
-            GameInject.FX -> find<T>(FxScopes.gameScope)
+            GameInject.KOIN -> KoinScopes.getGameScope().get<T>()
+            GameInject.FX -> find<T>(FxScopes.getGameScope())
         }.apply {
             log { "bean - ${this.name}" }
         }
