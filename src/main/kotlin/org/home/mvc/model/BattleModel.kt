@@ -1,30 +1,27 @@
 package org.home.mvc.model
 
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.removeFrom
+import home.extensions.BooleansExtensions.otherwise
+import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.yes
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
-import javafx.collections.MapChangeListener
-import org.home.mvc.ApplicationProperties
-import org.home.mvc.contoller.server.action.FleetSettingsAction
-import org.home.mvc.contoller.server.action.HasAShot
-import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.removeFrom
-import home.extensions.BooleansExtensions.so
-import home.extensions.BooleansExtensions.yes
-import home.extensions.CollectionsExtensions.exclude
-import home.extensions.CollectionsExtensions.hasElements
-import home.extensions.CollectionsExtensions.isEmpty
 import javafx.collections.ObservableMap
+import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
+import org.home.mvc.contoller.server.action.FleetSettingsAction
+import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
-import org.home.utils.extensions.ObservableValueMap
+import org.home.mvc.view.battle.subscription.NewServerInfo
+import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
-import org.home.mvc.view.battle.subscriptions.NewServerInfo
-import org.home.utils.extensions.ObservablePropertiesExtensions.copy
+import org.home.utils.extensions.ObservableValueMap
 import org.home.utils.extensions.addMapChange
 import org.home.utils.log
 import tornadofx.ViewModel
@@ -43,19 +40,19 @@ class BattleModel : ViewModel() {
     val currentPlayer = applicationProperties.currentPlayer
 
     private val size = applicationProperties.size
+
     private var maxShipType = applicationProperties.maxShipType
     private val playersNumbers = applicationProperties.playersNumber
-
     inline operator fun BattleModel.invoke(crossinline b: BattleModel.() -> Unit) = this.b()
 
     private val widthProp = SimpleIntegerProperty(size)
+
     private val heightProp = SimpleIntegerProperty(size)
     private val playersNumberProp = SimpleIntegerProperty(playersNumbers)
-
     val width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
+
     val height = bind { heightProp }.apply { onChange { log { "height - $value" } } }
     val playersNumber = bind { playersNumberProp }.apply { onChange { log { "playersNumber - $value" } } }
-
     private var _newServer: NewServerInfo? = null
 
     val hasNoServerTransfer get() = _newServer == null
@@ -82,9 +79,7 @@ class BattleModel : ViewModel() {
 
     val battleIsNotStarted get() = !battleIsStarted
 
-    val selectedPlayer = SimpleStringProperty()
     val turn = SimpleStringProperty()
-
     //SHIPS TYPES
     val fleetsReadiness = FleetsReadiness()
 
@@ -104,9 +99,10 @@ class BattleModel : ViewModel() {
 
     //PLAYERS
     val players = emptySimpleListProperty<String>().logOnChange("players")
+
+    val enemies = emptySimpleListProperty<String>().logOnChange("enemies")
     val defeatedPlayers = emptySimpleListProperty<String>().logOnChange("defeated")
     val readyPlayers = emptySimpleListProperty<String>().logOnChange("ready players")
-
     private val statistics = mutableListOf<HasAShot>()
 
     private fun initFleetsReadiness(shipsTypes: Map<Int, Int>): FleetReadiness {
@@ -126,15 +122,19 @@ class BattleModel : ViewModel() {
             val player = change.key
             when {
                 change.wasAdded() -> {
-                    players.add(player)
-                    setNotReady(player)
-                    fleetsReadiness[player] = initFleetsReadiness(shipsTypes)
-                    log { "added \"$player\"" }
+                    player.also {
+                        players.add(it)
+                        it.isNotCurrent { enemies.add(it) }
+                        setNotReady(it)
+                        fleetsReadiness[it] = initFleetsReadiness(shipsTypes)
+                        log { "added \"$it\"" }
+                    }
                 }
 
                 change.wasRemoved() -> {
                     player {
                         removeFrom(players)
+                        isNotCurrent { removeFrom(enemies) }
                         removeFrom(readyPlayers)
                         removeFrom(fleetsReadiness)
                         removeFrom(defeatedPlayers)
@@ -144,7 +144,6 @@ class BattleModel : ViewModel() {
             }
         }
     }
-
 
     private fun SimpleMapProperty<Int, Int>.putInitials() = apply {
         0.until(maxShipType).forEach {
@@ -236,6 +235,7 @@ class BattleModel : ViewModel() {
     inline fun String.addedAllShips(onTrue: () -> Unit) = addedAllShips().so(onTrue)
 
     fun hasReady(player: String) = player in readyPlayers
+    val String.isReady get() = this in readyPlayers
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
 
     fun setReady(player: String) { readyPlayers.add(player) }
@@ -255,12 +255,14 @@ class BattleModel : ViewModel() {
 
     //isCurrent
     inline val String?.isCurrent get() = currentPlayer == this
+    inline val String?.isNotCurrent get() = currentPlayer != this
     inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
+    inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
     fun hasCurrent(player: String?) = player.isCurrent
-    inline fun hasCurrent(player: String, onTrue: () -> Unit) = player.isCurrent.so(onTrue)
 
     fun shipsOf(player: String) = playersAndShips[player]!!
     fun String.ships() = playersAndShips[this]!!
+    fun String.decks() = playersAndShips[this]!!.flatten()
 
     private fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
         addListener(ListChangeListener { log { "$name - ${it.list}" } })

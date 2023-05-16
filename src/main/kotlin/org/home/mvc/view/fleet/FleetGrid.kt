@@ -3,8 +3,8 @@ package org.home.mvc.view.fleet
 import javafx.scene.layout.GridPane
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ships
-import org.home.mvc.view.components.GridPaneExtensions.getCell
-import org.home.mvc.view.components.GridPaneExtensions.getIndices
+import org.home.mvc.view.component.GridPaneExtensions.getCell
+import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.fleet.FleetGridStyleComponent.addSelectionColor
 import tornadofx.CssRule
 import tornadofx.addClass

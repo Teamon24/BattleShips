@@ -1,26 +1,23 @@
-package org.home.mvc.view.battle.subscriptions
+package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import home.extensions.CollectionsExtensions.excludeAll
-import javafx.beans.property.SimpleIntegerProperty
 import org.home.mvc.AppView
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleText
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
-import org.home.mvc.contoller.events.ConnectedPlayerReceived
-import org.home.mvc.contoller.events.ConnectedPlayersReceived
-import org.home.mvc.contoller.events.FleetsReadinessReceived
 import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.Transit.BACKWARD
-import org.home.mvc.view.components.transferTo
-import org.home.mvc.view.components.transitTo
+import org.home.mvc.view.component.Transit.BACKWARD
+import org.home.mvc.view.component.transferTo
+import org.home.mvc.view.component.transitTo
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.IpUtils.freePort
 import org.home.utils.log
@@ -34,40 +31,26 @@ inline fun View.subscriptions(subs: View.() -> Unit) {
     this.subs()
 }
 
-internal fun BattleView.playerWasConnected() {
-    subscribe<ConnectedPlayerReceived> {
-        logEvent(it, model)
-        addNewFleet(it.player)
-    }
-}
-
-fun BattleView.connectedPlayersReceived() {
-    subscribe<ConnectedPlayersReceived> { event ->
-        logEvent(event, model)
-        event.players.forEach { connectedPlayer ->
-            addNewFleet(connectedPlayer)
-        }
-    }
-}
-
-internal fun BattleView.fleetsReadinessReceived() {
-    subscribe<FleetsReadinessReceived> { event ->
-        logEvent(event, model)
-        model.fleetsReadiness {
-            event.states.forEach { (player, state) ->
-                get(player) ?: run { put(player, mutableMapOf()) }
-
-                state.forEach { (shipType, number) ->
-                    val shipNumberProperty = get(player)!![shipType]
-                    shipNumberProperty ?: run {
-                        get(player)!![shipType] = SimpleIntegerProperty(number)
-                        return@fleetsReadiness
-                    }
-
-                    shipNumberProperty.value = number
-                }
-            }
-        }
+internal fun BattleView.subscribe() {
+    subscriptions {
+        playerWasConnected()
+        connectedPlayersReceived()
+        fleetsReadinessReceived()
+        readyPlayersReceived()
+        playerIsReadyReceived()
+        playerIsNotReadyReceived()
+        shipWasAdded()
+        shipWasDeleted()
+        battleIsStarted()
+        playerTurnToShoot()
+        shipWasHit()
+        shipWasSunk()
+        thereWasAMiss()
+        playerLeaved()
+        playerWasDefeated()
+        playerWasDisconnected()
+        battleIsEnded()
+        serverTransferReceived()
     }
 }
 
@@ -79,9 +62,11 @@ internal fun BattleView.playerTurnToShoot() {
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
                 log { "defeated = $defeatedPlayers" }
-                enemiesFleetGridsPanes.excludeAll(defeatedPlayers).enable()
+                playersFleetGridsPanes.excludeAll(defeatedPlayers).enable()
+                playersFleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
             } else {
-                enemiesFleetGridsPanes.disable()
+                playersFleetGridsPanes.disable()
+                playersFleetsReadinessPanes.disable()
             }
         }
     }
@@ -99,10 +84,7 @@ internal fun BattleView.battleIsStarted() {
         }
 
         model.readyPlayers.clear()
-
         battleStartButton.hide()
-
-        updateCurrentPlayerFleetGrid()
 
         //НАЙТИ КАК УДАЛИТЬ EventHandler'ы у FleetGreed
         openMessageWindow { "Бой начался" }
@@ -115,6 +97,11 @@ internal fun BattleView.battleIsEnded() {
 
         openMessageWindow {
             val player = event.player
+            model.hasCurrent(player).so {
+                playersFleetGridsPanes[currentPlayer]!!.enable()
+                playersFleetsReadinessPanes[currentPlayer]!!.enable()
+            }
+
             model.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
         }
 

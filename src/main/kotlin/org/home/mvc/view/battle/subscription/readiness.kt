@@ -1,4 +1,4 @@
-package org.home.mvc.view.battle.subscriptions
+package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived

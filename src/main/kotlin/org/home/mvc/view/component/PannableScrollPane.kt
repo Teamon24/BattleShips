@@ -1,7 +1,6 @@
-package org.home.mvc.view.components
+package org.home.mvc.view.component
 
 import javafx.event.EventTarget
-import javafx.scene.Node
 import javafx.scene.control.ScrollPane
 import tornadofx.opcr
 
@@ -13,9 +12,8 @@ class PannableScrollPane : ScrollPane() {
     }
 
     private fun scrollBarPolicy() {
-
-        hbarPolicy = ScrollBarPolicy.NEVER;
-        vbarPolicy = ScrollBarPolicy.NEVER;
+        hbarPolicy = ScrollBarPolicy.NEVER
+        vbarPolicy = ScrollBarPolicy.NEVER
     }
 
     companion object {

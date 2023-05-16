@@ -17,6 +17,7 @@ import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleModel
+import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.net.server.ConnectionsListener
@@ -57,6 +58,7 @@ fun gameScoped(): Module {
             scoped { FleetGridController() }
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }
+            scoped { BattleStartButtonController() }
 
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }

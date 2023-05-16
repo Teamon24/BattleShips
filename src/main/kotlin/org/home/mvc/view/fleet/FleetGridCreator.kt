@@ -2,7 +2,7 @@ package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
 import org.home.mvc.contoller.AbstractGameBean
-import org.home.mvc.view.components.GridPaneExtensions.cell
+import org.home.mvc.view.component.GridPaneExtensions.cell
 import tornadofx.addChildIfPossible
 
 class FleetGridCreator: AbstractGameBean() {

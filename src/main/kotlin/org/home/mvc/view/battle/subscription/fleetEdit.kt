@@ -1,9 +1,13 @@
-package org.home.mvc.view.battle.subscriptions
+package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
 import org.home.mvc.contoller.events.FleetEditEvent
+import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
+import org.home.mvc.contoller.events.PlayerIsReadyReceived
+import org.home.mvc.contoller.events.PlayerReadinessReceived
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
+import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.action.FleetEditAction
 import org.home.mvc.contoller.server.action.NotReadyAction
 import org.home.mvc.contoller.server.action.PlayerReadinessAction
@@ -15,13 +19,13 @@ import org.home.utils.logEvent
 
 internal fun BattleView.shipWasAdded() {
     subscribe<ShipWasAdded> {
-        processFleetEdit(it, ::ShipAdditionAction, model::setReady, ::ReadyAction)
+        processFleetEdit(it, ::ShipAdditionAction, model::setReady, ::ReadyAction, ::PlayerIsReadyReceived)
     }
 }
 
 internal fun BattleView.shipWasDeleted() {
     subscribe<ShipWasDeleted> {
-        processFleetEdit(it, ::ShipDeletionAction, model::setNotReady, ::NotReadyAction)
+        processFleetEdit(it, ::ShipDeletionAction, model::setNotReady, ::NotReadyAction, ::PlayerIsNotReadyReceived)
     }
 }
 
@@ -29,7 +33,8 @@ private fun BattleView.processFleetEdit(
     event: FleetEditEvent,
     action: (Int, String) -> FleetEditAction,
     setReadiness: (String) -> Unit,
-    createReadinessAction: (String) -> PlayerReadinessAction
+    createReadinessAction: (String) -> PlayerReadinessAction,
+    createEvent: (String) -> PlayerReadinessReceived
 ) {
     logEvent(event, model)
 
@@ -41,6 +46,7 @@ private fun BattleView.processFleetEdit(
                     + action(shipType, currentPlayer)
                     player.addedAllShips {
                         setReadiness(player)
+                        eventbus { +createEvent(player) }
                         + createReadinessAction(player)
                     }
                 }

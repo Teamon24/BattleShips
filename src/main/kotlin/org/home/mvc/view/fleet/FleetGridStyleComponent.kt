@@ -5,7 +5,7 @@ import javafx.scene.layout.GridPane
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.style.AppStyles
-import org.home.mvc.view.components.GridPaneExtensions.getCell
+import org.home.mvc.view.component.GridPaneExtensions.getCell
 import tornadofx.addClass
 import tornadofx.removeClass
 

@@ -58,7 +58,7 @@ import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.thoseAreReady
-import org.home.mvc.view.battle.subscriptions.NewServerInfo
+import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer

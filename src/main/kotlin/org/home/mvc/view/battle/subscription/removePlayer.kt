@@ -1,12 +1,11 @@
-package org.home.mvc.view.battle.subscriptions
+package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
+import home.extensions.CollectionsExtensions.containsOnly
 import org.home.mvc.AppView
-import org.home.mvc.ApplicationProperties.Companion.defeatFillTransitionTime
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
 import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.contoller.events.HasAPlayer
@@ -14,20 +13,15 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.components.BattleButton
-import org.home.mvc.view.components.GridPaneExtensions.cell
-import org.home.mvc.view.components.GridPaneExtensions.getIndices
-import org.home.mvc.view.components.Transit
-import org.home.mvc.view.components.transferTo
-import org.home.mvc.view.fleet.FleetGrid
+import org.home.mvc.view.battle.defeatedFillTransition
+import org.home.mvc.view.component.button.BattleButton
+import org.home.mvc.view.component.GridPaneExtensions.cell
+import org.home.mvc.view.component.GridPaneExtensions.getIndices
+import org.home.mvc.view.component.Transit
+import org.home.mvc.view.component.transferTo
 import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles.Companion.buttonColor
-import org.home.style.AppStyles.Companion.defeatedCellColor
 import org.home.style.AppStyles.Companion.defeatedTitleCellColor
-import org.home.style.AppStyles.Companion.sunkCellColor
-import org.home.style.StyleUtils.backgroundColor
-import org.home.style.StyleUtils.fillBackground
-import org.home.style.StyleUtils.textColor
+import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.StyleUtils.textFillTransition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
@@ -57,38 +51,10 @@ internal fun BattleView.playerWasDefeated() {
             val defeated = event.player
             defeatedPlayers.add(defeated)
 
-            val (fleetReadiness, fleetGrid) =
-                when (defeated.isCurrent) {
-                    true -> currentPlayerFleetReadinessPane to
-                            (currentPlayerFleetGridPane.center as FleetGrid)
-                    else -> enemiesFleetsReadinessPanes[defeated]!! to
-                            enemiesFleetGridsPanes[defeated]!!.disable()
-                }
+            val fleetGrid = playersFleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
+            val fleetReadiness = playersFleetsReadinessPanes[defeated]!!
 
-            fleetGrid
-                .onEachTitleCells { fleetCell ->
-                    fleetCell.style {
-                        filling(fleetCell) {
-                            millis = defeatFillTransitionTime
-                            transition(fleetCell.backgroundColor, defeatedTitleCellColor) { backgroundColor += it }
-                            transition(fleetCell.textColor, sunkCellColor) { textFill = it }
-                        }
-                    }
-                }
-                .onEachFleetCells {
-                    it.coord
-                        .notIn(getShotsAt(defeated))
-                        .so {
-                            it.fillBackground(to = defeatedCellColor)
-                        }
-                }
-
-            fleetReadiness
-                .getTypeLabels()
-                .forEach {
-                    it.fillBackground(it.backgroundColor, defeatedTitleCellColor)
-                }
-
+            defeatedFillTransition(defeated, fleetGrid, fleetReadiness)
 
             openMessageWindow {
                 val args = when (defeated.isCurrent) {
@@ -100,7 +66,7 @@ internal fun BattleView.playerWasDefeated() {
 
             val battleView = this@playerWasDefeated
 
-            hasCurrent(defeated) {
+            defeated.isCurrent {
                 (battleViewExitButton as BattleButton).disableHover()
                 battleView.updateLeaveBattleFieldButton()
             }
@@ -111,6 +77,7 @@ internal fun BattleView.playerWasDefeated() {
         }
     }
 }
+
 
 private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
     crossinline function: (HasAPlayer) -> String
@@ -144,7 +111,7 @@ fun BattleView.updateLeaveBattleFieldButton() {
                 style {
                     filling(this@button) {
                         millis = leaveBattleFieldButtonTransitionTime
-                        transition(buttonColor, defeatedTitleCellColor) { backgroundColor += it }
+                        transition(initialAppColor, defeatedTitleCellColor) { backgroundColor += it }
                         textFillTransition()
                     }
                 }
@@ -157,4 +124,21 @@ fun BattleView.updateLeaveBattleFieldButton() {
             }
         }
     }
+}
+
+internal fun BattleView.removeEnemyFleet(player: String) {
+    playersFleetsReadinessPanes {
+        remove(player)
+        keys.containsOnly(currentPlayer).so { selectedEnemyFleetReadinessPane.center = null }
+    }
+
+    playersFleetGridsPanes {
+        remove(player)
+        keys.containsOnly(currentPlayer).so {
+            selectedEnemyFleetPane.center = null
+            selectedEnemyLabel.text = ""
+        }
+    }
+
+    log { "removed from panes: $player" }
 }

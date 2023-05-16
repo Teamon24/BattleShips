@@ -13,7 +13,7 @@ import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
-import org.home.mvc.view.components.GridPaneExtensions.getCell
+import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.fleet.FleetGridStyleComponent.addBorderColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.addIncorrectColor
 import org.home.mvc.view.fleet.FleetGridStyleComponent.addSelectionColor

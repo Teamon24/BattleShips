@@ -1,9 +1,9 @@
 package org.home.mvc.contoller
 
 import javafx.scene.layout.GridPane
-import org.home.mvc.view.components.GridPaneExtensions.getIndices
-import org.home.mvc.view.components.GridPaneExtensions.setIndices
-import org.home.mvc.view.components.GridPaneExtensions.transpose
+import org.home.mvc.view.component.GridPaneExtensions.getIndices
+import org.home.mvc.view.component.GridPaneExtensions.setIndices
+import org.home.mvc.view.component.GridPaneExtensions.transpose
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.style.AppStyles
 import tornadofx.addClass

@@ -1,13 +1,14 @@
 @file:JvmName("ViewTransitionsKt")
 
-package org.home.mvc.view.components
+package org.home.mvc.view.component
 
 import javafx.event.EventTarget
 import javafx.util.Duration
 import org.home.mvc.ApplicationProperties.Companion.backButtonText
 import org.home.app.di.FxScopes
-import org.home.mvc.view.components.Transit.BACKWARD
-import org.home.mvc.view.components.Transit.FORWARD
+import org.home.mvc.view.component.Transit.BACKWARD
+import org.home.mvc.view.component.Transit.FORWARD
+import org.home.mvc.view.component.button.battleButton
 import org.home.utils.componentName
 import org.home.utils.log
 import tornadofx.View
@@ -30,12 +31,12 @@ private const val METRO_DISTANCE = 0.5
 
 enum class Transit { FORWARD, BACKWARD }
 
-fun slide(seconds: Duration) = Slide(seconds)
-fun reveal(seconds: Duration) = Reveal(seconds, LEFT)
-fun swap(seconds: Duration, point: Double) = Swap(seconds, LEFT, point(point, point))
-fun fade(seconds: Duration) = Fade(seconds)
-fun cover(seconds: Duration) = Cover(seconds, LEFT)
-fun metro(seconds: Duration, distance: Double) = Metro(seconds, LEFT, distance)
+fun slide  (seconds: Duration)                    = Slide  (seconds)
+fun reveal (seconds: Duration)                    = Reveal (seconds, LEFT)
+fun swap   (seconds: Duration, point: Double)     = Swap   (seconds, LEFT, point( point, point))
+fun fade   (seconds: Duration)                    = Fade   (seconds)
+fun cover  (seconds: Duration)                    = Cover  (seconds, LEFT)
+fun metro  (seconds: Duration, distance: Double)  = Metro  (seconds, LEFT, distance)
 
 fun Slide  .back() = Slide  (duration, RIGHT)
 fun Reveal .back() = Reveal (duration, RIGHT)

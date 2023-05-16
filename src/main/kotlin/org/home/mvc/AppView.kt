@@ -11,12 +11,12 @@ import org.home.mvc.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
-import org.home.mvc.view.components.GridPaneExtensions.cell
-import org.home.mvc.view.components.GridPaneExtensions.centerGrid
-import org.home.mvc.view.components.PannableScrollPane.Companion.pannableScrollPane
-import org.home.mvc.view.components.battleButton
-import org.home.mvc.view.components.exitButton
-import org.home.mvc.view.components.transferTo
+import org.home.mvc.view.component.GridPaneExtensions.cell
+import org.home.mvc.view.component.GridPaneExtensions.centerGrid
+import org.home.mvc.view.component.PannableScrollPane.Companion.pannableScrollPane
+import org.home.mvc.view.component.button.battleButton
+import org.home.mvc.view.component.button.exitButton
+import org.home.mvc.view.component.transferTo
 import tornadofx.Form
 import tornadofx.View
 import tornadofx.action
@@ -40,7 +40,9 @@ class AppView : View("Sea Battle") {
                         appViewAnimationGrid(
                             appViewAnimationGridWidth,
                             appViewAnimationGridHeight
-                        ).also { add(it); }
+                        ).also {
+                            add(it)
+                        }
                     }
 
                     cell(0, 0) {
@@ -48,7 +50,6 @@ class AppView : View("Sea Battle") {
                             cell(0, 0) { newGameButton<BattleCreationView>(createNewGameButtonText) }
                             cell(1, 0) { newGameButton<BattleJoinView>(joinButtonText) }
                             cell(2, 0) { exitButton() }
-
                         }.apply {
                             toFront()
                         }

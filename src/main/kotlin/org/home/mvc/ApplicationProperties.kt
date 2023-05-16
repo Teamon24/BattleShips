@@ -101,10 +101,20 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
 
         //transitions
         const val transitionSteps = 50
-        const val fillingTransitionTime = 150L
-        const val startButtonTransitionTime = 150L
-        const val leaveBattleFieldButtonTransitionTime = 150L
-        const val defeatFillTransitionTime = 150L
+        const val fillingTransitionTime = 100L
+
+        val startButtonTransitionTime: Long
+        val leaveBattleFieldButtonTransitionTime: Long
+        val defeatFillTransitionTime: Long
+
+        init {
+            fillingTransitionTime.also {
+                startButtonTransitionTime = it
+                leaveBattleFieldButtonTransitionTime = it
+                defeatFillTransitionTime = it
+            }
+        }
+
         const val buttonHoverTransitionTime = 50L
 
         //app view animation

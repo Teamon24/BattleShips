@@ -7,9 +7,9 @@ import javafx.scene.shape.Rectangle
 import javafx.util.Duration
 import org.home.mvc.ApplicationProperties.Companion.appViewAnimationCellSize
 import org.home.mvc.ApplicationProperties.Companion.appViewAnimationTime
-import org.home.mvc.view.components.GridPaneExtensions
-import org.home.mvc.view.components.GridPaneExtensions.getCell
-import org.home.mvc.view.components.GridPaneExtensions.getIndices
+import org.home.mvc.view.component.GridPaneExtensions
+import org.home.mvc.view.component.GridPaneExtensions.getCell
+import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
 import org.home.style.ColorUtils.withOpacity
 import tornadofx.addChildIfPossible

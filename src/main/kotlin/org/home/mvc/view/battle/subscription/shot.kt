@@ -1,4 +1,4 @@
-package org.home.mvc.view.battle.subscriptions
+package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
@@ -63,13 +63,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
             }
 
             openMessageWindow(message)
-
-            val fleetGrid = when (target == currentPlayer) {
-                true -> currentPlayerFleetGridPane.center as FleetGrid
-                else -> enemiesFleetGridsPanes[target]!!
-            }
-
-            markShot(fleetGrid, hasAShot.shot)
+            markShot(playersFleetGridsPanes[target]!!, hasAShot.shot)
         }
     }
 }
@@ -85,12 +79,9 @@ private fun BattleView.processSunk(event: ThereWasAShot) {
 
             openMessageWindow(message)
 
-            val fleetGrid = when (currentPlayer) {
-                target -> currentPlayerFleetGridPane.center as FleetGrid
-                else -> enemiesFleetGridsPanes[target]!!
-            }
+            val fleetGrid = playersFleetGridsPanes[target]!!
 
-            fleetGrid{
+            fleetGrid {
                 markSunk(shot)
                 hashSetOf<Coord>().also {
                     model.getRightNextTo(shot, it)

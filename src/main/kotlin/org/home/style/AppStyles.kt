@@ -1,6 +1,10 @@
 package org.home.style
 
+import javafx.geometry.Pos.BASELINE_CENTER
+import javafx.geometry.Pos.BASELINE_LEFT
+import javafx.geometry.Pos.BASELINE_RIGHT
 import javafx.scene.Cursor
+import javafx.scene.control.Labeled
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.DARKCYAN
@@ -62,7 +66,7 @@ class AppStyles : Stylesheet() {
         val sunkCellColor = BLACK
         val readyColor: Color = MEDIUMSEAGREEN
         val wrongCellColor: Color = RED
-        val buttonColor = "E8E3E4FF".color
+        val initialAppColor = "E8E3E4FF".color
         val defeatedCellColor = PINK
         val defeatedTitleCellColor = "A93638F4".color
 
@@ -133,7 +137,7 @@ class AppStyles : Stylesheet() {
         //---- components style ----------------------------------------------------------------------------------------
         label     + jetBrainFont
         textField + square
-        button    + background(buttonColor) + jetBrainFont + fillParent + square
+        button    + background(initialAppColor) + jetBrainFont + fillParent + square
         odd       + background(WHITE)       + margin(1.px)
         even      + background(WHITE)       + margin(1.px)
 

@@ -3,7 +3,7 @@ package org.home.style
 import javafx.css.Styleable
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
-import org.home.mvc.view.components.BattleButton
+import org.home.mvc.view.component.button.BattleButton
 import tornadofx.InlineCss
 import tornadofx.style
 

@@ -17,8 +17,8 @@ import org.home.mvc.contoller.events.NewServerConnectionReceived
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.battle.subscriptions.subscriptions
-import org.home.mvc.view.components.transferTo
+import org.home.mvc.view.battle.subscription.subscriptions
+import org.home.mvc.view.component.transferTo
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.label

@@ -1,6 +1,6 @@
 package org.home.mvc.contoller.server.action
 
-import org.home.mvc.view.battle.subscriptions.NewServerInfo
+import org.home.mvc.view.battle.subscription.NewServerInfo
 
 class NewServerAction(player: String) : PlayerAction(player)
 class NewServerConnectionAction(newServer: NewServerInfo): PlayerAction(newServer.player) {
