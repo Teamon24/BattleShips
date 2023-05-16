@@ -1,4 +1,4 @@
-package org.home.run
+package org.home.app.run
 
 import org.home.app.MainApp
 import tornadofx.launch

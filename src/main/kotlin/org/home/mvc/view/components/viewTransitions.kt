@@ -72,14 +72,14 @@ inline fun <reified T : View> View.transferTo(transit: Transit = FORWARD) {
 }
 
 inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(transit: Transit) {
-    find(T::class).also {
+    find<T>().also {
         logTransit(it)
         replaceWith(it, ward<VT>(transit))
     }
 }
 
 inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(transit: Transit) {
-    find(T::class, FxScopes.getGameScope()).also {
+    find<T>(FxScopes.getGameScope()).also {
         logTransit(it)
         replaceWith(it, ward<VT>(transit))
     }

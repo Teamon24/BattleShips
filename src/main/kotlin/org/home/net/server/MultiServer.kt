@@ -1,7 +1,7 @@
 package org.home.net.server
 
 import org.home.mvc.contoller.AbstractGameBean
-import org.home.utils.SocketsMessages
+import org.home.mvc.contoller.server.PlayerSocket
 import org.home.utils.log
 import org.home.utils.logMultiServerThreads
 import tornadofx.Component
@@ -9,6 +9,11 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.LinkedBlockingQueue
+
+typealias SocketMessages<M, S> = Pair<S, Collection<M>>
+typealias SocketsMessages<M, S> = LinkedBlockingQueue<SocketMessages<M, S>>
+typealias PlayersSockets = ConcurrentLinkedQueue<PlayerSocket>
 
 abstract class MultiServer<M : Message, S : Socket>: AbstractGameBean() {
 

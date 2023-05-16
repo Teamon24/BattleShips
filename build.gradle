@@ -229,14 +229,20 @@ private String playerProp(i) {
 private static String content(File file, String playerProp, Integer playerNumber, Integer playersNumber) {
     StringBuilder fileContent = new StringBuilder()
     readFile(file, (line) -> fileContent.append(line).append("\n"))
-
     def lines = Arrays.asList(fileContent.toString().split("\n")) as ArrayList<String>
 
-    lines.set(0               , "currentPlayer=$playerProp")
-    lines.set(lines.size() - 2, "player=$playerNumber")
-    lines.set(lines.size() - 1, "players=$playersNumber")
+    set(lines, "currentPlayer", playerProp)
+    set(lines, "player", playerNumber)
+    set(lines, "players", playersNumber)
 
     return StringUtils.join(lines, "\n")
+}
+
+private static set(ArrayList<String> lines, String prop, Object playerProp) {
+    String propWithEqual = "$prop="
+    def line = lines.stream().filter(it -> it.contains(propWithEqual)).findFirst().get()
+    def index = lines.indexOf(line)
+    lines.set(index, "$prop=$playerProp")
 }
 
 private String propFilepath(String prop) {

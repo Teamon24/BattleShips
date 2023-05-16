@@ -1,25 +1,23 @@
 package org.home.utils
 
+import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.isNotUnit
+import home.extensions.AnysExtensions.refClass
+import home.extensions.AnysExtensions.refNumber
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import javafx.event.Event
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.net.server.MultiServerThread
-import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.isNotUnit
-import home.extensions.AnysExtensions.name
-import home.extensions.AnysExtensions.refClass
-import home.extensions.AnysExtensions.refNumber
-import home.extensions.BooleansExtensions.or
-import home.extensions.BooleansExtensions.then
 import org.home.utils.extensions.StringBuildersExtensions.LogBuilder
 import org.home.utils.extensions.StringBuildersExtensions.add
-import home.extensions.AnysExtensions.className
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import tornadofx.Component
 import tornadofx.FXEvent
-import tornadofx.Scope
 import tornadofx.View
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -47,6 +45,7 @@ inline fun threadErrorLn(build: StringBuilder.() -> Unit) {
     builder.build()
     println(threadLog(builder))
 }
+
 inline fun threadPrintln(build: StringBuilder.() -> Unit) {
     val builder = StringBuilder()
     builder.build()
@@ -73,19 +72,6 @@ inline fun log(disabled: Boolean = false, block: () -> Any?) {
     }
 }
 
-inline fun logInject(target: Component, injection: Component) {
-    log {
-        "${target.componentName} <== ${injection.componentName}"
-    }
-}
-
-inline fun logInject(targetName: String, injection: Component, scope: Scope) {
-    log {
-        "$targetName <== ${injection.componentName} with ${scope.name}"
-    }
-}
-
-
 val Component.componentName get() = "$refClass-[$refNumber]"
 
 fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any = {}) {
@@ -98,7 +84,13 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any 
         ln(dot.repeat(title.length))
         ln(title)
         ln(dot.repeat(title.length))
-        ln(if (stackTrace) { throwable.stackTraceToString() } else {throwable.message} )
+        ln(
+            if (stackTrace) {
+                throwable.stackTraceToString()
+            } else {
+                throwable.message
+            }
+        )
         body().isNotUnit { ln(it.toString()) }
         ln(dot.repeat(ttl.sumOf { it.length } + ttl.size - 1))
         ln()
@@ -133,7 +125,7 @@ inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block:
         val ttl = listOf(dots, titleContent, dots)
 
         val any = block()
-        val title = titleContent.isNotEmpty() then  ttl.joinToString(" ") or titleSign.repeat(any.toString().length)
+        val title = titleContent.isNotEmpty() then ttl.joinToString(" ") or titleSign.repeat(any.toString().length)
         threadPrintln(title)
         any.isNotUnit {
             threadPrintln(it)
@@ -145,10 +137,19 @@ inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block:
 fun line(length: Int) = UI_EVENT_SIGN.repeat(length)
 
 
-
 inline fun logReceive(disabled: Boolean = false, crossinline block: () -> Any) {
     if (!disabled) {
         log { "$LEFT_ARROW$comString ${block()}" }
+    }
+}
+
+inline fun <T> logReceive(socket: Socket, block: () -> T) {
+    logComLogic(socket, { "$LEFT_ARROW$it" }, block)
+}
+
+fun <S : Socket> logReceive(socket: S, messages: Collection<Message>) {
+    logReceive(socket) {
+        messages.forEach { logReceive { it } }
     }
 }
 
@@ -158,15 +159,9 @@ inline fun logSend(disabled: Boolean = false, crossinline block: () -> Any) {
     }
 }
 
-inline fun <T> logReceive(socket: Socket, block: () -> T) = logComLogic(socket, { "$LEFT_ARROW$it" }, block)
-
-fun <S: Socket> logReceive(socket: S, messages: Collection<Message>) {
-    logReceive(socket) {
-        messages.forEach { logReceive { it } }
-    }
+inline fun <T> logSend(socket: Socket, block: () -> T) {
+    logComLogic(socket, { "$it$RIGHT_ARROW" }, block)
 }
-
-inline fun <T> logSend(socket: Socket, block: () -> T) = logComLogic(socket, { "$it$RIGHT_ARROW" }, block)
 
 inline fun <T> logComLogic(socket: Socket, comLine: (String) -> String, block: () -> T) {
     val dashesNumber = N
@@ -212,11 +207,10 @@ fun MultiServer<*, *>.logMultiServerThreads(b: Boolean = true) {
     }
 }
 
-fun MultiServerThread<*, *>.logMultiServerThread(lengthOfMax: Int) {
+private fun MultiServerThread<*, *>.logMultiServerThread(lengthOfMax: Int) {
     val indent = " ".repeat(lengthOfMax - name.length)
     threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
 }
 
 
 private fun coord(it: Event) = (it.source as FleetCell).coord
-

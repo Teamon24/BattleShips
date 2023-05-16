@@ -1,7 +1,8 @@
 package org.home.app.di
 
-import home.extensions.AnysExtensions.name
-import org.home.utils.log
+import home.extensions.BooleansExtensions.so
+import org.home.app.di.GameScope.GameInject.FX
+import org.home.app.di.GameScope.GameInject.KOIN
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.component.createScope
 import tornadofx.Component
@@ -11,24 +12,30 @@ import kotlin.properties.ReadOnlyProperty
 
 object GameScope {
 
+    enum class GameInject {
+        KOIN, FX;
+
+        companion object {
+            inline fun GameInject.isKoin(onTrue: () -> Unit) = (this == FX).so(onTrue)
+        }
+    }
+
+    val gameInject = KOIN
+
     class NewGameScope : KoinScopeComponent {
         override val scope: KScope by lazy { createScope(this) }
         fun close() = scope.close()
     }
 
-    enum class GameInject { KOIN, FX }
-    val gameInject = GameInject.FX
-
-    private val newGameInitializer = scopes()
-
-    private fun scopes() = when (gameInject) {
-            GameInject.KOIN -> KoinScopes
-            GameInject.FX -> FxScopes
+    fun createNew() {
+        when (gameInject) {
+            KOIN -> {
+                FxScopes.createNew()
+                KoinScopes.createNew()
+            }
+            FX -> FxScopes.createNew()
         }
 
-    fun createNew() {
-        newGameInitializer.createNew()
-        log { "$gameInject new game created" }
     }
 
     inline fun <reified T> inject(): ReadOnlyProperty<Component, T> where
@@ -36,10 +43,8 @@ object GameScope {
             T : ScopedInstance = ReadOnlyProperty { _, _ ->
 
         when (gameInject) {
-            GameInject.KOIN -> KoinScopes.getGameScope().get<T>()
-            GameInject.FX -> find<T>(FxScopes.getGameScope())
-        }.apply {
-            log { "bean - ${this.name}" }
+            KOIN -> KoinScopes.getGameScope().get<T>()
+            FX -> find<T>(FxScopes.getGameScope())
         }
     }
 }

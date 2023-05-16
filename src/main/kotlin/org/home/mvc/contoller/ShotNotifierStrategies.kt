@@ -7,9 +7,8 @@ import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.MissAction
-import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
-import org.home.utils.PlayersSockets
+import org.home.net.server.PlayersSockets
 import tornadofx.Controller
 import kotlin.reflect.KClass
 

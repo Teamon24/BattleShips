@@ -10,6 +10,7 @@ import org.home.mvc.contoller.ShipsTypesPaneComponent
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.server.BattleClient
+import org.home.mvc.contoller.server.BattleEndingComponent
 import org.home.mvc.contoller.server.BattleServer
 import org.home.mvc.contoller.server.PlayerSocket
 import org.home.mvc.contoller.server.PlayerTurnComponent
@@ -25,7 +26,7 @@ import org.home.net.server.MultiServer
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-fun singletons(properties: String): Module {
+fun netControllers(properties: String): Module {
     return module {
         single { ApplicationProperties(properties) }
 
@@ -55,6 +56,7 @@ fun gameScoped(): Module {
             scoped { BattleModel() }
             scoped { FleetGridController() }
             scoped { FleetGridCreator() }
+            scoped { BattleEndingComponent() }
 
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }

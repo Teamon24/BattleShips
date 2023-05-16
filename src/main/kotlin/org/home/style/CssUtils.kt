@@ -3,7 +3,6 @@ package org.home.style
 import javafx.geometry.Pos
 import javafx.scene.paint.Color
 import org.home.style.AppStyles.Companion.fleetBorderWidth
-import org.home.utils.LinearUnits
 import tornadofx.CssSelectionBlock
 import tornadofx.MultiValue
 import tornadofx.box

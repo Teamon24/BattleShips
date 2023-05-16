@@ -24,9 +24,8 @@ import org.home.mvc.model.aintHit
 import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.MultiServer
 import org.home.utils.PlayerSocketUtils.send
-import org.home.utils.PlayersSocketsExtensions.get
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
-
 
 class ShotProcessingComponent: AbstractGameBean() {
 

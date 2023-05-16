@@ -71,7 +71,7 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
 
     override val currentPlayer: String get() = super.currentPlayer
 
-    private val battleEventEmitter: BattleEventEmitter by GameScope.inject()
+    private val battleEndingComponent: BattleEndingComponent by GameScope.inject()
 
     private val awaitConditions: AwaitConditions by GameScope.inject()
 
@@ -201,7 +201,7 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
     }
 
     override fun endBattle() {
-        battleEventEmitter.endBattle()
+        battleEndingComponent.endBattle()
     }
 
 

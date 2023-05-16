@@ -32,6 +32,7 @@ import org.home.style.CssUtils.text
 import tornadofx.CssRule
 import tornadofx.CssSelection
 import tornadofx.CssSelectionBlock
+import tornadofx.Dimension
 import tornadofx.Stylesheet
 import tornadofx.box
 import tornadofx.cssclass
@@ -39,6 +40,8 @@ import tornadofx.loadFont
 import tornadofx.mixin
 import tornadofx.px
 import java.net.URI
+
+typealias LinearUnits = Dimension<Dimension.LinearUnits>
 
 class AppStyles : Stylesheet() {
 

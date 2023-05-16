@@ -186,7 +186,6 @@ abstract class Transition(protected val region: Region) {
 
     private fun play() {
         isPlaying(true)
-        log { "${this.name} is playing" }
         var count = getCounter()
         val colors = getColors()
 
@@ -216,7 +215,6 @@ abstract class Transition(protected val region: Region) {
         } while (count in 1..steps && !disabled())
 
         isPlaying(false)
-        log { "${this.name} is finished" }
         onFinish()
     }
 

@@ -6,7 +6,7 @@ import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.action.BattleEndAction
 
-class BattleEventEmitter: AbstractGameBean() {
+class BattleEndingComponent: AbstractGameBean() {
     fun endBattle() {
         model {
             battleIsEnded = true

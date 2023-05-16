@@ -13,12 +13,9 @@ import kotlin.reflect.KClass
 
 abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::class) {
     init {
+        currentThreadName("UI")
         importStylesheet("/${AppStyles.playersListView}.css")
-        Thread.currentThread().name = "UI"
-
-        FX.dicontainer = object : DIContainer, KoinComponent {
-            override fun <T : Any> getInstance(type: KClass<T>) = getKoin().get<T>(clazz = type)
-        }
+        FX.dicontainer = diContainer()
     }
 
     override fun start(stage: Stage) {
@@ -28,4 +25,12 @@ abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::cla
         stage.isMaximized = false
         super.start(stage)
     }
+
+    private fun currentThreadName(name: String) {
+        Thread.currentThread().name = name
+    }
+
+    private fun diContainer() = object : DIContainer, KoinComponent {
+       override fun <T : Any> getInstance(type: KClass<T>) = getKoin().get<T>(clazz = type)
+   }
 }

@@ -28,6 +28,8 @@ import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.isNotClosed
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.exclude
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.AreReadyAction
 import org.home.mvc.contoller.server.action.BattleContinuationAction
@@ -60,15 +62,13 @@ import org.home.mvc.view.battle.subscriptions.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
-import org.home.utils.PlayersSocketsExtensions.exclude
-import org.home.utils.PlayersSocketsExtensions.get
-import org.home.utils.PlayersSocketsExtensions.isNotClosed
-import org.home.utils.SocketUtils.send
 import org.home.utils.log
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
+import org.home.utils.SocketUtils.send
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
-    private val battleEventEmitter: BattleEventEmitter by GameScope.inject()
+    private val battleEndingComponent: BattleEndingComponent by GameScope.inject()
     private val awaitConditions: AwaitConditions by GameScope.inject()
     private val shotProcessingComponent: ShotProcessingComponent by di()
     private val playerTurnComponent: PlayerTurnComponent by di()
@@ -119,7 +119,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
     override fun endBattle() {
-        battleEventEmitter.endBattle()
+        battleEndingComponent.endBattle()
     }
 
     override fun connect(ip: String, port: Int) {

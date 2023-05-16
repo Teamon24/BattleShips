@@ -13,11 +13,11 @@ typealias KScope = org.koin.core.scope.Scope
 typealias FxScope = tornadofx.Scope
 
 sealed class Scopes<ScopeType> {
-    protected var gameScopeBackingField: ScopeType? = null
+    protected var _gameScope: ScopeType? = null
 
-    open fun getGameScope(): ScopeType = gameScopeBackingField ?: run {
-        gameScopeBackingField = getScope()
-        gameScopeBackingField!!
+    open fun getGameScope() = _gameScope ?: run {
+        _gameScope = getScope()
+        _gameScope!!
     }
 
     abstract fun getScope(): ScopeType
@@ -28,19 +28,20 @@ object KoinScopes: Scopes<KScope>() {
     override fun getScope() = getKoin().createScope<NewGameScope>()
 
     override fun createNew() {
-        gameScopeBackingField?.close()
-        gameScopeBackingField = getKoin().createScope<NewGameScope>()
+        _gameScope?.close()
+        _gameScope = getScope()
+        log { "$name created NEW - ${getGameScope().name}" }
     }
 }
 
 
 object FxScopes: Scopes<FxScope>() {
-
     override fun getScope() = FxScope()
 
     override fun createNew() {
-        gameScopeBackingField = FxScope()
+        _gameScope = getScope()
         BattleModel().inScope(getGameScope())
+        log { "$name created NEW - ${getGameScope().name}" }
     }
 
     private inline fun <reified T> T.inScope(scope: FxScope) where T : Component, T : ScopedInstance {
