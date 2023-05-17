@@ -1,11 +1,12 @@
 package org.home.mvc.view.fleet
 
+import home.extensions.AtomicBooleansExtensions.invoke
+import home.extensions.BooleansExtensions.so
 import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
-import javafx.scene.layout.GridPane
 import kotlinx.coroutines.delay
 import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.ShipsTypesController
@@ -13,16 +14,13 @@ import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
-import org.home.mvc.view.component.GridPaneExtensions.getCell
-import org.home.mvc.view.fleet.FleetGridStyleComponent.addBorderColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.addIncorrectColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.addSelectionColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeBorderColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeSelectionColor
-import home.extensions.AtomicBooleansExtensions.invoke
-import home.extensions.BooleansExtensions.so
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addBorderColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addIncorrectColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addSelectionColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeBorderColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeIncorrectColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeSelectionColor
 import org.home.utils.log
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch
@@ -42,7 +40,7 @@ class FleetGridHandlers(
         return backingHandlers
     }
 
-    fun addDragEnteredHandler(currentCell: FleetCell, gridPane: GridPane) {
+    fun addDragEnteredHandler(currentCell: FleetCell, gridPane: FleetGrid) {
         currentCell.leftClickHandler(MouseDragEvent.MOUSE_DRAG_ENTERED) {
             if (startWithinBorder() ||
                 mouseWentOutOfBound() ||
@@ -52,9 +50,7 @@ class FleetGridHandlers(
                 return@leftClickHandler
             }
 
-            if (beingConstructed.isNotEmpty() &&
-                beingConstructed.first().withinAnyBorder(ships)
-            ) {
+            if (beingConstructed.isNotEmpty() && beingConstructed.first().withinAnyBorder(ships)) {
                 startWithinBorder(true)
                 gridPane.removeAnyColor(beingConstructed)
                 beingConstructed.clear()
@@ -65,7 +61,7 @@ class FleetGridHandlers(
                 val last = beingConstructed.last()
                 beingConstructed.remove(last)
 
-                val lastCell = gridPane.getCell(last)
+                val lastCell = gridPane.cell(last)
                 if (ships.any { ship -> last in ship }) {
                     lastCell.removeIncorrectColor()
                 } else {
@@ -110,7 +106,7 @@ class FleetGridHandlers(
         log { beingConstructed }
     }
 
-    fun addDragReleasedHandler(currentCell: FleetCell, gridPane: GridPane) {
+    fun addDragReleasedHandler(currentCell: FleetCell, gridPane: FleetGrid) {
         currentCell.leftClickHandler(MouseDragEvent.MOUSE_DRAG_RELEASED) {
             if (startWithinBorder()) {
                 startWithinBorder(false)
@@ -126,13 +122,13 @@ class FleetGridHandlers(
                 val toRemove = beingConstructed.filter { it !in flatten }
 
                 toRemove.forEach {
-                    gridPane.getCell(it).removeSelectionColor()
-                    gridPane.getCell(it).addIncorrectColor()
+                    gridPane.cell(it).removeSelectionColor()
+                    gridPane.cell(it).addIncorrectColor()
                 }
 
                 threadScopeLaunch {
                     delay(incorrectCellRemovingTime)
-                    toRemove.forEach { gridPane.getCell(it).removeIncorrectColor() }
+                    toRemove.forEach { gridPane.cell(it).removeIncorrectColor() }
                     gridPane.removeIncorrectColor(beingConstructed)
                     beingConstructed.clear()
                 }
@@ -152,9 +148,8 @@ class FleetGridHandlers(
         }
     }
 
-    fun addRightMouseClickHandler(currentCell: FleetCell) {
+    fun addRightMouseClickHandler(currentCell: FleetCell, gridPane: FleetGrid) {
         currentCell.rightClickHandler(MouseDragEvent.MOUSE_CLICKED) {
-            val gridPane = currentCell.parent as GridPane
 
             val beingDeletedShip = ships.firstOrNull { currentCell.coord in it }
 
@@ -172,7 +167,7 @@ class FleetGridHandlers(
         }
     }
 
-    fun addLeftMouseClickHandler(currentCell: FleetCell, gridPane: GridPane) {
+    fun addLeftMouseClickHandler(currentCell: FleetCell, gridPane: FleetGrid) {
 
         currentCell.leftClickHandler(MouseDragEvent.MOUSE_CLICKED) {
             if (withinBorder(currentCell, gridPane)) return@leftClickHandler
@@ -188,7 +183,7 @@ class FleetGridHandlers(
         }
     }
 
-    private fun withinBorder(currentCell: FleetCell, gridPane: GridPane): Boolean {
+    private fun withinBorder(currentCell: FleetCell, gridPane: FleetGrid): Boolean {
         val first = ships.firstOrNull { ship -> currentCell.coord.withinAnyBorder(ship) }
         return when (first) {
             null -> false

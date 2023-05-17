@@ -5,7 +5,7 @@ import org.home.mvc.model.Coord
 import org.home.mvc.model.Ships
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
-import org.home.mvc.view.fleet.FleetGridStyleComponent.addSelectionColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addSelectionColor
 import tornadofx.CssRule
 import tornadofx.addClass
 

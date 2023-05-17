@@ -17,8 +17,8 @@ import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.AbstractGameBean
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeIncorrectColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeIncorrectColor
 import org.home.style.AppStyles
 import org.home.utils.logCoordinate
 import org.home.utils.threadScopeLaunch
@@ -74,7 +74,7 @@ class FleetGridController : AbstractGameBean() {
                     fleetGridHandlers.addDragEnteredHandler(cell, this)
                     fleetGridHandlers.addDragReleasedHandler(cell, this)
                     fleetGridHandlers.addLeftMouseClickHandler(cell, this)
-                    fleetGridHandlers.addRightMouseClickHandler(cell)
+                    fleetGridHandlers.addRightMouseClickHandler(cell, this)
                 }
 
                 titleCellEventHandlers.forEach { (event, handler) ->
@@ -105,7 +105,7 @@ class FleetGridController : AbstractGameBean() {
         exitHappened(false)
     }
 
-    private fun GridPane.exitHappened() = EventHandler { event: MouseEvent ->
+    private fun FleetGrid.exitHappened() = EventHandler { event: MouseEvent ->
         exitHappened(true)
         if (dragged()) {
             event.logCoordinate()

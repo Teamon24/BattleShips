@@ -11,6 +11,7 @@ import org.home.mvc.view.component.GridPaneExtensions
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.chosenCellColor
 import org.home.style.ColorUtils.withOpacity
 import tornadofx.addChildIfPossible
 import tornadofx.addClass
@@ -56,7 +57,7 @@ object Animations {
         gridPane.children.forEach {
             val (i, j) = it.getIndices()
             val rectangle = gridPane.getCell(i, j) as Rectangle
-            randomFillAnimation(rectangle, AppStyles.chosenCellColor.withOpacity(0.001), time)
+            randomFillAnimation(rectangle, chosenCellColor.withOpacity(0.001), time)
         }
     }
 
@@ -64,7 +65,7 @@ object Animations {
         gridPane.children.forEach {
             val (i, j) = it.getIndices()
             val rectangle = gridPane.getCell(i, j) as Rectangle
-            waveAnimation(rectangle, i, j, rows, cols, rows / 2, AppStyles.chosenCellColor.withOpacity(0.5), time)
+            waveAnimation(rectangle, i, j, rows, cols, rows / 2, chosenCellColor.withOpacity(0.5), time)
         }
     }
 

@@ -8,7 +8,7 @@ import javafx.scene.layout.Region
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.removeColumn
 import org.home.mvc.view.fleet.FleetCellLabel
-import org.home.mvc.view.fleet.FleetGridStyleComponent.removeAnyColor
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
@@ -18,6 +18,7 @@ import org.home.utils.log
 import tornadofx.action
 import tornadofx.addClass
 import tornadofx.onChange
+import tornadofx.removeClass
 import tornadofx.runLater
 
 class ShipsTypesPaneComponent: AbstractGameBean() {
@@ -111,7 +112,7 @@ class ShipsTypesPaneComponent: AbstractGameBean() {
     private fun FleetCellLabel.updateClass(it: String?, shipType: Int) {
         when {
             it == "0" -> addClass(AppStyles.titleCell)
-            0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeAnyColor()
+            0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeClass(AppStyles.titleCell)
             else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
         }
     }

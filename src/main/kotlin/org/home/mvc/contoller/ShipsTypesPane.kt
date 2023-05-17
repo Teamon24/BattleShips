@@ -36,4 +36,7 @@ class ShipsTypesPane: GridPane() {
     }
 
     fun getTypeLabels() = children.filterIsInstance<ShipTypeLabel>()
+
+    fun forEachTypeLabel(block: (ShipTypeLabel) -> Unit) = getTypeLabels().forEach(block)
+
 }

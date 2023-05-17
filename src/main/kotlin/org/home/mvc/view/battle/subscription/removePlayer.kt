@@ -13,12 +13,12 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.battle.defeatedFillTransition
-import org.home.mvc.view.component.button.BattleButton
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.component.Transit
+import org.home.mvc.view.component.button.BattleButton
 import org.home.mvc.view.component.transferTo
+import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles.Companion.defeatedTitleCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
@@ -54,7 +54,9 @@ internal fun BattleView.playerWasDefeated() {
             val fleetGrid = playersFleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
             val fleetReadiness = playersFleetsReadinessPanes[defeated]!!
 
-            defeatedFillTransition(defeated, fleetGrid, fleetReadiness)
+            FleetGridStyleTransition {
+                defeatedFillTransition(defeated, fleetGrid, fleetReadiness)
+            }
 
             openMessageWindow {
                 val args = when (defeated.isCurrent) {

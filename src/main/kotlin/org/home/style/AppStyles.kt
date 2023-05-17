@@ -1,10 +1,6 @@
 package org.home.style
 
-import javafx.geometry.Pos.BASELINE_CENTER
-import javafx.geometry.Pos.BASELINE_LEFT
-import javafx.geometry.Pos.BASELINE_RIGHT
 import javafx.scene.Cursor
-import javafx.scene.control.Labeled
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.DARKCYAN
@@ -65,7 +61,7 @@ class AppStyles : Stylesheet() {
         val titleCellColor = LIGHTSLATEGRAY
         val sunkCellColor = BLACK
         val readyColor: Color = MEDIUMSEAGREEN
-        val wrongCellColor: Color = RED
+        val incorrectCellColor: Color = RED
         val initialAppColor = "E8E3E4FF".color
         val defeatedCellColor = PINK
         val defeatedTitleCellColor = "A93638F4".color
@@ -172,11 +168,12 @@ class AppStyles : Stylesheet() {
         defeatedTitleCell + background(defeatedTitleCellColor) + text(WHITE)
         chosenCell        + background(chosenCellColor)        + text(WHITE) + noBorder
         titleCell         + background(titleCellColor)         + text(WHITE) + border
-        incorrectCell     + background(wrongCellColor)         + noBorder
-        animationCell     + background(chosenCellColor)        + noBorder
+        incorrectCell     + background(incorrectCellColor)     + noBorder
         hitCell           + background(hitCellColor)           + border
         defeatedCell      + background(defeatedCellColor)      + border
+
         missCell          + radius(fleetCellSize / 4)          + border
+        animationCell     + noBorder
 
         val shipBorderCellColor = RED
         (shipBorderCell + background(shipBorderCellColor.withOpacity(0.3))) {

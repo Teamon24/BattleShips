@@ -5,6 +5,8 @@ import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.ReadyPlayersReceived
 import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
+import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
 import org.home.utils.log
 import org.home.utils.logEvent
 

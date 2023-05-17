@@ -3,6 +3,7 @@ package org.home.mvc.view.component
 import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.layout.GridPane
+import javafx.scene.layout.Region
 import org.home.mvc.model.Coord
 import org.home.style.AppStyles
 import tornadofx.addClass
@@ -20,6 +21,8 @@ object GridPaneExtensions {
         )
 
     fun GridPane.getCell(cell: Coord) = getCell(cell.first, cell.second)
+
+    fun <R: Region> GridPane.getCell(cell: Coord) = getCell(cell.first, cell.second) as R
 
     fun GridPane.getCell(row: Int, col: Int): Node {
         for (node in children) {
