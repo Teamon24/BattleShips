@@ -41,8 +41,8 @@ sealed class BattleEvent: FXEvent() {
             is BattleIsEnded -> "BattleIsEnded(winner=$player)"
             is NewServerReceived -> "GotNewServer($player)"
             is NewServerConnectionReceived -> "GotNewServerConnection(${action.string()})"
-            is ShipWasAdded -> "[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
-            is ShipWasDeleted -> "[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
+            is ShipWasAdded -> "[$player: $opSign${RomansDigits.arabicToRoman(shipType)}]"
+            is ShipWasDeleted -> "[$player: $opSign${RomansDigits.arabicToRoman(shipType)}]"
 
             is FleetSettingsReceived ->
                 buildString {

@@ -1,19 +1,18 @@
 package org.home.mvc.contoller
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.removeColumn
+import org.home.mvc.view.component.button.BattleButton
 import org.home.mvc.view.fleet.FleetCellLabel
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
-import home.extensions.AnysExtensions.name
-import org.home.mvc.view.component.button.BattleButton
 import org.home.utils.log
 import tornadofx.action
 import tornadofx.addClass
@@ -88,7 +87,7 @@ class ShipsTypesPaneComponent: AbstractGameBean() {
         }
 
     fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: SimpleIntegerProperty): FleetCellLabel {
-        val fleetCellLabel = FleetCellLabel(shipsNumber.value.toString())
+        val fleetCellLabel = ShipsNumberLabel(shipsNumber.value)
 
         gridPane.add(fleetCellLabel, shipType, 1)
         gridPane.minWidth = Region.USE_PREF_SIZE

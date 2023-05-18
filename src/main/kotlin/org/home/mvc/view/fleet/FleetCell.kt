@@ -9,7 +9,7 @@ import tornadofx.CssRule
 import tornadofx.add
 import tornadofx.addClass
 
-open class FleetCellLabel(text: String = "") : Label(text) {
+sealed class FleetCellLabel(text: String = "") : Label(text) {
     init { addClass(AppStyles.fleetLabel) }
 }
 
@@ -27,15 +27,6 @@ fun EventTarget.titleCell(row: Int, col: Int, text: String) =
     cell(row, col, text, AppStyles.titleCell)
 
 private fun EventTarget.cell(row: Int, col: Int, text: String, cssClass: CssRule) =
-    FleetCell(row, col, text).also {
-        it
-            .addClass(AppStyles.fleetLabel)
-            .addClass(cssClass)
-        add(it)
-    }
+    FleetCell(row, col, text).also { add(it.addClass(cssClass)) }
 
-private fun EventTarget.cell(row: Int, col: Int, text: String) =
-    FleetCell(row, col, text).also {
-        it.addClass(AppStyles.fleetLabel)
-        add(it)
-    }
+private fun EventTarget.cell(row: Int, col: Int, text: String) = FleetCell(row, col, text).also { add(it) }

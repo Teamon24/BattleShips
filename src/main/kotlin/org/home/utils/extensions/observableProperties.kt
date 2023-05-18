@@ -16,7 +16,7 @@ object ObservablePropertiesExtensions {
     fun <E> emptySimpleListProperty() =
         SimpleListProperty<E>(FXCollections.observableList(mutableListOf()))
 
-    fun <K, V> SimpleMapProperty<K, V>.copy() = toMutableMap().toObservable()
+    fun <K, V> SimpleMapProperty<K, V>.copy() = SimpleMapProperty(toMutableMap().toObservable())
 }
 
 class ObservableValueMap<K, V> : HashMap<K, V>() {

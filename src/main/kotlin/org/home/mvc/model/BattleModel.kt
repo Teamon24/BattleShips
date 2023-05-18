@@ -10,7 +10,6 @@ import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
-import javafx.collections.ObservableMap
 import org.home.mvc.ApplicationProperties
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
@@ -87,7 +86,7 @@ class BattleModel : ViewModel() {
         .updateFleetReadiness()
         .putInitials()
 
-    fun copyShipsTypes(): ObservableMap<Int, Int> {
+    fun copyShipsTypes(): ShipsTypes {
         val copy = shipsTypes.copy()
         applicationProperties.ships?.let { ships ->
             ships.forEach {
@@ -167,7 +166,7 @@ class BattleModel : ViewModel() {
             set(currentPlayer, ships)
             log { "init ships from app props - $ships" }
             fleetsReadiness {
-                val initialFleetReadiness = fleetReadiness(ships)
+                val initialFleetReadiness = ships.fleetReadiness()
                 if (initialFleetReadiness == shipsTypes) {
                     setReady(currentPlayer)
                 }
@@ -183,18 +182,9 @@ class BattleModel : ViewModel() {
         return this
     }
 
-    private fun fleetReadiness(ships: Ships): Map<Int, Int> {
-        return ships
-            .map { it.size }
-            .distinct()
-            .associateWith { type ->
-                ships.count { type == it.size }
-            }
-    }
-
     fun FleetsReadiness.update(event: FleetEditEvent) {
         event {
-            get(player)!![shipType]!!.operation()
+            get(player)!![shipType]!!.propOp()
         }
     }
 
@@ -225,17 +215,23 @@ class BattleModel : ViewModel() {
             .map { it.shot }
     }
 
-    fun String.addedAllShips(): Boolean {
-        val decks = this.ships().flatten().count()
-        val shouldBe = shipsTypes.entries.sumOf { it.key * it.value }
-        log { "hasAllShips [decks == shouldBe; $decks ? $shouldBe"}
-        return decks == shouldBe
+    fun lastShipWasAdded(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(0).so(onTrue)
+    fun lastShipWasDeleted(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(1).so(onTrue)
+
+    private fun String.lastShipWasEdited(i: Int): Boolean {
+        val restShipsNumbers = fleetsReadiness[currentPlayer]!!
+            .values
+            .map { it.value }
+
+        return restShipsNumbers.run {
+            val otherTypesAdded = count { it == 0 } == size - i
+            val restTypeEdited = count { it == 1 } == i
+            otherTypesAdded && restTypeEdited
+        }
+
     }
 
-    inline fun String.addedAllShips(onTrue: () -> Unit) = addedAllShips().so(onTrue)
-
     fun hasReady(player: String) = player in readyPlayers
-    val String.isReady get() = this in readyPlayers
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
 
     fun setReady(player: String) { readyPlayers.add(player) }
@@ -257,7 +253,7 @@ class BattleModel : ViewModel() {
     inline val String?.isCurrent get() = currentPlayer == this
     inline val String?.isNotCurrent get() = currentPlayer != this
     inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
-    inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
+    private inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
     fun hasCurrent(player: String?) = player.isCurrent
 
     fun shipsOf(player: String) = playersAndShips[player]!!

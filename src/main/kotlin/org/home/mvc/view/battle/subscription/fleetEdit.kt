@@ -14,24 +14,40 @@ import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.battle.BattleView
 import org.home.utils.logEvent
 
 internal fun BattleView.shipWasAdded() {
     subscribe<ShipWasAdded> {
-        processFleetEdit(it, ::ShipAdditionAction, model::setReady, ::ReadyAction, ::PlayerIsReadyReceived)
+        processFleetEdit(
+            it,
+            ::ShipAdditionAction,
+            { model, player, onTrue -> model.lastShipWasAdded(player, onTrue) },
+            model::setReady,
+            ::ReadyAction,
+            ::PlayerIsReadyReceived
+        )
     }
 }
 
 internal fun BattleView.shipWasDeleted() {
     subscribe<ShipWasDeleted> {
-        processFleetEdit(it, ::ShipDeletionAction, model::setNotReady, ::NotReadyAction, ::PlayerIsNotReadyReceived)
+        processFleetEdit(
+            it,
+            ::ShipDeletionAction,
+            { model, player, onTrue -> model.lastShipWasDeleted(player, onTrue) },
+            model::setNotReady,
+            ::NotReadyAction,
+            ::PlayerIsNotReadyReceived
+        )
     }
 }
 
 private fun BattleView.processFleetEdit(
     event: FleetEditEvent,
     action: (Int, String) -> FleetEditAction,
+    lastShipWasEdited: (BattleModel, String, () -> Unit) -> Unit,
     setReadiness: (String) -> Unit,
     createReadinessAction: (String) -> PlayerReadinessAction,
     createEvent: (String) -> PlayerReadinessReceived
@@ -44,9 +60,9 @@ private fun BattleView.processFleetEdit(
             battleController.send {
                 player.isCurrent {
                     + action(shipType, currentPlayer)
-                    player.addedAllShips {
+                    lastShipWasEdited(model, player) {
                         setReadiness(player)
-                        eventbus { +createEvent(player) }
+                        eventbus(createEvent(player))
                         + createReadinessAction(player)
                     }
                 }

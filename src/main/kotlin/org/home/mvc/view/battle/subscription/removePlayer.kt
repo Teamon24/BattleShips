@@ -59,18 +59,12 @@ internal fun BattleView.playerWasDefeated() {
             }
 
             openMessageWindow {
-                val args = when (defeated.isCurrent) {
-                    true -> listOf("Вы", "и")
-                    else -> listOf(defeated, "")
-                }
+                val args = defeated.isCurrent then listOf("Вы", "и") or listOf(defeated, "")
                 "${args[0]} проиграл${args[1]}"
             }
 
-            val battleView = this@playerWasDefeated
-
             defeated.isCurrent {
-                (battleViewExitButton as BattleButton).disableHover()
-                battleView.updateLeaveBattleFieldButton()
+                updateLeaveBattleFieldButton()
             }
 
             hasAWinner {
@@ -104,6 +98,7 @@ private fun BattleView.removePlayer(player: String) {
 }
 
 fun BattleView.updateLeaveBattleFieldButton() {
+    (battleViewExitButton as BattleButton).disableHover()
     val buttonIndices = battleViewExitButtonIndices
     root {
         children.removeIf { it.getIndices() == buttonIndices }

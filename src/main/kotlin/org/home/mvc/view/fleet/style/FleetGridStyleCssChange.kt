@@ -5,34 +5,44 @@ import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
-import javafx.scene.layout.Region
 import javafx.scene.paint.Color
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Ship
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
+import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.chosenCellColor
 import org.home.style.AppStyles.Companion.defeatedCellColor
 import org.home.style.AppStyles.Companion.defeatedTitleCellColor
+import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
+import org.home.style.AppStyles.Companion.shipBorderCellColor
 import org.home.style.AppStyles.Companion.titleCellColor
 import org.home.style.ColorUtils.withOpacity
 import tornadofx.style
 
 object FleetGridStyleCssChange: FleetGridStyleComponent {
-    override fun FleetCell.removeAnyColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.addSelectionColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.addIncorrectColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.addBorderColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.removeSelectionColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.removeIncorrectColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetCell.removeBorderColor(): FleetCell { TODO("Not yet implemented") }
-    override fun FleetGrid.addSelectionColor(ship: Ship) { TODO("Not yet implemented") }
 
-    private fun Region.background(color: Color) = style { backgroundColor += color }
+    override fun FleetCell.removeAnyColor() = background(initialAppColor)
+    override fun FleetCell.addSelectionColor() = background(chosenCellColor)
+    override fun FleetCell.addIncorrectColor() = background(incorrectCellColor)
+    override fun FleetCell.addBorderColor() = background(shipBorderCellColor)
+
+    override fun FleetGrid.addSelectionColor(ship: Ship) {
+        forEachCell(ship) { background(chosenCellColor) }
+    }
+
+    override fun FleetCell.removeSelectionColor() = background(initialAppColor)
+    override fun FleetCell.removeIncorrectColor() = background(incorrectCellColor)
+    override fun FleetCell.removeBorderColor() = background(initialAppColor)
+
+    private fun <T: FleetCellLabel> T.background(color: Color) = apply {
+        style(append = true) { backgroundColor += color }
+    }
+
     private fun FleetCell.text(color: Color) = style { textFill = color }
 
     override fun BattleView.ready(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
@@ -72,7 +82,11 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
             .forEachTypeLabel { it.background(chosenCellColor) }
     }
 
-    override fun BattleModel.defeatedFillTransition(defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
+    override fun BattleModel.defeatedFillTransition(
+        defeated: String,
+        fleetGrid: FleetGrid,
+        fleetReadiness: ShipsTypesPane
+    ) {
         fleetGrid
             .onEachTitleCells {
                 it.background(defeatedTitleCellColor)

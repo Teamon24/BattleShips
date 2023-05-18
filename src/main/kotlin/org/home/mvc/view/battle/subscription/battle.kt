@@ -85,6 +85,7 @@ internal fun BattleView.battleIsStarted() {
 
         model.readyPlayers.clear()
         battleStartButton.hide()
+        updateCurrentPlayerFleetGrid()
 
         //НАЙТИ КАК УДАЛИТЬ EventHandler'ы у FleetGreed
         openMessageWindow { "Бой начался" }

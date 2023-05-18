@@ -7,6 +7,7 @@ import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.style.AppStyles.Companion.chosenCell
+import org.home.style.AppStyles.Companion.emptyCellIncorrect
 import org.home.style.AppStyles.Companion.hitCell
 import org.home.style.AppStyles.Companion.incorrectCell
 import org.home.style.AppStyles.Companion.shipBorderCell
@@ -30,9 +31,11 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
     override fun FleetCell.addSelectionColor() = addClass(chosenCell)
     override fun FleetCell.addIncorrectColor() = addClass(incorrectCell)
     override fun FleetCell.addBorderColor()    = addClass(shipBorderCell)
+    fun FleetCell.addIncorrectHover() = addClass(emptyCellIncorrect)
 
     override fun FleetCell.removeSelectionColor() = removeClass(chosenCell)
     override fun FleetCell.removeIncorrectColor() = removeClass(incorrectCell)
+    fun FleetCell.removeIncorrectHover() = removeClass(emptyCellIncorrect)
     override fun FleetCell.removeBorderColor()    = removeClass(shipBorderCell)
 
     override fun FleetGrid.addSelectionColor(ship: Ship) {

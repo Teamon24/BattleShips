@@ -24,10 +24,11 @@ import tornadofx.style
 
 object StyleUtils {
 
-    val Region.backgroundColor get() = background?.fills?.get(0)?.fill?.color ?: Color.WHITE
-    val Labeled.textColor get() = textFill?.color ?: Color.WHITE
+    val Region.backgroundColor: Color get() = background?.fills?.get(0)?.fill?.color ?: WHITE
+    val Labeled.textColor: Color get() = textFill?.color ?: WHITE
 
-    fun Region.fillBackground(from: Color = backgroundColor, to: Color) = filling(from, to) { backgroundColor += it }
+    fun Region.fillBackground(from: Color = backgroundColor, to: Color) =
+        filling(from, to) { backgroundColor += it }
 
     fun Region.filling(from: Color, to: Color, cssProp: InlineCss.(Color) -> Unit) {
         style {
@@ -39,46 +40,6 @@ object StyleUtils {
     }
 
     fun Transition.textFillTransition() = transition(BLACK, WHITE) { textFill = it }
-    fun Transition.textFillBackTransition() = transition(WHITE, BLACK) { textFill = it }
-
-    fun Node.addChildrenClass(vararg cssRule: CssRule) {
-        this.getChildList()?.forEach {
-            it.addClass(*cssRule)
-        }
-    }
-
-    fun Node.addChildrenProperty(pos: Pos) {
-        getChildList()?.forEach {
-            it.apply {
-                style {
-                    alignment = pos
-                }
-            }
-        }
-    }
-
-    fun Parent.addPropertyRecursively(pos: Pos) {
-        NodeUtils.getAllNodes(this).forEach {
-            it.apply {
-                style { alignment = pos }
-            }
-        }
-    }
-
-    fun Parent.addClassRecursively(vararg cssRules: CssRule): Parent {
-        cssRules.forEach { this.addClass(it) }
-        this.addAllChildrenClass(*cssRules)
-        return this
-    }
-
-    fun Parent.addAllChildrenClass(vararg cssRules: CssRule): Parent {
-        NodeUtils.getAllNodes(this).forEach {
-            cssRules.forEach { cssRule ->
-                it.addClass(cssRule)
-            }
-        }
-        return this
-    }
 
     fun Styleable.rightPadding(dimension: Int) {
         style {

@@ -37,6 +37,7 @@ import tornadofx.flowpane
 import tornadofx.gridpane
 import tornadofx.label
 import tornadofx.onLeftClick
+import tornadofx.removeClass
 import tornadofx.selectedItem
 import kotlin.collections.set
 
@@ -235,6 +236,17 @@ class BattleView : AbstractGameView("Battle View") {
                 }
             }
 
+    internal fun updateCurrentPlayerFleetGrid() {
+        fleetGridController
+            .fleetGrid()
+            .addShips(model.shipsOf(currentPlayer))
+            .onEachFleetCells { it.removeClass(AppStyles.emptyCell) }
+            .also {
+                playersFleetGridsPanes[currentPlayer] = it
+                currentPlayerFleetGridPane.center = it
+            }
+
+    }
 
     internal fun <T: Node> Map<String, T>.disable() { values.forEach { it.disable() } }
     internal fun <T: Node> T.disable() = apply { isDisable = true }

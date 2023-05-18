@@ -62,6 +62,9 @@ class AppStyles : Stylesheet() {
         val sunkCellColor = BLACK
         val readyColor: Color = MEDIUMSEAGREEN
         val incorrectCellColor: Color = RED
+        val shipBorderColor = RED
+        val shipBorderCellColor = shipBorderColor.withOpacity(0.3)
+        val shipBorderCellBorderColor = shipBorderColor.withOpacity(0.15)
         val initialAppColor = "E8E3E4FF".color
         val defeatedCellColor = PINK
         val defeatedTitleCellColor = "A93638F4".color
@@ -95,6 +98,8 @@ class AppStyles : Stylesheet() {
         val shipTypeLabel by cssclass()
 
         val emptyCell by cssclass()
+        val emptyCellIncorrect by cssclass()
+
         val fleetLabel by cssclass()
 
         val missCell by cssclass()
@@ -175,9 +180,9 @@ class AppStyles : Stylesheet() {
         missCell          + radius(fleetCellSize / 4)          + border
         animationCell     + noBorder
 
-        val shipBorderCellColor = RED
-        (shipBorderCell + background(shipBorderCellColor.withOpacity(0.3))) {
-            borderColor += box(shipBorderCellColor.withOpacity(0.15))
+
+        (shipBorderCell + background(shipBorderCellColor)) {
+            borderColor += box(shipBorderCellBorderColor)
             borderWidth += box(fleetBorderWidth.px)
         }
 
@@ -190,6 +195,13 @@ class AppStyles : Stylesheet() {
             border()
             and(hover) {
                 backgroundColor += chosenCellColor
+            }
+        }
+
+        emptyCellIncorrect {
+            border()
+            and(hover) {
+                backgroundColor += incorrectCellColor
             }
         }
 

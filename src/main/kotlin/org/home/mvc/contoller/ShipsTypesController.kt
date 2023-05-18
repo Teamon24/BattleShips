@@ -1,19 +1,20 @@
 package org.home.mvc.contoller
 
 
-import home.extensions.AnysExtensions.name
+import home.extensions.CollectionsExtensions.ifAbsent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
-import org.home.mvc.model.addIfAbsent
 import org.home.utils.log
 
-class ShipsTypesController: AbstractGameBean() {
+class ShipsTypesController : AbstractGameBean() {
     private val shipsTypes = model.copyShipsTypes()
 
     fun validates(newShip: Collection<Coord>): Boolean {
+        model.log { "ships: ${shipsOf(currentPlayer)}" }
+        log { "$shipsTypes" }
         newShip.ifEmpty { return false }
 
         val newShipSize = newShip.size
@@ -22,36 +23,39 @@ class ShipsTypesController: AbstractGameBean() {
         val shipsNumber = shipsTypes[newShipSize]
         if (shipsNumber == 0) return false
 
+        log { "new ship is valid: $newShip" }
         return true
     }
 
     private fun shipMaxLength() = shipsTypes.maxOf { it.key }
 
-    fun add(vararg ships: Ship) {
-        ships
+    fun add(vararg newShips: Ship) {
+        newShips
             .filter { it.size != 0 }
-            .onEach { ship -> shipsTypes[ship.size] = shipsTypes[ship.size]?.minus(1) }
-            .forEach {
-                model.shipsOf(currentPlayer).addIfAbsent(it.copy())
-                log { "${this.name} ships addition ${ships.joinToString(",")}" }
-
-                eventbus {
-                    +ShipWasAdded(currentPlayer, it.size)
+            .forEach { newShip ->
+                val ships = model.shipsOf(currentPlayer)
+                ships.ifAbsent(newShip) {
+                    ShipWasAdded(currentPlayer, newShip.size).also {
+                        it.mapOp(shipsTypes, newShip.size)
+                        add(newShip)
+                        eventbus(it)
+                        log { "ship addition - $newShip" }
+                    }
                 }
             }
-
     }
 
-    fun remove(vararg ships: Ship) {
-        ships
+    fun remove(vararg newShips: Ship) {
+        newShips
             .filter { it.size != 0 }
-            .onEach { ship -> shipsTypes[ship.size] = shipsTypes[ship.size]?.plus(1) }
-            .forEach {
-                eventbus {
-                    +ShipWasDeleted(it.size, currentPlayer)
+            .forEach { newShip ->
+                val ships = model.shipsOf(currentPlayer)
+                ShipWasDeleted(currentPlayer, newShip.size).also {
+                    it.mapOp(shipsTypes, newShip.size)
+                    ships.remove(newShip)
+                    eventbus(it)
+                    log { "ship deletion - $newShip" }
                 }
-                model.shipsOf(currentPlayer).remove(it)
-                log { "${this.name} ships deletion ${ships.joinToString(",")}" }
             }
     }
 }

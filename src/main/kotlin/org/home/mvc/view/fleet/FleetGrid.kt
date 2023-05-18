@@ -1,7 +1,10 @@
 package org.home.mvc.view.fleet
 
+import home.extensions.BooleansExtensions.invoke
+import home.extensions.CollectionsExtensions.hasElements
 import javafx.scene.layout.GridPane
 import org.home.mvc.model.Coord
+import org.home.mvc.model.Ship
 import org.home.mvc.model.Ships
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
@@ -15,8 +18,12 @@ class FleetGrid : GridPane() {
         return getCell(cell) as FleetCell
     }
 
+    fun cell(ship: Ship): FleetCell {
+        ship.hasElements { throw RuntimeException("ship should has one deck") }
+        return getCell(ship.first()) as FleetCell
+    }
+
     fun addFleetCellClass(cssRule: CssRule) = onEachFleetCells { it.addClass(cssRule) }
-    fun addTitleCellClass(cssRule: CssRule) = onEachTitleCells { it.addClass(cssRule) }
 
     fun addShips(ships: Ships): FleetGrid {
         ships.forEach { ship -> ship.forEach { cell(it).addSelectionColor() } }

@@ -7,8 +7,6 @@ import org.home.mvc.model.Ship
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetGrid
-import org.home.style.AppStyles
-import tornadofx.removeClass
 
 interface FleetGridStyleComponent {
 
@@ -25,7 +23,7 @@ interface FleetGridStyleComponent {
     fun FleetGrid.addSelectionColor(ship: Ship)
 
     fun FleetGrid.removeIncorrectColor(beingConstructedShip: Ship) {
-        forEachCell(beingConstructedShip) { removeClass(AppStyles.incorrectCell) }
+        forEachCell(beingConstructedShip) { removeIncorrectColor() }
     }
 
     fun FleetGrid.addIncorrectColor(ship: Ship) = forEachCell(ship) { addIncorrectColor() }
