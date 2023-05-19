@@ -12,23 +12,24 @@ import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CLASS
-import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.currentPlayerLabel
 import org.home.style.AppStyles.Companion.defeatedEmptyCell
 import org.home.style.AppStyles.Companion.defeatedPlayerLabel
 import org.home.style.AppStyles.Companion.defeatedShipNumberLabel
+import org.home.style.AppStyles.Companion.defeatedShipTypeLabel
 import org.home.style.AppStyles.Companion.defeatedTitleCell
 import org.home.style.AppStyles.Companion.emptyCell
-import org.home.style.AppStyles.Companion.selectedCell
-import org.home.style.AppStyles.Companion.incorrectEmptyCell
 import org.home.style.AppStyles.Companion.fleetCell
 import org.home.style.AppStyles.Companion.fullShipNumberLabel
 import org.home.style.AppStyles.Companion.hitCell
 import org.home.style.AppStyles.Companion.incorrectCell
+import org.home.style.AppStyles.Companion.incorrectEmptyCell
 import org.home.style.AppStyles.Companion.readyCell
 import org.home.style.AppStyles.Companion.readyPlayerLabel
 import org.home.style.AppStyles.Companion.readyShipNumberLabel
 import org.home.style.AppStyles.Companion.readyShipTypeLabel
 import org.home.style.AppStyles.Companion.readyTitleCell
+import org.home.style.AppStyles.Companion.selectedCell
 import org.home.style.AppStyles.Companion.shipBorderCell
 import org.home.style.AppStyles.Companion.sunkCell
 import org.home.style.AppStyles.Companion.titleCell
@@ -79,11 +80,11 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane
     ) {
         model {
-            playerLabel(defeated).toggle(AppStyles.currentPlayerLabel, defeatedPlayerLabel)
+            playerLabel(defeated).toggle(currentPlayerLabel, defeatedPlayerLabel)
         }
 
         fleetReadiness
-            .forEachTypeLabel { it.toggle(selectedCell, defeatedTitleCell) }
+            .forEachTypeLabel { it.toggle(selectedCell, defeatedShipTypeLabel) }
             .forEachNumberLabel { it.toggle(fullShipNumberLabel, defeatedShipNumberLabel) }
 
         fleetGrid
@@ -102,8 +103,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         fleetReadiness: ShipsTypesPane,
         isReady: Boolean
     ) {
-
-        val playerUsualOrReady = isReady.getRule(AppStyles.currentPlayerLabel, readyPlayerLabel)
+        val playerUsualOrReady = isReady.getRule(currentPlayerLabel, readyPlayerLabel)
         val shipNumberUsualOrReady = isReady.getRule(fullShipNumberLabel, readyShipNumberLabel)
         val shipTypeUsualOrReady = isReady.getRule(selectedCell, readyShipTypeLabel)
         val usualOrReady = isReady.getRule(titleCell, readyTitleCell)

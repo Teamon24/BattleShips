@@ -3,10 +3,6 @@ package org.home.style
 import javafx.scene.Cursor
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
-import javafx.scene.paint.Color.DARKCYAN
-import javafx.scene.paint.Color.DARKGREEN
-import javafx.scene.paint.Color.DARKRED
-import javafx.scene.paint.Color.GREY
 import javafx.scene.paint.Color.LIGHTSLATEGRAY
 import javafx.scene.paint.Color.ORANGERED
 import javafx.scene.paint.Color.RED
@@ -19,8 +15,8 @@ import org.home.style.CssUtils.border
 import org.home.style.CssUtils.center
 import org.home.style.CssUtils.fillParent
 import org.home.style.CssUtils.gridMargin
+import org.home.style.CssUtils.height
 import org.home.style.CssUtils.hover
-import org.home.style.CssUtils.jetBrainFont
 import org.home.style.CssUtils.margin
 import org.home.style.CssUtils.noBorder
 import org.home.style.CssUtils.padding
@@ -48,13 +44,14 @@ class AppStyles : Stylesheet() {
     companion object {
         private const val targetIconPath = "/icons/target-3699.svg"
 
-        val selectedColor = "#085191".color.opacity(0.7)
-        val missCellColor = "A4A5A6FF".color
-        val hitCellColor = ORANGERED
         val titleCellColor = LIGHTSLATEGRAY
+        val selectedColor = "#085191".color.opacity(0.7)
+        val readyColor: Color = "408802FF".color
+        val missCellColor = "A4A5A6FF".color
+
+        val hitCellColor = ORANGERED
         val sunkCellColor = BLACK
 
-        val readyColor: Color = "408802FF".color
         val readyCellColor: Color = readyColor.brighter()
         val readyTitleColor: Color = readyColor.darker()
         val hoveredReadyTitleColor = "D39D00FF".color
@@ -120,6 +117,7 @@ class AppStyles : Stylesheet() {
         val readyCell by cssclass()
         val readyTitleCell by cssclass()
         val readyShipTypeLabel by cssclass()
+        val defeatedShipTypeLabel by cssclass()
 
         val hitCell by cssclass()
         val missCell by cssclass()
@@ -132,20 +130,11 @@ class AppStyles : Stylesheet() {
 
         val animationCell by cssclass()
         val enemyListCell by cssclass()
+        val emptyListCell by cssclass()
+
         val defeatedListCell by cssclass()
         val readyListCell by cssclass()
 
-//        #players-list-view .list-cell:filled:selected:focused,
-//
-//        #players-list-view .list-cell:filled:selected {
-//            -fx-background-color:  #0A65BF;
-//            -fx-text-fill: white;
-//        }
-//
-//        #players-list-view .list-cell:even { /* <=== changed to even */
-//            -fx-background-color: white;
-//        }
-//
     }
 
     init {
@@ -155,13 +144,22 @@ class AppStyles : Stylesheet() {
             borderWidth += box(fleetBorderWidth.px)
         }
 
+
+        //ENEMIES LIST VIEW
         odd              + background(WHITE)   + margin(1.px)
         even             + background(WHITE)   + margin(1.px)
-        enemyListCell    + text(BLACK)         + selected(selectedColor, WHITE)
-        defeatedListCell + text(defeatedColor) + selected(defeatedColor, WHITE)
-        readyListCell    + text(readyColor)    + selected(readyColor, WHITE)
+
+        emptyListCell    + background(WHITE) + height(fleetCellSize)
+        enemyListCell    + listCell(selectedColor, BLACK)
+        defeatedListCell + listCell(defeatedColor, BLACK)
+        readyListCell    + listCell(readyColor,    BLACK)
+
 
         //---- components style ------------------------------------------------------------
+        listView {
+            noBorder()
+            focusTraversable = false
+        }
         label     + jetBrainFont
         textField + square
         button    + background(initialAppColor) + jetBrainFont + fillParent + square
@@ -176,8 +174,8 @@ class AppStyles : Stylesheet() {
         fleetLabel + center + jetBrainFont + cellSize
 
         defeatedPlayerLabel + text(WHITE) + margin(5.px) + background(defeatedColor.opacity(0.5))
-        currentPlayerLabel + text(WHITE) + margin(5.px) + background(selectedColor.opacity(0.5))
-        readyPlayerLabel + text(WHITE) + margin(5.px) + background(readyColor.opacity(0.5))
+        currentPlayerLabel  + text(WHITE) + margin(5.px) + background(selectedColor.opacity(0.5))
+        readyPlayerLabel    + text(WHITE) + margin(5.px) + background(readyColor.opacity(0.5))
 
         shipTypeLabel {
             backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
@@ -212,11 +210,14 @@ class AppStyles : Stylesheet() {
         titleCell               + border   + background(titleCellColor)     + text(WHITE)
         readyTitleCell          + border   + background(readyTitleColor)    + text(WHITE)
         defeatedTitleCell       + border   + background(defeatedColor)      + text(WHITE)
+
         readyShipTypeLabel      + noBorder + background(readyTitleColor)    + text(WHITE)
+        defeatedShipTypeLabel   + noBorder + background(defeatedColor)      + text(WHITE)
 
         fullShipNumberLabel     + noBorder + background(selectedColor)      + text(WHITE) + radius(fleetCellSize/2)
         readyShipNumberLabel    + noBorder + background(readyTitleColor)    + text(WHITE) + radius(fleetCellSize/2)
         defeatedShipNumberLabel + noBorder + background(defeatedColor)      + text(WHITE) + radius(fleetCellSize/2)
+
         animationCell           + noBorder
 
 
@@ -240,7 +241,24 @@ class AppStyles : Stylesheet() {
         }
     }
 
-    inline val AppStyles.cellSize: CssSelectionBlock.() -> Unit get() { return { size(fleetCellSize) } }
+    private fun listCell(color: Color, text: Color): CssSelectionBlock.() -> Unit {
+        return {
+            text(text)
+            background(color.opacity(0.1))
+            height(fleetCellSize)
+            selected(color, WHITE)
+        }
+    }
+
+    private inline val AppStyles.cellSize: CssSelectionBlock.() -> Unit get() { return size(fleetCellSize) }
+    private inline val AppStyles.border: CssSelectionBlock.() -> Unit get() { return border(fleetBorderWidth.px) }
+    private inline val AppStyles.jetBrainFont: CssSelectionBlock.() -> Unit
+        get() {
+            return {
+                +jetBrainsMonoLightFont
+                +small
+            }
+        }
 
     inline operator fun CssRule.plus(crossinline block: CssSelectionBlock.() -> Unit): CssRule {
         this { block() }
