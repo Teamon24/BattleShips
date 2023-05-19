@@ -1,9 +1,0 @@
-#players-list-view .list-cell:filled:selected:focused,
-#players-list-view .list-cell:filled:selected {
-    -fx-background-color:  #0A65BF;
-    -fx-text-fill: white;
-}
-
-#players-list-view .list-cell:even { /* <=== changed to even */
-    -fx-background-color: white;
-}

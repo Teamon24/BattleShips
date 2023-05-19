@@ -1,7 +1,6 @@
 package org.home.mvc.contoller.server
 
 import home.extensions.AnysExtensions.className
-import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
 import home.extensions.AtomicBooleansExtensions.atomic
@@ -16,11 +15,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.home.app.di.GameScope
-import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.GameController
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsContinued
-import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -38,7 +36,6 @@ import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.LeaveAction
 import org.home.mvc.contoller.server.action.MissAction
 import org.home.mvc.contoller.server.action.NotReadyAction
-import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
@@ -67,7 +64,7 @@ import java.net.Socket
 import java.net.SocketException
 import java.net.UnknownHostException
 
-class BattleClient : AbstractGameBean(), BattleController<Action> {
+class BattleClient : GameController(), BattleController<Action> {
 
     override val currentPlayer: String get() = super.currentPlayer
 
@@ -98,7 +95,6 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
         send {
             +ConnectionAction(currentPlayer)
             model.hasReady(currentPlayer) {
-
                 val fleetReadiness = model
                     .fleetsReadiness[currentPlayer]!!
                     .mapValues { it.value.value }
@@ -108,7 +104,6 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
             }
             listen()
         }
-
         awaitConditions.fleetSettingsReceived.await()
     }
 
@@ -145,8 +140,8 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
         when (action) {
             is FleetSettingsAction -> awaitConditions.fleetSettingsReceived.notifyUI { putFleetSettings(action) }
 
-            is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
-            is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
+            is NotReadyAction -> eventbus(PlayerIsNotReadyReceived(action))
+            is ReadyAction -> eventbus(PlayerIsReadyReceived(action))
 
             is ShotAction -> {
                 if (action.target == currentPlayer) {
@@ -245,14 +240,6 @@ class BattleClient : AbstractGameBean(), BattleController<Action> {
 
     override fun onWindowClose() {
         serverSocket.isNotClosed { leaveBattle() }
-    }
-
-
-    private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
-        action {
-            model.setReadiness(player, isReady)
-            eventbus(event(this))
-        }
     }
 
     override fun continueBattle() {

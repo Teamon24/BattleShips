@@ -83,6 +83,13 @@ internal fun BattleView.battleIsStarted() {
             transitTo<AppView>(BACKWARD)
         }
 
+        playersFleetGridsPanes.entries
+            .zip(playersFleetsReadinessPanes.entries) { fleet, readiness ->
+            readinessStyleComponent {
+                notReady(fleet.key, fleet.value, readiness.value)
+            }
+        }
+
         model.readyPlayers.clear()
         battleStartButton.hide()
         updateCurrentPlayerFleetGrid()

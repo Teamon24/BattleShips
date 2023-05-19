@@ -1,9 +1,9 @@
 package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
-import home.extensions.CollectionsExtensions.exclude
-import javafx.collections.ListChangeListener
+import home.extensions.BooleansExtensions.then
 import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -17,6 +17,7 @@ import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.model.BattleModel
 import org.home.mvc.view.AbstractGameView
 import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
@@ -28,6 +29,8 @@ import org.home.mvc.view.component.GridPaneExtensions.row
 import org.home.mvc.view.component.backTransitButton
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
+import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.mvc.view.openAlertWindow
 import org.home.style.AppStyles
 import org.home.style.StyleUtils.leftPadding
@@ -42,13 +45,16 @@ import tornadofx.selectedItem
 import kotlin.collections.set
 
 class BattleView : AbstractGameView("Battle View") {
-    internal val battleController: BattleController<Action> by di()
+    internal val readinessStyleComponent by GameScope.fleetGridStyle<FleetGridStyleAddClass>()
+    internal val defeatedStyleComponent by GameScope.fleetGridStyle<FleetGridStyleTransition>()
 
-    private val fleetGridController: FleetGridController by GameScope.inject()
-    internal val shipsTypesPaneController: ShipsTypesPaneController by GameScope.inject()
+    internal val battleController by di<BattleController<Action>>()
+
+    private val fleetGridController by GameScope.inject<FleetGridController>()
+    internal val shipsTypesPaneController by GameScope.inject<ShipsTypesPaneController>()
+    internal val startButtonController by GameScope.inject<BattleStartButtonController>()
 
     internal val playersFleetGridsPanes = hashMapOf<String, FleetGrid>()
-
     internal val playersFleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
 
     private val currentPlayerFleetGridPane = BorderPane(fleetGridController.activeFleetGrid()).apply {
@@ -63,9 +69,8 @@ class BattleView : AbstractGameView("Battle View") {
                 playersFleetsReadinessPanes[currentPlayer] = this
             }
 
-    internal val selectedEnemyFleetReadinessPane = BorderPane()
-
     internal val selectedEnemyFleetPane = BorderPane()
+    internal val selectedEnemyFleetReadinessPane = BorderPane()
 
     internal val enemiesView =
         EnemiesView(model.enemies, model) { selected ->
@@ -78,9 +83,12 @@ class BattleView : AbstractGameView("Battle View") {
         }
 
     internal val selectedEnemyLabel: Label = enemiesView.getSelectedEnemyLabel()
+    private val currentPlayerLabel = Label(currentPlayer).addClass(AppStyles.currentPlayerLabel)
+
+    fun BattleModel.playerLabel(player: String) = player.isCurrent then currentPlayerLabel or selectedEnemyLabel
+
     internal lateinit var battleViewExitButton: Button
 
-    private val startButtonController: BattleStartButtonController by GameScope.inject()
     internal var battleStartButton = startButtonController.create()
 
     init {
@@ -89,7 +97,6 @@ class BattleView : AbstractGameView("Battle View") {
         primaryStage.setOnCloseRequest { battleController.onWindowClose() }
 
         model {
-
             listOf(
                 turn,
                 defeatedPlayers,
@@ -97,25 +104,12 @@ class BattleView : AbstractGameView("Battle View") {
             ).forEach {
                 it.addListener { _, _, new -> new?.run { enemiesView.refresh() } }
             }
-
-            readyPlayers.addListener(ListChangeListener { change ->
-                change.next()
-                val player = when {
-                    change.wasAdded() -> change.addedSubList[0]
-                    change.wasRemoved() -> change.removed[0]
-                    else -> throw RuntimeException("\"readyPlayers\" list underwent unappropriate operation")
-                }
-
-                startButtonController {
-                    battleStartButton.updateStyle(player, change.wasAdded())
-                }
-            })
         }
 
         title = currentPlayer.uppercase()
 
         selectedEnemyFleetPane { initByFirstIfPresent(playersFleetGridsPanes) { disable() } }
-        selectedEnemyFleetReadinessPane { initByFirstIfPresent(playersFleetsReadinessPanes) }
+        selectedEnemyFleetReadinessPane.initByFirstIfPresent(playersFleetsReadinessPanes)
     }
 
     private inline fun <N : Node> BorderPane.initByFirstIfPresent(
@@ -123,10 +117,7 @@ class BattleView : AbstractGameView("Battle View") {
         afterInit: N.() -> Unit = {},
     ) {
         model {
-            players
-                .exclude(currentPlayer)
-                .firstOrNull()
-                ?.also { player -> center = playersNodes[player]!!.apply { afterInit() } }
+            enemies.firstOrNull()?.also { player -> center = playersNodes[player]!!.apply { afterInit() } }
         }
     }
 
@@ -136,8 +127,8 @@ class BattleView : AbstractGameView("Battle View") {
         battleController.disconnect()
         super.exit()
     }
-
     private val battleViewExitButtonRow = 2
+
     val battleViewExitButtonIndices = battleViewExitButtonRow to 0
 
     init {
@@ -151,7 +142,7 @@ class BattleView : AbstractGameView("Battle View") {
                 col(0) {
                     flowpane {
                         alignment = Pos.BASELINE_LEFT
-                        label(currentPlayer)
+                        add(currentPlayerLabel)
                     }
                 }
                 col(1) {
@@ -205,6 +196,7 @@ class BattleView : AbstractGameView("Battle View") {
         }
     }
 
+
     private fun EventTarget.currentPlayerFleet() =
         currentPlayerFleetGridPane
             .addClass(AppStyles.currentPlayerCell)
@@ -214,7 +206,6 @@ class BattleView : AbstractGameView("Battle View") {
                     (pane.center as FleetGrid).addShips(it)
                 }
             }
-
 
     internal fun enemyFleetGrid() =
         fleetGridController
@@ -240,21 +231,22 @@ class BattleView : AbstractGameView("Battle View") {
         fleetGridController
             .fleetGrid()
             .addShips(model.shipsOf(currentPlayer))
-            .onEachFleetCells { it.removeClass(AppStyles.emptyCell) }
+            .onEachFleetCells {
+                it.removeClass(AppStyles.emptyCell)
+            }
             .also {
                 playersFleetGridsPanes[currentPlayer] = it
                 currentPlayerFleetGridPane.center = it
             }
 
     }
-
     internal fun <T: Node> Map<String, T>.disable() { values.forEach { it.disable() } }
     internal fun <T: Node> T.disable() = apply { isDisable = true }
-    internal fun BorderPane.disable() = apply { center.isDisable = true }
 
+    internal fun BorderPane.disable() = apply { center.isDisable = true }
     internal fun <T: Node> Map<String, T>.enable() { values.forEach { it.enable() } }
     internal fun <T: Node> T.enable() = apply { isDisable = false }
-    internal fun BorderPane.enable() = apply { center.isDisable = false }
 
+    internal fun BorderPane.enable() = apply { center.isDisable = false }
     internal fun FleetGrid.disableIf(condition: Boolean) = apply { condition.so { isDisable = true } }
 }

@@ -14,11 +14,14 @@ sealed class FleetCellLabel(text: String = "") : Label(text) {
 }
 
 class FleetCell (row: Int, column: Int, text: String = ""): FleetCellLabel(text) {
+    init { addClass(AppStyles.fleetCell) }
     val coord: Coord = row to column
 }
 
-class ShipsNumberLabel(number: Int): FleetCellLabel(number.toString())
-class ShipTypeLabel(type: Int): FleetCellLabel(RomansDigits.arabicToRoman(type))
+sealed class ShipReadinessLabel(text: String): FleetCellLabel(text)
+
+class ShipsNumberLabel(number: Int): ShipReadinessLabel(number.toString())
+class ShipTypeLabel(type: Int): ShipReadinessLabel(RomansDigits.arabicToRoman(type))
 
 fun EventTarget.fleetCell(row: Int, col: Int, text: String = "") =
     cell(row, col, text)

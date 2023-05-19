@@ -6,7 +6,6 @@ import javafx.collections.ObservableList
 import javafx.scene.control.Label
 import javafx.scene.control.ListView
 import org.home.mvc.model.BattleModel
-import org.home.style.AppStyles
 import org.home.utils.log
 import tornadofx.selectedItem
 
@@ -19,9 +18,8 @@ class EnemiesView(
     private val selectedEnemyLabel = Label()
 
     init {
-        cellFactory = MarkReadyPlayers(model)
+        cellFactory = EnemyListCellFactory(model)
         changeEnemyFleetOnSelection(model.currentPlayer)
-        id = AppStyles.playersListView
     }
 
     fun getSelectedEnemyLabel() = selectedEnemyLabel
@@ -29,12 +27,14 @@ class EnemiesView(
     private fun ListView<String>.changeEnemyFleetOnSelection(currentPlayer: String) {
         selectionModel.selectedItemProperty().addListener { _, old, new ->
             select(currentPlayer, new, old)
+            refresh()
         }
     }
 
     private fun select(currentPlayer: String, new: String?, old: String?) {
         if (new == currentPlayer) return
         val playerWasRemoved = new == null
+
         val selected = playerWasRemoved then {
             items.firstOrNull { it != old }
         } or {

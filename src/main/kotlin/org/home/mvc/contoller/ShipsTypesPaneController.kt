@@ -5,8 +5,7 @@ import javafx.beans.property.SimpleMapProperty
 import javafx.scene.layout.GridPane
 import org.home.app.di.GameScope
 
-class ShipsTypesPaneController: AbstractGameBean() {
-
+class ShipsTypesPaneController: GameController() {
     private val component: ShipsTypesPaneComponent by GameScope.inject()
 
     fun shipTypesPaneControl(): ShipsTypesPane {

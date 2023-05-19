@@ -14,7 +14,6 @@ import kotlin.reflect.KClass
 abstract class AbstractApp<T : View>(view: KClass<T>) : App(view, AppStyles::class) {
     init {
         currentThreadName("UI")
-        importStylesheet("/${AppStyles.playersListView}.css")
         FX.dicontainer = diContainer()
     }
 

@@ -9,7 +9,7 @@ import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.utils.log
 
-class ShipsTypesController : AbstractGameBean() {
+class ShipsTypesController : GameController() {
     private val shipsTypes = model.copyShipsTypes()
 
     fun validates(newShip: Collection<Coord>): Boolean {

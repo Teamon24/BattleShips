@@ -1,7 +1,5 @@
 package org.home.mvc.view.fleet
 
-import home.extensions.AtomicBooleansExtensions.atomic
-import home.extensions.AtomicBooleansExtensions.invoke
 import javafx.event.EventHandler
 import javafx.event.EventType
 import javafx.scene.input.MouseDragEvent.DRAG_DETECTED
@@ -10,40 +8,15 @@ import javafx.scene.input.MouseDragEvent.MOUSE_DRAG_EXITED
 import javafx.scene.input.MouseDragEvent.MOUSE_EXITED
 import javafx.scene.input.MouseDragEvent.MOUSE_RELEASED
 import javafx.scene.input.MouseEvent
-import javafx.scene.layout.GridPane
-import kotlinx.coroutines.delay
 import org.home.app.di.GameScope
-import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
-import org.home.mvc.contoller.AbstractGameBean
-import org.home.mvc.contoller.ShipsTypesController
-import org.home.mvc.model.Ship
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeIncorrectColor
+import org.home.mvc.contoller.GameController
 import org.home.style.AppStyles
-import org.home.utils.logCoordinate
-import org.home.utils.threadScopeLaunch
 
-class FleetGridController : AbstractGameBean() {
 
-    private val shipsTypesController: ShipsTypesController by GameScope.inject()
+class FleetGridController : GameController() {
     private val fleetGridCreator: FleetGridCreator by GameScope.inject()
 
-    private val ships by lazy { model.shipsOf(currentPlayer) }
-    private val currentShip = Ship()
-
-    private var mouseWentOutOfBound = false.atomic
-    private var dragged = false.atomic
-    private var dragExited = false.atomic
-    private var exitHappened = false.atomic
-    private var startWithinBorder = false.atomic
-
-    private val fleetGridHandlers = FleetGridHandlers(
-        mouseWentOutOfBound,
-        startWithinBorder,
-        currentShip,
-        ships,
-        shipsTypesController
-    )
+    private val fleetGridHandlers by GameScope.inject<FleetGridHandlers>()
 
     private val titleCellEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
     private val fleetGridEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
@@ -52,10 +25,10 @@ class FleetGridController : AbstractGameBean() {
 
     fun activeFleetGrid(): FleetGrid {
         val fleetGrid = fleetGridCreator.titledFleetGrid()
-        val exitHappenedHandler = fleetGrid.exitHappened()
-        val releaseAfterExitHandler = releaseAfterExit()
-        val dragExitHandler = dragExit()
-        val dragDetectedHandler = EventHandler { _: MouseEvent -> dragged(true) }
+        val exitHappenedHandler = fleetGridHandlers.exitHappenedHandler(fleetGrid)
+        val releaseAfterExitHandler = fleetGridHandlers.releaseAfterExit()
+        val dragExitHandler = fleetGridHandlers.dragExit()
+        val dragDetectedHandler = fleetGridHandlers.dragDetectedHandler()
 
         titleCellEventHandlers[MOUSE_DRAG_ENTERED] = exitHappenedHandler
         titleCellEventHandlers[MOUSE_RELEASED] = releaseAfterExitHandler
@@ -85,37 +58,5 @@ class FleetGridController : AbstractGameBean() {
                     addEventHandler(event, handler)
                 }
             }
-    }
-
-    private fun dragExit() = EventHandler { event: MouseEvent ->
-        event.logCoordinate()
-        dragged(false)
-        dragExited(true)
-    }
-
-    private fun releaseAfterExit() = EventHandler { event: MouseEvent ->
-        if (exitHappened()) {
-            event.logCoordinate()
-            mouseWentOutOfBound(false)
-            startWithinBorder(false)
-        }
-
-        dragged(false)
-        dragExited(false)
-        exitHappened(false)
-    }
-
-    private fun FleetGrid.exitHappened() = EventHandler { event: MouseEvent ->
-        exitHappened(true)
-        if (dragged()) {
-            event.logCoordinate()
-            threadScopeLaunch {
-                delay(incorrectCellRemovingTime)
-                removeAnyColor(currentShip.filter { it !in ships.flatten() })
-                ships.forEach { removeIncorrectColor(it) }
-                currentShip.clear()
-            }
-            mouseWentOutOfBound(true)
-        }
     }
 }

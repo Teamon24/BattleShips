@@ -10,6 +10,7 @@ import home.extensions.BooleansExtensions.yes
 import home.extensions.delete
 import javafx.scene.Parent
 import javafx.scene.layout.VBox
+import org.home.app.di.FxScopes
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
@@ -18,7 +19,6 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.battle.subscription.subscriptions
-import org.home.mvc.view.component.transferTo
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.label
@@ -43,14 +43,21 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
     }
 
     init {
+        subscriptions {
+            serverTransferClientsReceived()
+            playerWasConnected()
+            playerLeaved()
+            battleIsContinuedReceived()
+        }
+
         title = "${model.currentPlayer.uppercase()}: перенос сервера"
-        root {
-            applicationProperties.isServer.yes {
+        applicationProperties.isServer.yes {
                 model {
                     label("Вы новый сервер")
                     battleController.connect(newServer.ip, newServer.port)
                 }
             } no {
+        root {
                 label("Идет перенос сервера") {
                     threadIndicator = thread(name = "indicator") {
                         while (connectedPlayers.isNotEmpty()) {
@@ -70,34 +77,36 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
             }
         }
 
-        subscriptions {
-            serverTransferClientsReceived()
-            subscribe<ConnectedPlayerReceived> {
-                logEvent(it, model)
-                connectedPlayers.remove(it.player)
-                root { label("Подключился: ${it.player}") }
-                log { "connectedPlayers: $connectedPlayers" }
-                connectedPlayers.isEmpty().so {
-                    battleController.continueBattle()
-                }
-            }
+    }
 
-            subscribe<PlayerLeaved> {
-                TODO("${NewServerView::class.name}#subscribe<${PlayerLeaved::class.name}>")
-                logEvent(it, model)
-                connectedPlayers.remove(it.player)
-                root { label("Отключился: ${it.player}") }
-                connectedPlayers.isEmpty().so { }
+    private fun playerLeaved() {
+        subscribe<PlayerLeaved> {
+            TODO("${NewServerView::class.name}#subscribe<${PlayerLeaved::class.name}>")
+            logEvent(it, model)
+            connectedPlayers.remove(it.player)
+            root { label("Отключился: ${it.player}") }
+            connectedPlayers.isEmpty().so { }
+        }
+    }
+
+    private fun playerWasConnected() {
+        subscribe<ConnectedPlayerReceived> {
+            logEvent(it, model)
+            connectedPlayers.remove(it.player)
+            root { label("Подключился: ${it.player}") }
+            log { "connectedPlayers: $connectedPlayers" }
+            connectedPlayers.isEmpty().so {
+                battleController.continueBattle()
             }
-            battleIsContinuedReceived()
         }
     }
 
     private fun battleIsContinuedReceived() {
         subscribe<BattleIsContinued> {
-            threadIndicator?.interrupt()
             logEvent(it, model)
-            transferTo<BattleView>()
+            threadIndicator?.interrupt()
+            tornadofx.find<BattleView>().openWindow()
+            this@NewServerView.close()
         }
     }
 

@@ -20,6 +20,14 @@ import org.home.mvc.model.BattleModel
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
+import org.home.mvc.view.fleet.FleetGridHandlers
+import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CLASS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.TRANSITION
+import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
+import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.net.server.ConnectionsListener
 import org.home.net.server.MessageProcessor
 import org.home.net.server.MessageReceiver
@@ -63,8 +71,17 @@ fun gameScoped(): Module {
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }
             scoped { ShipsTypesPaneComponent() }
+            scoped { FleetGridHandlers() }
 
             scoped { AwaitConditions() }
+
+            scoped { (type: FleetGreedStyleUdate) ->
+                when (type) {
+                    CLASS -> FleetGridStyleAddClass
+                    TRANSITION -> FleetGridStyleTransition
+                    CSS -> FleetGridStyleCssChange
+                }
+            }
         }
     }
 }

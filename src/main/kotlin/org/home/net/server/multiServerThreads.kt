@@ -32,8 +32,8 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     protected val multiServer: MultiServer<M, S> by di()
     private lateinit var thread: Thread
     internal val canProceed = true.atomic
-
     abstract fun run()
+
     fun start() {
         canProceed(true)
         thread = thread(name = name, block = ::run)

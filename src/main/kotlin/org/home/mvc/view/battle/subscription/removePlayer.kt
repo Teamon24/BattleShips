@@ -18,9 +18,8 @@ import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.component.Transit
 import org.home.mvc.view.component.button.BattleButton
 import org.home.mvc.view.component.transferTo
-import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles.Companion.defeatedTitleCellColor
+import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.StyleUtils.textFillTransition
 import org.home.style.TransitionDSL.filling
@@ -54,8 +53,8 @@ internal fun BattleView.playerWasDefeated() {
             val fleetGrid = playersFleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
             val fleetReadiness = playersFleetsReadinessPanes[defeated]!!
 
-            FleetGridStyleTransition {
-                defeatedFillTransition(defeated, fleetGrid, fleetReadiness)
+            defeatedStyleComponent {
+                defeated(defeated, fleetGrid, fleetReadiness)
             }
 
             openMessageWindow {
@@ -108,7 +107,7 @@ fun BattleView.updateLeaveBattleFieldButton() {
                 style {
                     filling(this@button) {
                         millis = leaveBattleFieldButtonTransitionTime
-                        transition(initialAppColor, defeatedTitleCellColor) { backgroundColor += it }
+                        transition(initialAppColor, defeatedColor) { backgroundColor += it }
                         textFillTransition()
                     }
                 }

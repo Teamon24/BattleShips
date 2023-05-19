@@ -3,10 +3,10 @@ package org.home.mvc.contoller.server
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.AnysExtensions.invoke
 import home.extensions.CollectionsExtensions.hasElements
-import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.GameComponent
 import org.home.utils.log
 
-class PlayerTurnComponent: AbstractGameBean() {
+class PlayerTurnComponent: GameComponent() {
 
     private val backing = mutableListOf<String>()
     val turnList: List<String> get() = backing

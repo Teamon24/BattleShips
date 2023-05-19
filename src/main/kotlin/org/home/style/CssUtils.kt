@@ -5,10 +5,42 @@ import javafx.scene.paint.Color
 import org.home.style.AppStyles.Companion.fleetBorderWidth
 import tornadofx.CssSelectionBlock
 import tornadofx.MultiValue
+import tornadofx.Stylesheet.Companion.hover
+import tornadofx.Stylesheet.Companion.selected
 import tornadofx.box
 import tornadofx.px
 
 object CssUtils {
+
+    fun AppStyles.prefWidth(width: LinearUnits): CssSelectionBlock.() -> Unit {
+        return { prefWidth = width }
+    }
+
+    fun AppStyles.prefSize(width: LinearUnits, height: LinearUnits = width): CssSelectionBlock.() -> Unit {
+        return {
+            prefWidth = width
+            prefHeight = height
+        }
+    }
+
+    fun AppStyles.selected(color: Color, text: Color? = null): CssSelectionBlock.() -> Unit {
+        return {
+            and(selected) {
+                backgroundColor += color
+                text?.also { textFill = it }
+            }
+        }
+    }
+
+    fun AppStyles.hover(color: Color, text: Color? = null): CssSelectionBlock.() -> Unit {
+        return {
+            and(hover) {
+                backgroundColor += color
+                text?.also { textFill = it }
+            }
+        }
+    }
+
     val AppStyles.border: CssSelectionBlock.() -> Unit
         get() { return {
             borderColor += box(Color.BLACK)
@@ -56,10 +88,9 @@ object CssUtils {
     val Color.background: CssSelectionBlock.() -> Unit get() = { backgroundColor += this@background }
     fun background(color: Color): CssSelectionBlock.() -> Unit = { backgroundColor += color }
 
-
     fun text(color: Color): CssSelectionBlock.() -> Unit = { textFill = color }
 
-    inline val AppStyles.cellSize: CssSelectionBlock.() -> Unit get() { return { size(AppStyles.fleetCellSize) } }
+
     inline val AppStyles.center: CssSelectionBlock.() -> Unit get() { return { alignment = Pos.CENTER } }
 
     inline val AppStyles.fillParent: CssSelectionBlock.() -> Unit
@@ -79,6 +110,7 @@ object CssUtils {
         padding = box(px)
         backgroundInsets = MultiValue(arrayOf(box(px / 2)))
     }
+
 
 
 

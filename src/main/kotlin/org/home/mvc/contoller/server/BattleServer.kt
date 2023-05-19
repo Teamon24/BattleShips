@@ -223,7 +223,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     private fun processReadiness(action: PlayerReadinessAction, event: (PlayerReadinessAction) -> HasAPlayer) {
         action.let {
             excluding(it.player).send(it)
-            model.setReadiness(it.player, it.isReady)
             eventbus(event(it))
         }
     }

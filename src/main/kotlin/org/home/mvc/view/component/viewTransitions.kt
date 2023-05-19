@@ -6,6 +6,9 @@ import javafx.event.EventTarget
 import javafx.util.Duration
 import org.home.mvc.ApplicationProperties.Companion.backButtonText
 import org.home.app.di.FxScopes
+import org.home.app.di.GameScope
+import org.home.mvc.view.NewServerView
+import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.component.Transit.BACKWARD
 import org.home.mvc.view.component.Transit.FORWARD
 import org.home.mvc.view.component.button.battleButton
@@ -26,9 +29,6 @@ import tornadofx.find
 import tornadofx.point
 import tornadofx.seconds
 
-private const val SLIDE_TIME = 0.3
-private const val METRO_DISTANCE = 0.5
-
 enum class Transit { FORWARD, BACKWARD }
 
 fun slide  (seconds: Duration)                    = Slide  (seconds)
@@ -45,6 +45,7 @@ fun Swap   .back() = Swap   (duration, RIGHT, scale)
 fun Metro  .back() = Metro  (duration, RIGHT, this.distancePercentage)
 
 private val duration = 0.5.seconds
+private const val METRO_DISTANCE = 0.5
 
 val slide  = slide(duration)
 val metro  = metro(duration, METRO_DISTANCE)
@@ -64,29 +65,30 @@ inline fun <reified T : View> EventTarget.backTransitButton(
         }
     }
 
-inline fun <reified T : View> View.transitTo(transit: Transit = FORWARD) {
-    transitLogic<T, Metro>(transit)
+inline fun <reified T : View> View.transitTo(type: Transit = FORWARD) {
+    transitLogic<T, Metro>(type)
 }
 
-inline fun <reified T : View> View.transferTo(transit: Transit = FORWARD) {
-    transferLogic<T, Metro>(transit)
+inline fun <reified T : View> View.transferTo(type: Transit = FORWARD) {
+    transferLogic<T, Metro>(type)
 }
 
-inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(transit: Transit) {
+inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(type: Transit) {
     find<T>().also {
         logTransit(it)
-        replaceWith(it, ward<VT>(transit))
+        replaceWith(it, viewTransition<VT>(type))
     }
 }
 
-inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(transit: Transit) {
-    find<T>(FxScopes.getGameScope()).also {
+inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(type: Transit) {
+    val view = find<T>(FxScopes.getGameScope())
+    view.also {
         logTransit(it)
-        replaceWith(it, ward<VT>(transit))
+        replaceWith(it, viewTransition<VT>(type))
     }
 }
 
-inline fun <reified VT : ViewTransition> ward(transit: Transit) = when (transit) {
+inline fun <reified VT : ViewTransition> viewTransition(type: Transit) = when (type) {
     FORWARD -> forward<VT>(FORWARD)
     BACKWARD -> backward<VT>(BACKWARD)
 }

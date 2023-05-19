@@ -13,6 +13,9 @@ import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.fullShipNumberLabel
+import org.home.style.AppStyles.Companion.selectedCell
+import org.home.style.AppStyles.Companion.shipTypeLabel
 import org.home.utils.log
 import tornadofx.action
 import tornadofx.addClass
@@ -20,7 +23,7 @@ import tornadofx.onChange
 import tornadofx.removeClass
 import tornadofx.runLater
 
-class ShipsTypesPaneComponent: AbstractGameBean() {
+class ShipsTypesPaneComponent: GameComponent() {
     private fun lastShipType() = model.shipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
 
     fun addShipTypeButton(gridPane: GridPane) {
@@ -72,10 +75,7 @@ class ShipsTypesPaneComponent: AbstractGameBean() {
 
     fun shipTypeLabel(gridPane: GridPane, column: Int) =
         ShipTypeLabel(column)
-            .addClass(
-                AppStyles.shipTypeLabel,
-                AppStyles.chosenCell
-            )
+            .addClass(shipTypeLabel, selectedCell)
             .also {
                 gridPane.add(it, column, 0)
             }
@@ -110,8 +110,8 @@ class ShipsTypesPaneComponent: AbstractGameBean() {
 
     private fun FleetCellLabel.updateClass(it: String?, shipType: Int) {
         when {
-            it == "0" -> addClass(AppStyles.titleCell)
-            0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeClass(AppStyles.titleCell)
+            it == "0" -> addClass(fullShipNumberLabel)
+            0 < it!!.toInt() && it.toInt() <= model.shipsTypes[shipType]!! -> removeClass(fullShipNumberLabel)
             else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
         }
     }

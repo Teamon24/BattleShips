@@ -7,7 +7,7 @@ object ColorUtils {
     val String.color get() = Paint.valueOf(this) as Color
     val Paint.color get() = this as Color
 
-    fun Color.withOpacity(d: Double): Color {
+    fun Color.opacity(d: Double): Color {
         return Color.color(red, green, blue, d)
     }
 

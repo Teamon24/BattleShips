@@ -5,7 +5,7 @@ import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.hasElements
 import home.extensions.CollectionsExtensions.isEmpty
-import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.GameComponent
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
@@ -27,8 +27,7 @@ import org.home.utils.PlayerSocketUtils.send
 import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 
-class ShotProcessingComponent: AbstractGameBean() {
-
+class ShotProcessingComponent: GameComponent() {
     private val notifierStrategies: ShotNotifierStrategies by di()
     private val multiServerSockets: MultiServer.MultiServerSockets<PlayerSocket> by di()
     private val playerTurnComponent: PlayerTurnComponent by di()

@@ -204,7 +204,7 @@ abstract class Transition(protected val region: Region) {
             }
 
             runLater {
-                region.style {
+                region.style(append = true) {
                     cssProps.zip(colors).forEach { (transformation, color) ->
                         transformation(color)
                     }

@@ -2,7 +2,7 @@ package org.home.mvc.view.component.button
 
 import javafx.scene.control.Button
 import org.home.mvc.ApplicationProperties.Companion.buttonHoverTransitionTime
-import org.home.style.AppStyles.Companion.chosenCellColor
+import org.home.style.AppStyles.Companion.selectedColor
 import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.StyleUtils.textFillTransition
 import org.home.style.Transition
@@ -23,7 +23,7 @@ class BattleButton(text: String) : Button(text) {
         style {
             hovering(currentNode) {
                 millis = buttonHoverTransitionTime
-                transition(initialAppColor, chosenCellColor) { backgroundColor += it }
+                transition(initialAppColor, selectedColor) { backgroundColor += it }
                 textFillTransition()
             }
         }

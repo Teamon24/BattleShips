@@ -15,6 +15,7 @@ class Condition<A>(val name: String, private val accepter: A) {
         this.afterNotify = afterNotify
         latch.countDown()
         state(true)
+        log { "ui was notified about $this" }
     }
 
     fun await() {

@@ -98,7 +98,6 @@ class BattleModel : ViewModel() {
 
     //PLAYERS
     val players = emptySimpleListProperty<String>().logOnChange("players")
-
     val enemies = emptySimpleListProperty<String>().logOnChange("enemies")
     val defeatedPlayers = emptySimpleListProperty<String>().logOnChange("defeated")
     val readyPlayers = emptySimpleListProperty<String>().logOnChange("ready players")
@@ -259,6 +258,7 @@ class BattleModel : ViewModel() {
     fun shipsOf(player: String) = playersAndShips[player]!!
     fun String.ships() = playersAndShips[this]!!
     fun String.decks() = playersAndShips[this]!!.flatten()
+    fun String.hasDeck(deck: Coord) = playersAndShips[this]!!.flatten().contains(deck)
 
     private fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
         addListener(ListChangeListener { log { "$name - ${it.list}" } })

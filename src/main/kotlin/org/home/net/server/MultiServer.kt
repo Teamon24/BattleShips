@@ -1,6 +1,6 @@
 package org.home.net.server
 
-import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.GameController
 import org.home.mvc.contoller.server.PlayerSocket
 import org.home.utils.log
 import org.home.utils.logMultiServerThreads
@@ -15,7 +15,7 @@ typealias SocketMessages<M, S> = Pair<S, Collection<M>>
 typealias SocketsMessages<M, S> = LinkedBlockingQueue<SocketMessages<M, S>>
 typealias PlayersSockets = ConcurrentLinkedQueue<PlayerSocket>
 
-abstract class MultiServer<M : Message, S : Socket>: AbstractGameBean() {
+abstract class MultiServer<M : Message, S : Socket>: GameController() {
 
     class MultiServerSockets<S: Socket>: Component() {
         private val sockets = ConcurrentLinkedQueue<S>()
@@ -26,6 +26,7 @@ abstract class MultiServer<M : Message, S : Socket>: AbstractGameBean() {
     internal val receiver: MessageReceiver<M, S> by di()
     internal val connector: ConnectionsListener<M, S> by di()
     private val multiServerSockets: MultiServerSockets<S> by di()
+
 
     val threads = listOf(connector, receiver, processor)
 
@@ -44,12 +45,9 @@ abstract class MultiServer<M : Message, S : Socket>: AbstractGameBean() {
 
     fun start(port: Int) {
         serverSocket = ServerSocket(port)
-
         connector.start()
         receiver.start()
         processor.start()
-
-        logMultiServerThreads(false)
     }
 
     private var connectionBarrier = CountDownLatch(1)
@@ -59,7 +57,7 @@ abstract class MultiServer<M : Message, S : Socket>: AbstractGameBean() {
     fun permitToConnect() {
         connectionBarrier.countDown()
         connectionBarrier = CountDownLatch(1)
-        log { "reset barrier" }
+        log { "reset connection barrier" }
     }
 }
 

@@ -1,11 +1,11 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
-import org.home.mvc.contoller.AbstractGameBean
+import org.home.mvc.contoller.GameComponent
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import tornadofx.addChildIfPossible
 
-class FleetGridCreator: AbstractGameBean() {
+class FleetGridCreator: GameComponent() {
     private val rowRange = 1.. model.height.value
     private val colRange = 1.. model.width.value
 
