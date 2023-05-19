@@ -7,15 +7,15 @@ import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
 import javafx.scene.paint.Color
 import org.home.mvc.contoller.ShipsTypesPane
-import org.home.mvc.model.Ship
+import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.selectedColor
-import org.home.style.AppStyles.Companion.defeatedCellColor
+import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
@@ -28,11 +28,16 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
     override val type = CSS
 
     override fun FleetCell.removeAnyColor() = background(initialAppColor)
+
+    override fun FleetCell.addMiss(): FleetCell { TODO("Not yet implemented") }
+    override fun FleetCell.addHit(): FleetCell { TODO("Not yet implemented") }
+    override fun FleetCell.addSunk(): FleetCell { TODO("Not yet implemented") }
+
     override fun FleetCellLabel.addSelectionColor(): FleetCellLabel = background(selectedColor)
     override fun FleetCell.addIncorrectColor() = background(incorrectCellColor)
     override fun FleetCell.addBorderColor() = background(shipBorderCellColor)
 
-    override fun FleetGrid.addSelectionColor(ship: Ship) {
+    override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) {
         forEachCell(ship) { background(selectedColor) }
     }
 
@@ -94,7 +99,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
             }.onEachFleetCells {
                 it.coord
                     .notIn(model.getShotsAt(defeated))
-                    .so { it.background(defeatedCellColor) }
+                    .so { it.background(defeatedEmptyCellColor) }
             }
 
         fleetReadiness

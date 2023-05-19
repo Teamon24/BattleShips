@@ -27,7 +27,7 @@ import tornadofx.ViewModel
 import tornadofx.onChange
 import java.util.concurrent.ConcurrentHashMap
 
-typealias PlayersAndShips = SimpleMapProperty<String, MutableCollection<Ship>>
+typealias PlayersAndShips = SimpleMapProperty<String, Ships>
 typealias ShipsTypes = SimpleMapProperty<Int, Int>
 private typealias FleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>
 typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
@@ -79,6 +79,7 @@ class BattleModel : ViewModel() {
     val battleIsNotStarted get() = !battleIsStarted
 
     val turn = SimpleStringProperty()
+
     //SHIPS TYPES
     val fleetsReadiness = FleetsReadiness()
 
@@ -109,7 +110,7 @@ class BattleModel : ViewModel() {
             .toMutableMap()
     }
 
-    fun getWinner(): String = players.first { it !in defeatedPlayers }
+
 
     val playersAndShips = emptySimpleMapProperty<String, Ships>()
         .notifyOnChange()
@@ -187,13 +188,6 @@ class BattleModel : ViewModel() {
         }
     }
 
-    //Shots
-    fun getHits() = getShots { it is HitAction }
-    fun getShotsAt(target: String) = getShots { it.target == target }
-    private fun getShots(function: (HasAShot) -> Boolean) = statistics.filter(function).map { it.shot }
-
-    fun addShot(hasAShot: HasAShot) { statistics.add(hasAShot) }
-
     fun putFleetSettings(settings: FleetSettingsAction) {
         width.value = settings.width
         height.value = settings.height
@@ -205,6 +199,27 @@ class BattleModel : ViewModel() {
         playersAndShips[player] = mutableListOf()
     }
 
+    //-------------------------------------------------------------------------------------------------
+    //Winner
+    fun getWinner(): String = players.first { it !in defeatedPlayers }
+    fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
+    fun hasAWinner() = players.size - defeatedPlayers.size == 1
+    inline fun hasAWinner(onTrue: () -> Unit) = hasAWinner().so(onTrue)
+
+    //-------------------------------------------------------------------------------------------------
+    //Ready
+    fun hasReady(player: String) = player in readyPlayers
+    fun setReady(player: String) { readyPlayers.add(player) }
+    fun setNotReady(player: String) { readyPlayers.remove(player) }
+    inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
+
+    //-------------------------------------------------------------------------------------------------
+    //Shots
+    fun getHits() = getShots { it is HitAction }
+    fun getShotsAt(target: String) = getShots { it.target == target }
+    fun addShot(hasAShot: HasAShot) { statistics.add(hasAShot) }
+    private fun getShots(function: (HasAShot) -> Boolean) = statistics.filter(function).map { it.shot }
+
     fun registersAHit(shot: Coord) = currentPlayer.ships().gotHitBy(shot)
 
     fun hasNo(target: String, hitCoord: Coord): Boolean {
@@ -212,6 +227,38 @@ class BattleModel : ViewModel() {
             .asSequence()
             .filter { it.target == target }
             .map { it.shot }
+    }
+    //-------------------------------------------------------------------------------------------------
+    //isCurrent
+    inline val String?.isCurrent get() = currentPlayer == this
+    inline val String?.isNotCurrent get() = currentPlayer != this
+    inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
+    private inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
+    fun hasCurrent(player: String?) = player.isCurrent
+    //-------------------------------------------------------------------------------------------------
+    //Ships
+    fun shipsOf(player: String): Ships = playersAndShips[player]!!
+    fun String.ships() = playersAndShips[this]!!
+    fun String.decks() = playersAndShips[this]!!.flatten()
+    fun String.hasDeck(deck: Coord) = playersAndShips[this]!!.flatten().contains(deck)
+
+    fun getShipBy(hasAShot: HasAShot): MutableList<Coord> {
+        return mutableListOf<Coord>().also {
+            getRightNextTo(hasAShot.shot, it)
+        }
+    }
+
+    private fun getRightNextTo(
+        coord: Coord,
+        container: MutableList<Coord>
+    ) {
+        var tempCont = getHits().getRightNextTo(coord)
+        if (container.containsAll(tempCont)) return
+        container.addAll(tempCont)
+
+        tempCont.forEach {
+            getRightNextTo(it, container)
+        }
     }
 
     fun lastShipWasAdded(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(0).so(onTrue)
@@ -227,50 +274,11 @@ class BattleModel : ViewModel() {
             val restTypeEdited = count { it == 1 } == i
             otherTypesAdded && restTypeEdited
         }
-
     }
-
-    fun hasReady(player: String) = player in readyPlayers
-    inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
-
-    fun setReady(player: String) { readyPlayers.add(player) }
-    fun setNotReady(player: String) { readyPlayers.remove(player) }
-
-    fun setReadiness(player: String, ready: Boolean) {
-        when {
-            ready -> setReady(player)
-            else -> setNotReady(player)
-        }
-    }
-
-    fun hasOnePlayerLeft() = players.size == 1 && battleIsEnded
-
-    fun hasAWinner() = players.size - defeatedPlayers.size == 1
-    inline fun hasAWinner(onTrue: () -> Unit) = hasAWinner().so(onTrue)
-
-    //isCurrent
-    inline val String?.isCurrent get() = currentPlayer == this
-    inline val String?.isNotCurrent get() = currentPlayer != this
-    inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
-    private inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
-    fun hasCurrent(player: String?) = player.isCurrent
-
-    fun shipsOf(player: String) = playersAndShips[player]!!
-    fun String.ships() = playersAndShips[this]!!
-    fun String.decks() = playersAndShips[this]!!.flatten()
-    fun String.hasDeck(deck: Coord) = playersAndShips[this]!!.flatten().contains(deck)
 
     private fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
         addListener(ListChangeListener { log { "$name - ${it.list}" } })
     }
-
-    private fun ObservableValueMap<String, Boolean>.logOnChange() {
-        addValueListener {
-            log { "ready players - ${this@BattleModel.readyPlayers}" }
-        }
-    }
-
-
 }
 
 inline val BattleModel.allAreReady get() = readyPlayers.size == playersNumber.value

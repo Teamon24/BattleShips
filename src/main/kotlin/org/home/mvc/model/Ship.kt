@@ -1,32 +1,30 @@
 package org.home.mvc.model
 
 import home.extensions.CollectionsExtensions.isEmpty
-import org.home.utils.log
 
-class Ship
-constructor(coordinates: Collection<Coord> = mutableListOf()) : ArrayList<Coord>(coordinates) {
-    constructor(coordinate: Coord) : this(listOf(coordinate))
-    constructor(vararg coordinates: Coord) : this(coordinates.toList())
+typealias Ship = MutableList<Coord>
+typealias BeingConstructedShip = MutableList<Coord>
 
-    fun copy() = Ship(this.toMutableList())
-    fun hasDecks(i: Int) = size == i
-    inline val isDestroyed get() = isEmpty
+inline val Ship.isDestroyed get() = isEmpty
 
-    fun crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
-    private fun crosses(another: Ship) = any { deck -> deck in another }
+fun Ship.hasDecks(i: Int) = size == i
 
-    fun withBorder() = flatMap { it.border() }.toHashSet()
+fun Ship.crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
+private fun Ship.crosses(another: Ship) = any { deck -> deck in another }
 
-    fun addIfAbsent(coord: Coord) {
-        find { it == coord } ?: this.add(coord)
-    }
+fun Ship.withBorder() = flatMap { it.border() }.toHashSet()
 
-    fun border(rows: Int, cols: Int) =
-        flatMap { it.border() }
-            .filter { it.first <= rows && it.second <= cols }
-            .filter { it.first >= 1 && it.second >= 1 }
-            .toHashSet().also { it.removeAll(this) }
+fun Ship.border(rows: Int, cols: Int) =
+    flatMap { it.border() }
+        .filter { it.first <= rows && it.second <= cols }
+        .filter { it.first >= 1 && it.second >= 1 }
+        .toHashSet().also { it.removeAll(this) }
+
+fun BeingConstructedShip.addIfAbsent(coord: Coord) {
+    find { it == coord } ?: add(coord)
 }
+
+fun Ship.copy() = toMutableList()
 
 
 fun Ships.gotHitBy(shot: Coord) = any { shot in it }
@@ -44,18 +42,4 @@ fun Ships.removeAndGetBy(shot: Coord): Ship {
 fun Coord.withinAnyBorder(ships: Collection<Ship>) = ships.any { ship -> ship.withBorder().contains(this) }
 fun Coord.withinAnyBorder(vararg ships: Ship) = ships.any { ship -> ship.withBorder().contains(this) }
 
-fun Ships.ifAbsent(ship: Ship, onAbsent: () -> Unit): Boolean {
-    ship.ifEmpty { return false }
-    val find = find { it.size == ship.size && it.containsAll(ship) }
-    return find == null
-}
-
-fun logShips(ships: Ships, action: String = "") {
-    log { action }
-    ships.forEach { log { it } }
-}
-
-inline fun <T> Iterable<T>.ship(transform: (T) -> Coord) = map { transform(it) }.toShip()
-
-fun Collection<Coord>.toShip() = Ship(this)
-fun Coord.toShip() = Ship(this)
+inline fun <T> Iterable<T>.ship(transform: (T) -> Coord) = map { transform(it) }

@@ -41,9 +41,11 @@ import tornadofx.ChangeListener
 import tornadofx.Form
 import tornadofx.action
 import tornadofx.label
+import tornadofx.style
 import tornadofx.textfield
 
-class BattleCreationView : AbstractGameView("Настройки боя") {
+
+open class BattleCreationView : AbstractGameView("Настройки боя") {
     private val shipsTypesPaneController: ShipsTypesPaneController by GameScope.inject()
     private val battleController: BattleController<Action> by di()
 
@@ -130,11 +132,30 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
 
     private fun EventTarget.intField(prop: SimpleIntegerProperty): TextField {
         return textfield(prop) {
+            style {
+                focusTraversable = false
+            }
+            setOnScroll { event ->
+                val op: (Int) -> Int = if (event.deltaY < 0) {
+                    { it - 1 }
+                } else {
+                    { it + 1 }
+                }
+
+                text(op)
+            }
+
             focusedProperty().addListener { _, _, _ ->
                 if (!text.matches(Regex("\\d+"))) {
                     text = ""
                 }
             }
+        }
+    }
+
+    private fun TextField.text(op: (Int) -> Int) {
+        op(text.toInt()).moreThan(1) {
+            text = it
         }
     }
 
@@ -173,6 +194,10 @@ class BattleCreationView : AbstractGameView("Настройки боя") {
 
     private fun setWidth(model: BattleModel, newValue: Number?) {
         model.width.value = newValue as Int?
+    }
+
+    private fun Int.moreThan(i: Int, function: (String) -> Unit) {
+        if (this > i) { function(this.toString()) }
     }
 }
 

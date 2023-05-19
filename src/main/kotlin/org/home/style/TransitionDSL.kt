@@ -21,8 +21,8 @@ object TransitionDSL {
     }
 
 
-    inline fun InlineCss.filling(battleButton: Region, createFill: FillTransition.() -> Unit): FillTransition {
-        return FillTransition(battleButton)
+    inline fun InlineCss.filling(region: Region, createFill: FillTransition.() -> Unit): FillTransition {
+        return FillTransition(region)
             .apply {
                 createFill()
                 enable()

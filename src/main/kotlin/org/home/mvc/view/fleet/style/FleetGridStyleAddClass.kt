@@ -6,12 +6,12 @@ import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.mvc.contoller.ShipsTypesPane
-import org.home.mvc.model.Ship
+import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CLASS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
 import org.home.style.AppStyles.Companion.currentPlayerLabel
 import org.home.style.AppStyles.Companion.defeatedEmptyCell
 import org.home.style.AppStyles.Companion.defeatedPlayerLabel
@@ -19,11 +19,13 @@ import org.home.style.AppStyles.Companion.defeatedShipNumberLabel
 import org.home.style.AppStyles.Companion.defeatedShipTypeLabel
 import org.home.style.AppStyles.Companion.defeatedTitleCell
 import org.home.style.AppStyles.Companion.emptyCell
+import org.home.style.AppStyles.Companion.enemyCell
 import org.home.style.AppStyles.Companion.fleetCell
 import org.home.style.AppStyles.Companion.fullShipNumberLabel
 import org.home.style.AppStyles.Companion.hitCell
 import org.home.style.AppStyles.Companion.incorrectCell
 import org.home.style.AppStyles.Companion.incorrectEmptyCell
+import org.home.style.AppStyles.Companion.missCell
 import org.home.style.AppStyles.Companion.readyCell
 import org.home.style.AppStyles.Companion.readyPlayerLabel
 import org.home.style.AppStyles.Companion.readyShipNumberLabel
@@ -40,7 +42,6 @@ import tornadofx.removeClass
 object FleetGridStyleAddClass: FleetGridStyleComponent {
     override val type = CLASS
 
-
     override fun FleetCell.removeAnyColor(): FleetCell = this
         .removeClass(
             selectedCell,
@@ -51,6 +52,10 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
             shipBorderCell,
             titleCell
         )
+
+    override fun FleetCell.addMiss() = addClass(missCell)
+    override fun FleetCell.addHit() = addClass(hitCell)
+    override fun FleetCell.addSunk() = addClass(sunkCell)
 
     override fun FleetCellLabel.addSelectionColor() = addClass(selectedCell)
     override fun FleetCell.addIncorrectColor() = addClass(incorrectCell)
@@ -63,7 +68,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
     fun FleetCell.addIncorrectHover() = addClass(incorrectEmptyCell)
     fun FleetCell.removeIncorrectHover() = removeClass(incorrectEmptyCell)
 
-    override fun FleetGrid.addSelectionColor(ship: Ship) {
+    override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) {
         forEachCell(ship) {
             addSelectionColor()
             removeIncorrectColor()
@@ -90,8 +95,12 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         fleetGrid
             .onEachTitleCells { it.toggle(titleCell, defeatedTitleCell) }
             .onEachFleetCells {
-                it.coord.notIn(model.getShotsAt(defeated)).so {
-                    it.toggle(emptyCell, defeatedEmptyCell)
+                model {
+                    it.coord.notIn(getShotsAt(defeated)).so {
+                        defeated.isCurrent
+                            .then { it.addClass(defeatedEmptyCell) }
+                            .or { it.toggle(enemyCell, defeatedEmptyCell) }
+                    }
                 }
             }
 

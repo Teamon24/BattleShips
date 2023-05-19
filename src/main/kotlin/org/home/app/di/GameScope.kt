@@ -5,9 +5,9 @@ import org.home.app.di.GameScope.GameInject.FX
 import org.home.app.di.GameScope.GameInject.KOIN
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CLASS
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CSS
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.TRANSITION
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
 import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.koin.core.component.KoinScopeComponent

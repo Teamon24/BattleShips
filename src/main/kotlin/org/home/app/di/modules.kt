@@ -22,10 +22,10 @@ import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.mvc.view.fleet.FleetGridHandlers
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CLASS
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.CSS
-import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUdate.TRANSITION
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
 import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.net.server.ConnectionsListener
@@ -75,7 +75,7 @@ fun gameScoped(): Module {
 
             scoped { AwaitConditions() }
 
-            scoped { (type: FleetGreedStyleUdate) ->
+            factory { (type: FleetGreedStyleUpdate) ->
                 when (type) {
                     CLASS -> FleetGridStyleAddClass
                     TRANSITION -> FleetGridStyleTransition

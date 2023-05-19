@@ -4,11 +4,8 @@ package org.home.mvc.view.component
 
 import javafx.event.EventTarget
 import javafx.util.Duration
-import org.home.mvc.ApplicationProperties.Companion.backButtonText
 import org.home.app.di.FxScopes
-import org.home.app.di.GameScope
-import org.home.mvc.view.NewServerView
-import org.home.mvc.view.battle.BattleView
+import org.home.mvc.ApplicationProperties.Companion.backButtonText
 import org.home.mvc.view.component.Transit.BACKWARD
 import org.home.mvc.view.component.Transit.FORWARD
 import org.home.mvc.view.component.button.battleButton
@@ -17,13 +14,13 @@ import org.home.utils.log
 import tornadofx.View
 import tornadofx.ViewTransition
 import tornadofx.ViewTransition.Cover
-import tornadofx.ViewTransition.Direction.RIGHT
 import tornadofx.ViewTransition.Direction.LEFT
-import tornadofx.ViewTransition.Reveal
+import tornadofx.ViewTransition.Direction.RIGHT
+import tornadofx.ViewTransition.Fade
 import tornadofx.ViewTransition.Metro
+import tornadofx.ViewTransition.Reveal
 import tornadofx.ViewTransition.Slide
 import tornadofx.ViewTransition.Swap
-import tornadofx.ViewTransition.Fade
 import tornadofx.action
 import tornadofx.find
 import tornadofx.point

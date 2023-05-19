@@ -18,6 +18,11 @@ import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.GameComponent
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
+import org.home.mvc.model.addIfAbsent
+import org.home.mvc.model.border
+import org.home.mvc.model.copy
+import org.home.mvc.model.crosses
+import org.home.mvc.model.hasDecks
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addBorderColor
@@ -37,7 +42,7 @@ import tornadofx.addClass
 import tornadofx.removeClass
 
 class FleetGridHandlers: GameComponent() {
-    private val beingConstructed = Ship()
+    private val beingConstructed: Ship = mutableListOf()
     private val shipsTypesController by GameScope.inject<ShipsTypesController>()
 
     private var mouseWentOutOfBound = false.atomic
@@ -120,7 +125,7 @@ class FleetGridHandlers: GameComponent() {
 
             beingConstructed.hasElement {
                 shipsTypesController.validates(beingConstructed).otherwise {
-                    val ship = beingConstructed.toShip()
+                    val ship = beingConstructed
                     gridPane.cell(ship).removeClass(emptyCell)
                     gridPane.cell(ship).addIncorrectHover()
                 }
@@ -130,8 +135,8 @@ class FleetGridHandlers: GameComponent() {
                 gridPane.addSelectionColor(beingConstructed)
             } else {
                 for (i in 0..beingConstructed.size) {
-                    val dropped = beingConstructed.takeLast(i).toShip()
-                    val droppedShip = beingConstructed.dropLast(i).toShip()
+                    val dropped = beingConstructed.takeLast(i)
+                    val droppedShip = beingConstructed.dropLast(i)
                     if (shipsTypesController.validates(droppedShip)) {
                         log { "$eventType: beingConstructed - $beingConstructed " }
                         log { "$eventType: dropped - $dropped " }
@@ -187,7 +192,7 @@ class FleetGridHandlers: GameComponent() {
 
             beingConstructed.isNotEmpty {
                 shipsTypesController.validates(beingConstructed).otherwise {
-                    val ship = beingConstructed.first().toShip()
+                    val ship = beingConstructed.first()
                     gridPane.cell(ship).removeIncorrectHover()
                     gridPane.cell(ship).addClass(emptyCell)
                 }

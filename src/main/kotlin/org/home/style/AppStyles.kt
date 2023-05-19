@@ -62,7 +62,9 @@ class AppStyles : Stylesheet() {
         val shipBorderCellBorderColor = shipBorderColor.opacity(0.15)
         val initialAppColor = "E8E3E4FF".color
         val defeatedColor = "A93638F4".color
-        val defeatedCellColor = defeatedColor.opacity(0.5)
+        val defeatedEmptyCellColor = defeatedColor.opacity(0.7)
+        const val defeatedPlayerOpacity = 0.5
+        val defeatedPlayerColor = defeatedColor.opacity(defeatedPlayerOpacity)
 
         private const val fontName = "JetBrainsMono-Light.ttf"
 
@@ -105,7 +107,6 @@ class AppStyles : Stylesheet() {
 
         val fleetGrid by cssclass()
 
-
         val emptyCell by cssclass()
         val fleetCell by cssclass()
         val selectedCell by cssclass()
@@ -122,7 +123,6 @@ class AppStyles : Stylesheet() {
         val hitCell by cssclass()
         val missCell by cssclass()
         val sunkCell by cssclass()
-        val currentPlayerCell by cssclass()
 
         val incorrectCell by cssclass()
         val defeatedEmptyCell by cssclass()
@@ -160,8 +160,16 @@ class AppStyles : Stylesheet() {
             noBorder()
             focusTraversable = false
         }
+
+        fleetGrid {
+            focusTraversable = false
+        }
+
         label     + jetBrainFont
-        textField + square
+        textField {
+            square()
+            focusTraversable = false
+        }
         button    + background(initialAppColor) + jetBrainFont + fillParent + square
 
         form {
@@ -173,9 +181,9 @@ class AppStyles : Stylesheet() {
         errorLabel + padding(20.px)
         fleetLabel + center + jetBrainFont + cellSize
 
-        defeatedPlayerLabel + text(WHITE) + margin(5.px) + background(defeatedColor.opacity(0.5))
-        currentPlayerLabel  + text(WHITE) + margin(5.px) + background(selectedColor.opacity(0.5))
-        readyPlayerLabel    + text(WHITE) + margin(5.px) + background(readyColor.opacity(0.5))
+        defeatedPlayerLabel + text(WHITE) + margin(5.px) + background(defeatedPlayerColor)
+        currentPlayerLabel  + text(WHITE) + margin(5.px) + background(selectedColor.opacity(defeatedPlayerOpacity))
+        readyPlayerLabel    + text(WHITE) + margin(5.px) + background(readyColor.opacity(defeatedPlayerOpacity))
 
         shipTypeLabel {
             backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
@@ -199,13 +207,13 @@ class AppStyles : Stylesheet() {
         incorrectEmptyCell      + border   + hover(incorrectCellColor)
 
         selectedCell            + noBorder + background(selectedColor)      + text(WHITE)
-        readyCell               + border   + background(readyCellColor)     + hover(hoveredReadyTitleColor)
-        defeatedEmptyCell       + border   + background(defeatedCellColor)
+        readyCell               + noBorder + background(readyCellColor)     + hover(hoveredReadyTitleColor)
+        defeatedEmptyCell       + border   + background(defeatedEmptyCellColor)
         incorrectCell           + noBorder + background(incorrectCellColor)
 
-        hitCell                 + border   + background(hitCellColor)
-        missCell                + border   + radius(fleetCellSize / 2)
-        sunkCell                + border   + background(sunkCellColor)
+        hitCell                 + noBorder + background(hitCellColor)
+        sunkCell                + noBorder + background(sunkCellColor)
+        missCell                + border   + background(missCellColor) + radius(fleetCellSize / 2)
 
         titleCell               + border   + background(titleCellColor)     + text(WHITE)
         readyTitleCell          + border   + background(readyTitleColor)    + text(WHITE)
@@ -224,11 +232,6 @@ class AppStyles : Stylesheet() {
         (shipBorderCell + background(shipBorderCellColor)) {
             borderColor += box(shipBorderCellBorderColor)
             borderWidth += box(fleetBorderWidth.px)
-        }
-
-        currentPlayerCell {
-            border()
-            focusTraversable = false
         }
 
         enemyCell {

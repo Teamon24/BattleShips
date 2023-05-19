@@ -40,12 +40,14 @@ import tornadofx.flowpane
 import tornadofx.gridpane
 import tornadofx.label
 import tornadofx.onLeftClick
+import tornadofx.plusAssign
 import tornadofx.removeClass
 import tornadofx.selectedItem
 import kotlin.collections.set
 
 class BattleView : AbstractGameView("Battle View") {
     internal val readinessStyleComponent by GameScope.fleetGridStyle<FleetGridStyleAddClass>()
+    internal val shotStyleComponent by GameScope.fleetGridStyle<FleetGridStyleTransition>()
     internal val defeatedStyleComponent by GameScope.fleetGridStyle<FleetGridStyleTransition>()
 
     internal val battleController by di<BattleController<Action>>()
@@ -199,7 +201,6 @@ class BattleView : AbstractGameView("Battle View") {
 
     private fun EventTarget.currentPlayerFleet() =
         currentPlayerFleetGridPane
-            .addClass(AppStyles.currentPlayerCell)
             .also { add(it) }
             .also { pane ->
                 model.shipsOf(currentPlayer).let {
@@ -231,9 +232,6 @@ class BattleView : AbstractGameView("Battle View") {
         fleetGridController
             .fleetGrid()
             .addShips(model.shipsOf(currentPlayer))
-            .onEachFleetCells {
-                it.removeClass(AppStyles.emptyCell)
-            }
             .also {
                 playersFleetGridsPanes[currentPlayer] = it
                 currentPlayerFleetGridPane.center = it

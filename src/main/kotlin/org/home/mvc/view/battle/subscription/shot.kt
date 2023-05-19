@@ -7,22 +7,14 @@ import org.home.mvc.contoller.events.ShipWasHit
 import org.home.mvc.contoller.events.ShipWasSunk
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.ThereWasAShot
-import org.home.mvc.model.BattleModel
 import org.home.mvc.model.Coord
-import org.home.mvc.model.getRightNextTo
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles.Companion.hitCellColor
-import org.home.style.AppStyles.Companion.missCell
-import org.home.style.AppStyles.Companion.missCellColor
-import org.home.style.AppStyles.Companion.sunkCellColor
-import org.home.style.StyleUtils.fillBackground
 import org.home.utils.logEvent
-import tornadofx.addClass
 
-internal fun BattleView.shipWasHit() = subscribe<ShipWasHit>(::markHit)
-internal fun BattleView.thereWasAMiss() = subscribe<ThereWasAMiss>(::markMiss)
+internal fun BattleView.shipWasHit() = subscribe<ShipWasHit>(this::markHit)
+internal fun BattleView.thereWasAMiss() = subscribe<ThereWasAMiss>(this::markMiss)
 
 internal fun BattleView.shipWasSunk() {
     subscribe<ShipWasSunk> { event ->
@@ -34,16 +26,17 @@ internal fun BattleView.shipWasSunk() {
     }
 }
 
-fun markMiss(fleetGrid: FleetGrid, shot: Coord) =
-    fleetGrid
-        .cell(shot)
-        .apply { addClass(missCell) }
-        .fillBackground(to = missCellColor)
+fun BattleView.markMiss(fleetGrid: FleetGrid, shot: Coord) =
+    fleetGrid.cell(shot).apply { shotStyleComponent { addMiss() } }
 
-fun markHit (fleetGrid: FleetGrid, shot: Coord) = fleetGrid.cell(shot).fillBackground(to = hitCellColor)
+fun BattleView.markHit (fleetGrid: FleetGrid, shot: Coord) =
+    fleetGrid.cell(shot).apply { shotStyleComponent { addHit() } }
 
-fun FleetGrid.markSunk(shot: Coord) = cell(shot).fillBackground(to = sunkCellColor)
-fun FleetGrid.markSunk(sunkShip: Collection<Coord>) = sunkShip.forEach { markSunk(it) }
+fun BattleView.markSunk(fleetGrid: FleetGrid, shot: Coord) =
+    fleetGrid.cell(shot).apply { shotStyleComponent { addSunk() } }
+
+fun BattleView.markSunk(fleetGrid: FleetGrid, sunkShip: Collection<Coord>) =
+    sunkShip.forEach { markSunk(fleetGrid, it) }
 
 private inline fun <reified E: ThereWasAShot> BattleView.subscribe(crossinline markShot: (FleetGrid, Coord) -> Unit) {
     subscribe<E> { event ->
@@ -81,28 +74,12 @@ private fun BattleView.processSunk(event: ThereWasAShot) {
 
             val fleetGrid = playersFleetGridsPanes[target]!!
 
-            fleetGrid {
-                markSunk(shot)
-                hashSetOf<Coord>().also {
-                    model.getRightNextTo(shot, it)
-                    markSunk(it)
-                }
-            }
+            markSunk(fleetGrid, shot)
+            markSunk(fleetGrid, model.getShipBy(hasAShot))
         }
     }
 }
 
-private fun BattleModel.getRightNextTo(
-    coord: Coord,
-    container: MutableSet<Coord>
-) {
-    var tempCont = getHits().getRightNextTo(coord)
-    if (container.containsAll(tempCont)) return
-    container.addAll(tempCont)
 
-    tempCont.forEach {
-        getRightNextTo(it, container)
-    }
-}
 
 

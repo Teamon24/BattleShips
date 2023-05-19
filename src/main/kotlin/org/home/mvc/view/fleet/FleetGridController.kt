@@ -21,10 +21,10 @@ class FleetGridController : GameController() {
     private val titleCellEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
     private val fleetGridEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
 
-    fun fleetGrid() = fleetGridCreator.titledFleetGrid().addFleetCellClass(AppStyles.currentPlayerCell)
+    fun fleetGrid() = fleetGridCreator.titledFleetGrid().addFleetCellClass(AppStyles.fleetGrid)
 
     fun activeFleetGrid(): FleetGrid {
-        val fleetGrid = fleetGridCreator.titledFleetGrid()
+        val fleetGrid = fleetGrid()
         val exitHappenedHandler = fleetGridHandlers.exitHappenedHandler(fleetGrid)
         val releaseAfterExitHandler = fleetGridHandlers.releaseAfterExit()
         val dragExitHandler = fleetGridHandlers.dragExit()

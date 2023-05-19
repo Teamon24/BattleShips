@@ -1,10 +1,9 @@
 package org.home.style
 
-import home.extensions.AnysExtensions.invoke
 import javafx.geometry.Pos
 import javafx.scene.paint.Color
-import tornadofx.CssRule
 import tornadofx.CssSelectionBlock
+import tornadofx.InlineCss
 import tornadofx.MultiValue
 import tornadofx.Stylesheet.Companion.hover
 import tornadofx.Stylesheet.Companion.selected
@@ -67,9 +66,8 @@ object CssUtils {
         return this
     }
 
-    fun CssSelectionBlock.text(color: Color) {
-        textFill = color
-    }
+    fun CssSelectionBlock.text(color: Color) { textFill = color }
+    fun InlineCss.noBorder() { borderWidth += box(0.px) }
 
     fun CssSelectionBlock.gridMargin(dimension: LinearUnits) {
         hgap = dimension

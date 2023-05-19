@@ -41,6 +41,7 @@ import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.event
 import org.home.mvc.model.areDestroyed
+import org.home.mvc.model.isDestroyed
 import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.Message
 import org.home.net.server.Ping
