@@ -110,10 +110,10 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
 
         init {
             fillingTransitionTime.also {
-                enemySelectionFadeTime = it * 3
+                enemySelectionFadeTime = it * 4
                 startButtonTransitionTime = it
                 leaveBattleFieldButtonTransitionTime = it
-                defeatFillTransitionTime = it * 3
+                defeatFillTransitionTime = it * 5
             }
         }
 

@@ -35,17 +35,14 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
     override fun FleetCell.removeAnyColor(): FleetCell { TODO("Not yet implemented" ) }
 
     override fun FleetCell.addMiss() = apply {
-        style { noBorder() }
         fillBackground(to = missCellColor)
     }
 
     override fun FleetCell.addHit()  = apply {
-        style { noBorder() }
         fillBackground(to = hitCellColor)
     }
 
     override fun FleetCell.addSunk() = apply {
-        style { noBorder() }
         fillBackground(to = sunkCellColor)
     }
 

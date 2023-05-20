@@ -5,17 +5,19 @@ import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.exclude
 import javafx.css.Styleable
 import javafx.scene.control.Labeled
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
 import org.home.app.ApplicationProperties.Companion.fillingTransitionTime
 import org.home.style.Transition
-import org.home.utils.ColorUtils.color
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
+import org.home.utils.ColorUtils.color
+import org.home.utils.StyleUtils.fillBackground
 import tornadofx.CssRule
-import tornadofx.InlineCss
 import tornadofx.addClass
 import tornadofx.box
 import tornadofx.hasClass
@@ -28,16 +30,14 @@ object StyleUtils {
     val Labeled.textColor: Color get() = textFill?.color ?: WHITE
 
     fun Region.fillBackground(from: Color = backgroundColor, to: Color) =
-        filling(from, to) { backgroundColor += it }
-
-    fun Region.filling(from: Color, to: Color, cssProp: InlineCss.(Color) -> Unit) {
         style {
-            filling(this@filling) {
+            filling(this@fillBackground) {
                 millis = fillingTransitionTime
-                transition(from, to, cssProp)
+                transition(from, to) { backgroundColor += it }
+            }.onFinish {
+                this@fillBackground.backgroundProperty().value = Background(BackgroundFill(to, null, null))
             }
         }
-    }
 
     fun Transition.textFillTransition() = transition(BLACK, WHITE) { textFill = it }
 

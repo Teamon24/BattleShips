@@ -51,8 +51,8 @@ class BattleView : GameView("Battle View") {
 
     internal val enemiesView by GameScope.inject<EnemiesViewController>()
 
-    internal val fleetGridsPanes            = enemiesView.fleetGridsPanes
-    internal val fleetsReadinessPanes       = enemiesView.fleetsReadinessPanes
+    internal val fleetGridsPanes           = enemiesView.fleetGridsPanes
+    internal val fleetsReadinessPanes      = enemiesView.fleetsReadinessPanes
     private val selectedLabel              = enemiesView.selectedEnemyLabel
     private val selectedFleetPane          = enemiesView.selectedFleetPane
     private val selectedFleetReadinessPane = enemiesView.selectedFleetReadinessPane
