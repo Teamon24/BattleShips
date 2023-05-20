@@ -109,12 +109,11 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         modelView {
             if (battleIsStarted() && getPlayers().size > 1) {
                 playerTurnComponent {
-                    hasATurn(currentPlayer) { nextTurn() }
+                    hasATurn(getCurrentPlayer()) { nextTurn() }
                 }
                 send(NewServerAction(turnPlayer))
                 awaitConditions.newServerFound.await()
-                val foundNewServer = getNewServer()
-                excluding(foundNewServer.player).send(NewServerConnectionAction(foundNewServer))
+                excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
             }
         }
         disconnect()

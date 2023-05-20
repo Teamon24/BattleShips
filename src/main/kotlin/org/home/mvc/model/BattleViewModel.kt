@@ -52,7 +52,7 @@ abstract class BattleViewModel: ViewModel() {
     abstract fun updateFleetReadiness(event: FleetEditEvent)
     abstract fun putFleetSettings(settings: FleetSettingsAction)
 
-    fun hasNoServerTransfer() = getNewServer() == null
+    abstract fun hasNoServerTransfer(): Boolean
     fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()

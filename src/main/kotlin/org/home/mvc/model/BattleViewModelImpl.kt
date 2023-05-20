@@ -99,6 +99,8 @@ class BattleViewModelImpl : BattleViewModel() {
         shipsTypes.putAll(settings.shipsTypes)
     }
 
+    override fun hasNoServerTransfer() = newServer == null
+
     //-------------------------------------------------------------------------------------------------
     //players
     override fun getCurrentPlayer() = _currentPlayer
