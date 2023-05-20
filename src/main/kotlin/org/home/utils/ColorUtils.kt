@@ -1,8 +1,8 @@
-package org.home.style
+package org.home.utils
 
+import home.to
 import javafx.scene.paint.Color
 import javafx.scene.paint.Paint
-import home.to
 
 object ColorUtils {
     val String.color get() = Paint.valueOf(this) as Color
@@ -21,4 +21,5 @@ object ColorUtils {
     }
 
     operator fun Color.invoke() = red to green to blue
+
 }

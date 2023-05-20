@@ -28,12 +28,13 @@ import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
 
 class ShotProcessingComponent: GameComponent() {
-    private val notifierStrategies: ShotNotifierStrategies by di()
-    private val multiServerSockets: MultiServer.MultiServerSockets<PlayerSocket> by di()
     private val playerTurnComponent: PlayerTurnComponent by di()
 
+    private val multiServerSockets: MultiServer.MultiServerSockets<PlayerSocket> by di()
     private val sockets = multiServerSockets.get()
-    private val shotNotifier = notifierStrategies.create(sockets)
+
+    private val notifierStrategies: ShotNotifierStrategies by di()
+    private val shotNotifier = notifierStrategies.create(modelView.enemies)
 
     private val turnList = playerTurnComponent.turnList
     private inline val <E> Collection<E>.hasPlayers get() = hasElements
@@ -50,7 +51,7 @@ class ShotProcessingComponent: GameComponent() {
     }
 
     private fun onShotAtServer(target: String, action: ShotAction) {
-        val ships = model.shipsOf(target)
+        val ships = modelView.shipsOf(target)
         val shot = action.shot
 
         shot.aintHit(ships)

@@ -18,9 +18,9 @@ internal fun BattleView.thereWasAMiss() = subscribe<ThereWasAMiss>(this::markMis
 
 internal fun BattleView.shipWasSunk() {
     subscribe<ShipWasSunk> { event ->
-        logEvent(event, model)
+        logEvent(event, modelView)
         event {
-            model.addShot(hasAShot)
+            modelView.addShot(hasAShot)
             processSunk(event)
         }
     }
@@ -40,8 +40,8 @@ fun BattleView.markSunk(fleetGrid: FleetGrid, sunkShip: Collection<Coord>) =
 
 private inline fun <reified E: ThereWasAShot> BattleView.subscribe(crossinline markShot: (FleetGrid, Coord) -> Unit) {
     subscribe<E> { event ->
-        logEvent(event, model)
-        model.addShot(event.hasAShot)
+        logEvent(event, modelView)
+        modelView.addShot(event.hasAShot)
         processShot(event, markShot)
     }
 }
@@ -56,7 +56,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
             }
 
             openMessageWindow(message)
-            markShot(playersFleetGridsPanes[target]!!, hasAShot.shot)
+            markShot(fleetGridsPanes[target]!!, hasAShot.shot)
         }
     }
 }
@@ -72,10 +72,10 @@ private fun BattleView.processSunk(event: ThereWasAShot) {
 
             openMessageWindow(message)
 
-            val fleetGrid = playersFleetGridsPanes[target]!!
+            val fleetGrid = fleetGridsPanes[target]!!
 
             markSunk(fleetGrid, shot)
-            markSunk(fleetGrid, model.getShipBy(hasAShot))
+            markSunk(fleetGrid, modelView.getShipBy(hasAShot))
         }
     }
 }

@@ -35,7 +35,7 @@ import org.home.style.AppStyles.Companion.selectedCell
 import org.home.style.AppStyles.Companion.shipBorderCell
 import org.home.style.AppStyles.Companion.sunkCell
 import org.home.style.AppStyles.Companion.titleCell
-import org.home.style.StyleUtils.toggle
+import org.home.utils.StyleUtils.toggle
 import tornadofx.addClass
 import tornadofx.removeClass
 
@@ -84,7 +84,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
     override fun BattleView.defeated(
         defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane
     ) {
-        model {
+        modelView {
             playerLabel(defeated).toggle(currentPlayerLabel, defeatedPlayerLabel)
         }
 
@@ -95,7 +95,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         fleetGrid
             .onEachTitleCells { it.toggle(titleCell, defeatedTitleCell) }
             .onEachFleetCells {
-                model {
+                modelView {
                     it.coord.notIn(getShotsAt(defeated)).so {
                         defeated.isCurrent
                             .then { it.addClass(defeatedEmptyCell) }
@@ -119,7 +119,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         val selectedOrReady = isReady.getRule(selectedCell, readyCell)
         val nonDeckClasses = isReady.getRule(emptyCell, fleetCell)
 
-        model {
+        modelView {
             playerLabel(player).toggle(playerUsualOrReady)
         }
 
@@ -130,7 +130,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent {
         fleetGrid
             .onEachTitleCells { it.toggle(usualOrReady) }
             .onEachFleetCells { cell ->
-                model {
+                modelView {
                     player
                         .hasDeck(cell.coord)
                         .then { selectedOrReady }

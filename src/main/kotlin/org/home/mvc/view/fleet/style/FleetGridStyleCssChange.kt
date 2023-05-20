@@ -21,7 +21,7 @@ import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.AppStyles.Companion.shipBorderCellColor
 import org.home.style.AppStyles.Companion.titleCellColor
-import org.home.style.ColorUtils.opacity
+import org.home.utils.ColorUtils.opacity
 import tornadofx.style
 
 object FleetGridStyleCssChange: FleetGridStyleComponent {
@@ -58,7 +58,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
                 it.background(titleColor)
             }
             .onEachFleetCells {
-                model {
+                modelView {
                     player.decks()
                         .contains(it.coord)
                         .thus { it.background(AppStyles.readyColor.opacity(0.9)) }
@@ -76,7 +76,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
                 it.background(titleCellColor)
             }
             .onEachFleetCells {
-                model {
+                modelView {
                     player.decks()
                         .contains(it.coord)
                         .thus { it.background(selectedColor) }
@@ -98,7 +98,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent {
                 it.background(defeatedColor)
             }.onEachFleetCells {
                 it.coord
-                    .notIn(model.getShotsAt(defeated))
+                    .notIn(modelView.getShotsAt(defeated))
                     .so { it.background(defeatedEmptyCellColor) }
             }
 

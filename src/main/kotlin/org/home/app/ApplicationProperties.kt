@@ -1,4 +1,4 @@
-package org.home.mvc
+package org.home.app
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
@@ -103,15 +103,17 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val transitionSteps = 50
         const val fillingTransitionTime = 100L
 
+        val enemySelectionFadeTime: Long
         val startButtonTransitionTime: Long
         val leaveBattleFieldButtonTransitionTime: Long
         val defeatFillTransitionTime: Long
 
         init {
             fillingTransitionTime.also {
+                enemySelectionFadeTime = it * 3
                 startButtonTransitionTime = it
                 leaveBattleFieldButtonTransitionTime = it
-                defeatFillTransitionTime = it
+                defeatFillTransitionTime = it * 3
             }
         }
 

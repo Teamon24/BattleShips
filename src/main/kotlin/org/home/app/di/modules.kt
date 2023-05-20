@@ -2,7 +2,7 @@ package org.home.app.di
 
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-import org.home.mvc.ApplicationProperties
+import org.home.app.ApplicationProperties
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesController
@@ -17,6 +17,11 @@ import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleModel
+import org.home.mvc.view.battle.EnemiesViewController
+import org.home.mvc.view.battle.EnemiesListViewController
+import org.home.mvc.view.battle.SettingsFieldsController
+import org.home.mvc.view.battle.SettingsPaneController
+import org.home.mvc.view.component.button.BattleConnectionButtonController
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
@@ -25,8 +30,10 @@ import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TIMELINE
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
 import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
+import org.home.mvc.view.fleet.style.FleetGridStyleTimeline
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.net.server.ConnectionsListener
 import org.home.net.server.MessageProcessor
@@ -67,11 +74,16 @@ fun gameScoped(): Module {
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }
             scoped { BattleStartButtonController() }
+            scoped { BattleConnectionButtonController() }
+            scoped { SettingsPaneController() }
+            scoped { SettingsFieldsController() }
 
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }
             scoped { ShipsTypesPaneComponent() }
             scoped { FleetGridHandlers() }
+            scoped { EnemiesViewController() }
+            scoped { EnemiesListViewController() }
 
             scoped { AwaitConditions() }
 
@@ -80,6 +92,7 @@ fun gameScoped(): Module {
                     CLASS -> FleetGridStyleAddClass
                     TRANSITION -> FleetGridStyleTransition
                     CSS -> FleetGridStyleCssChange
+                    TIMELINE -> FleetGridStyleTimeline
                 }
             }
         }

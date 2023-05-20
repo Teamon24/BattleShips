@@ -14,7 +14,7 @@ import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import kotlinx.coroutines.delay
 import org.home.app.di.GameScope
-import org.home.mvc.ApplicationProperties.Companion.incorrectCellRemovingTime
+import org.home.app.ApplicationProperties.Companion.incorrectCellRemovingTime
 import org.home.mvc.contoller.GameComponent
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
@@ -51,7 +51,7 @@ class FleetGridHandlers: GameComponent() {
     private var exitHappened = false.atomic
     private var startWithinBorder = false.atomic
 
-    private val ships by lazy { model.shipsOf(currentPlayer) }
+    private val ships by lazy { modelView.shipsOf(currentPlayer) }
 
     private val handlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
 

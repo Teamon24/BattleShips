@@ -14,7 +14,7 @@ import org.home.utils.logEvent
 internal fun BattleView.playerIsReadyReceived() {
     val battleView = this@playerIsReadyReceived
     battleView.subscribe<PlayerIsReadyReceived> {
-        logEvent(it, model)
+        logEvent(it, modelView)
         handleReady(it.player)
     }
 }
@@ -22,31 +22,31 @@ internal fun BattleView.playerIsReadyReceived() {
 internal fun BattleView.playerIsNotReadyReceived() {
     val battleView = this@playerIsNotReadyReceived
     battleView.subscribe<PlayerIsNotReadyReceived> {
-        logEvent(it, model)
+        logEvent(it, modelView)
         handleNotReady(it.player)
     }
 }
 
 fun BattleView.readyPlayersReceived() {
     this.subscribe<ReadyPlayersReceived> { event ->
-        logEvent(event, model)
+        logEvent(event, modelView)
         event.players.forEach {
-            model.readyPlayers.add(it)
+            modelView.readyPlayers.add(it)
             handleReady(it)
         }
     }
 }
 
 private fun BattleView.handleReady(player: String) {
-    model.log { "ready = $readyPlayers" }
-    handle(player, true, model::setReady) { fleet, readiness ->
+    modelView.log { "ready = $readyPlayers" }
+    handle(player, true, modelView::setReady) { fleet, readiness ->
         ready(player, fleet, readiness)
     }
 }
 
 private fun BattleView.handleNotReady(player: String) {
-    model.log { "not ready = $readyPlayers" }
-    handle(player, false, model::setNotReady) { fleet, readiness ->
+    modelView.log { "not ready = $readyPlayers" }
+    handle(player, false, modelView::setNotReady) { fleet, readiness ->
         notReady(player, fleet, readiness)
     }
 }
@@ -60,8 +60,8 @@ private inline fun BattleView.handle(
     setReadiness(player)
     readinessStyleComponent {
         fleetStyleReadiness(
-            playersFleetGridsPanes[player]!!,
-            playersFleetsReadinessPanes[player]!!
+            fleetGridsPanes[player]!!,
+            fleetsReadinessPanes[player]!!
         )
     }
 

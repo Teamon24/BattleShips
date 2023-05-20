@@ -1,7 +1,9 @@
-package org.home.style
+package org.home.utils
 
 import javafx.geometry.Pos
 import javafx.scene.paint.Color
+import org.home.style.AppStyles
+import org.home.style.LinearUnits
 import tornadofx.CssSelectionBlock
 import tornadofx.InlineCss
 import tornadofx.MultiValue

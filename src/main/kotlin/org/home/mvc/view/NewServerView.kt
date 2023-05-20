@@ -10,7 +10,6 @@ import home.extensions.BooleansExtensions.yes
 import home.extensions.delete
 import javafx.scene.Parent
 import javafx.scene.layout.VBox
-import org.home.app.di.FxScopes
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
@@ -27,13 +26,13 @@ import java.util.*
 import kotlin.concurrent.thread
 
 
-class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
+class NewServerView(override val root: Parent = VBox()) : GameView() {
     private val battleController: BattleController<Action> by di()
     private var threadIndicator: Thread? = null
     private val connectedPlayers =
         Collections
-            .synchronizedList(model.players.toMutableList())
-            .apply { remove(model.newServer.player) }
+            .synchronizedList(modelView.players.toMutableList())
+            .apply { remove(modelView.newServer.player) }
 
 
     override fun exit() {
@@ -50,9 +49,9 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
             battleIsContinuedReceived()
         }
 
-        title = "${model.currentPlayer.uppercase()}: перенос сервера"
+        title = "${modelView.currentPlayer.uppercase()}: перенос сервера"
         applicationProperties.isServer.yes {
-                model {
+                modelView {
                     label("Вы новый сервер")
                     battleController.connect(newServer.ip, newServer.port)
                 }
@@ -82,7 +81,7 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
     private fun playerLeaved() {
         subscribe<PlayerLeaved> {
             TODO("${NewServerView::class.name}#subscribe<${PlayerLeaved::class.name}>")
-            logEvent(it, model)
+            logEvent(it, modelView)
             connectedPlayers.remove(it.player)
             root { label("Отключился: ${it.player}") }
             connectedPlayers.isEmpty().so { }
@@ -91,7 +90,7 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
 
     private fun playerWasConnected() {
         subscribe<ConnectedPlayerReceived> {
-            logEvent(it, model)
+            logEvent(it, modelView)
             connectedPlayers.remove(it.player)
             root { label("Подключился: ${it.player}") }
             log { "connectedPlayers: $connectedPlayers" }
@@ -103,7 +102,7 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
 
     private fun battleIsContinuedReceived() {
         subscribe<BattleIsContinued> {
-            logEvent(it, model)
+            logEvent(it, modelView)
             threadIndicator?.interrupt()
             tornadofx.find<BattleView>().openWindow()
             this@NewServerView.close()
@@ -112,7 +111,7 @@ class NewServerView(override val root: Parent = VBox()) : AbstractGameView() {
 
     private fun serverTransferClientsReceived() {
         subscribe<NewServerConnectionReceived> {
-            logEvent(it, model)
+            logEvent(it, modelView)
             battleController.disconnect()
             log { "Отключение от предыдущего сервера..." }
             root { label("Отключение от предыдущего сервера...") }

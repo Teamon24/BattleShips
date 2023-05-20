@@ -3,7 +3,10 @@ package org.home.utils.extensions
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
 import javafx.collections.MapChangeListener
+import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
 import tornadofx.toObservable
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
@@ -33,6 +36,10 @@ class ObservableValueMap<K, V> : HashMap<K, V>() {
     }
 }
 
-fun <K, V> SimpleMapProperty<K, V>.addMapChange(change: (MapChangeListener.Change<out K, out V>) -> Unit) {
+fun <K, V> ObservableMap<K, V>.onMapChange(change: (MapChangeListener.Change<out K, out V>) -> Unit) {
     addListener(MapChangeListener { change(it) })
+}
+
+fun <E> ObservableList<E>.onLisChange(change: (ListChangeListener.Change<out E>) -> Unit) {
+    addListener(ListChangeListener { change(it) })
 }

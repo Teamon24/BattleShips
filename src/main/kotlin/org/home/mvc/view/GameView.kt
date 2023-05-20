@@ -14,10 +14,10 @@ import tornadofx.px
 import tornadofx.style
 import kotlin.system.exitProcess
 
-abstract class AbstractGameView(title: String = ""): View(title = title) {
+abstract class GameView(title: String = ""): View(title = title) {
 
-    internal val model: BattleModel by GameScope.inject()
-    internal val applicationProperties = model.applicationProperties
+    internal val modelView: BattleModel by GameScope.inject()
+    internal val applicationProperties = modelView.applicationProperties
     internal val currentPlayer = applicationProperties.currentPlayer
 
     open fun exit() {

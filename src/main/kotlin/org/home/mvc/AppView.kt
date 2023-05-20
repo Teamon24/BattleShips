@@ -2,13 +2,14 @@ package org.home.mvc
 
 import javafx.event.EventTarget
 import javafx.geometry.Pos
+import org.home.app.ApplicationProperties
 import org.home.mvc.view.Animations.appViewAnimationGrid
 import org.home.app.di.GameScope
-import org.home.mvc.ApplicationProperties.Companion.appViewAnimationGridHeight
-import org.home.mvc.ApplicationProperties.Companion.appViewAnimationGridWidth
-import org.home.mvc.ApplicationProperties.Companion.createNewGameButtonText
-import org.home.mvc.ApplicationProperties.Companion.joinButtonText
-import org.home.mvc.view.AbstractGameView
+import org.home.app.ApplicationProperties.Companion.appViewAnimationGridHeight
+import org.home.app.ApplicationProperties.Companion.appViewAnimationGridWidth
+import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
+import org.home.app.ApplicationProperties.Companion.joinButtonText
+import org.home.mvc.view.GameView
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.component.GridPaneExtensions.cell
@@ -71,7 +72,7 @@ class AppView : View("Sea Battle") {
         }
     }
 
-    private inline fun <reified T: AbstractGameView> EventTarget.newGameButton(text: String) = battleButton(text) {
+    private inline fun <reified T: GameView> EventTarget.newGameButton(text: String) = battleButton(text) {
         action {
             GameScope.createNew()
             this@AppView.transferTo<T>()

@@ -5,7 +5,7 @@ package org.home.mvc.view.component
 import javafx.event.EventTarget
 import javafx.util.Duration
 import org.home.app.di.FxScopes
-import org.home.mvc.ApplicationProperties.Companion.backButtonText
+import org.home.app.ApplicationProperties.Companion.backButtonText
 import org.home.mvc.view.component.Transit.BACKWARD
 import org.home.mvc.view.component.Transit.FORWARD
 import org.home.mvc.view.component.button.battleButton

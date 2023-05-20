@@ -5,14 +5,14 @@ import javafx.scene.layout.GridPane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.util.Duration
-import org.home.mvc.ApplicationProperties.Companion.appViewAnimationCellSize
-import org.home.mvc.ApplicationProperties.Companion.appViewAnimationTime
+import org.home.app.ApplicationProperties.Companion.appViewAnimationCellSize
+import org.home.app.ApplicationProperties.Companion.appViewAnimationTime
 import org.home.mvc.view.component.GridPaneExtensions
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.selectedColor
-import org.home.style.ColorUtils.opacity
+import org.home.utils.ColorUtils.opacity
 import tornadofx.addChildIfPossible
 import tornadofx.addClass
 import tornadofx.animateFill

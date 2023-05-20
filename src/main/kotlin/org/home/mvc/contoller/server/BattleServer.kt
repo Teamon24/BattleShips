@@ -105,7 +105,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
-        model {
+        modelView {
             if (battleIsStarted && players.size > 1) {
                 playerTurnComponent {
                     hasATurn(currentPlayer) { nextTurn() }
@@ -159,7 +159,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             is NotReadyAction -> processReadiness(action, ::PlayerIsNotReadyReceived)
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
             is FleetsReadinessAction -> {
-                eventbus { +FleetsReadinessReceived(action) }
+                eventbus(FleetsReadinessReceived(action))
                 action.states.keys.forEach { player ->
                     excluding(player).send(action)
                 }
@@ -186,7 +186,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
     private fun onConnect(socket: PlayerSocket, action: ConnectionAction) {
-        if (sockets.size + 1 < model.playersNumber.value) {
+        if (sockets.size + 1 < modelView.playersNumber.value) {
             permitToConnect()
         }
 
@@ -196,14 +196,14 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             eventbus(ConnectedPlayerReceived(it))
 
-            model {
+            modelView {
                 log { "hasNoServerTransfer: $hasNoServerTransfer"}
                 hasNoServerTransfer {
-                    sockets.exclude(connected).send(it)
+                    excluding(connected).send(it)
                     socket(connected).send {
-                        +FleetSettingsAction(model)
+                        +FleetSettingsAction(modelView)
                         +ConnectionsAction(players.exclude(connected))
-                        +fleetsReadinessExcept(connected, model)
+                        +fleetsReadinessExcept(connected, modelView)
                         readyPlayers.isNotEmpty {
                             +AreReadyAction(thoseAreReady)
                         }
@@ -229,7 +229,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
     private fun sendRemovePlayer(action: PlayerToRemoveAction) {
         val removedPlayer = action.player
-        sockets.exclude(removedPlayer).send(action)
+        excluding(removedPlayer).send(action)
 
         eventbus {
             when (action) {
@@ -279,13 +279,13 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
         + event(toRemovedAction)
 
-        model.battleIsNotStarted {
+        modelView.battleIsNotStarted {
             permitToConnect()
         }
     }
 
-    private fun fleetsReadinessExcept(player: String, model: BattleModel): FleetsReadinessAction {
-        val states = model.fleetsReadiness
+    private fun fleetsReadinessExcept(player: String, modelView: BattleModel): FleetsReadinessAction {
+        val states = modelView.fleetsReadiness
             .exclude(player)
             .map { (player, state) ->
                 player to state.map { (shipType, number) -> shipType to number.value }.toMap()

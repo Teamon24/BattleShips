@@ -10,10 +10,10 @@ import org.home.mvc.model.Ship
 import org.home.utils.log
 
 class ShipsTypesController : GameController() {
-    private val shipsTypes = model.copyShipsTypes()
+    private val shipsTypes = modelView.copyShipsTypes()
 
     fun validates(newShip: Collection<Coord>): Boolean {
-        model.log { "ships: ${shipsOf(currentPlayer)}" }
+        modelView.log { "ships: ${shipsOf(currentPlayer)}" }
         log { "$shipsTypes" }
         newShip.ifEmpty { return false }
 
@@ -33,7 +33,7 @@ class ShipsTypesController : GameController() {
         newShips
             .filter { it.size != 0 }
             .forEach { newShip ->
-                val ships = model.shipsOf(currentPlayer)
+                val ships = modelView.shipsOf(currentPlayer)
                 ships.ifAbsent(newShip) {
                     ShipWasAdded(currentPlayer, newShip.size).also {
                         it.mapOp(shipsTypes, newShip.size)
@@ -49,7 +49,7 @@ class ShipsTypesController : GameController() {
         newShips
             .filter { it.size != 0 }
             .forEach { newShip ->
-                val ships = model.shipsOf(currentPlayer)
+                val ships = modelView.shipsOf(currentPlayer)
                 ShipWasDeleted(currentPlayer, newShip.size).also {
                     it.mapOp(shipsTypes, newShip.size)
                     ships.remove(newShip)

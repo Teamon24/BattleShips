@@ -15,7 +15,7 @@ interface FleetGridStyleComponent {
     val type: FleetGreedStyleUpdate
 
     enum class FleetGreedStyleUpdate {
-        CLASS, TRANSITION, CSS
+        CLASS, TRANSITION, CSS, TIMELINE
     }
 
     fun FleetCell.removeAnyColor(): FleetCell

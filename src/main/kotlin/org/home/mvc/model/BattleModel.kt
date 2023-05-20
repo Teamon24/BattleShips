@@ -10,7 +10,7 @@ import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
-import org.home.mvc.ApplicationProperties
+import org.home.app.ApplicationProperties
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.server.action.FleetSettingsAction
@@ -20,8 +20,7 @@ import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
-import org.home.utils.extensions.ObservableValueMap
-import org.home.utils.extensions.addMapChange
+import org.home.utils.extensions.onMapChange
 import org.home.utils.log
 import tornadofx.ViewModel
 import tornadofx.onChange
@@ -35,46 +34,38 @@ typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
 class BattleModel : ViewModel() {
 
     val applicationProperties: ApplicationProperties by di()
-
     val currentPlayer = applicationProperties.currentPlayer
 
     private val size = applicationProperties.size
-
     private var maxShipType = applicationProperties.maxShipType
-    private val playersNumbers = applicationProperties.playersNumber
+
     inline operator fun BattleModel.invoke(crossinline b: BattleModel.() -> Unit) = this.b()
 
     private val widthProp = SimpleIntegerProperty(size)
-
     private val heightProp = SimpleIntegerProperty(size)
-    private val playersNumberProp = SimpleIntegerProperty(playersNumbers)
-    val width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
+    private val playersNumberProp = SimpleIntegerProperty(applicationProperties.playersNumber)
 
+    val width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
     val height = bind { heightProp }.apply { onChange { log { "height - $value" } } }
     val playersNumber = bind { playersNumberProp }.apply { onChange { log { "playersNumber - $value" } } }
+
     private var _newServer: NewServerInfo? = null
 
     val hasNoServerTransfer get() = _newServer == null
 
     var newServer: NewServerInfo
         get() = _newServer!!
-        set(value) {
-            _newServer = value
-        }
+        set(value) { _newServer = value }
 
     fun equalizeSizes() {
         height.value = width.value
     }
 
     var battleIsEnded = false
-        set(value) {
-            field = value.yes { battleIsStarted = false }
-        }
+        set(value) { field = value.yes { battleIsStarted = false } }
 
     var battleIsStarted = false
-        set(value) {
-            field = value.yes { battleIsEnded = false }
-        }
+        set(value) { field = value.yes { battleIsEnded = false } }
 
     val battleIsNotStarted get() = !battleIsStarted
 
@@ -110,14 +101,12 @@ class BattleModel : ViewModel() {
             .toMutableMap()
     }
 
-
-
-    val playersAndShips = emptySimpleMapProperty<String, Ships>()
+    private val playersAndShips = emptySimpleMapProperty<String, Ships>()
         .notifyOnChange()
         .putInitials()
 
     private fun PlayersAndShips.notifyOnChange() = apply {
-        addMapChange { change ->
+        onMapChange { change ->
             val player = change.key
             when {
                 change.wasAdded() -> {
@@ -137,7 +126,7 @@ class BattleModel : ViewModel() {
                         removeFrom(readyPlayers)
                         removeFrom(fleetsReadiness)
                         removeFrom(defeatedPlayers)
-                        log { "removed \"$this\"" }
+                        log { "removed \"${this@player}\"" }
                     }
                 }
             }
@@ -151,7 +140,7 @@ class BattleModel : ViewModel() {
     }
 
     private fun ShipsTypes.updateFleetReadiness() = apply {
-        addMapChange {
+        onMapChange {
             fleetsReadiness {
                 keys.forEach { player ->
                     put(player, initFleetsReadiness(this@apply))
@@ -195,8 +184,13 @@ class BattleModel : ViewModel() {
         shipsTypes.putAll(settings.shipsTypes)
     }
 
-    fun initShips(player: String) {
+    fun add(player: String) {
         playersAndShips[player] = mutableListOf()
+    }
+
+    fun remove(player: String) {
+        playersAndShips.remove(player)
+        playersNumber.value = playersNumber.value - 1
     }
 
     //-------------------------------------------------------------------------------------------------

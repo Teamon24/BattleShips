@@ -104,8 +104,8 @@ inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> A
 }
 
 @JvmName("logEvent")
-fun View.logEvent(fxEvent: FXEvent, model: BattleModel, body: () -> Any = {}) {
-    val title = "${this::class.simpleName}[${model.currentPlayer}] <- $fxEvent"
+fun View.logEvent(fxEvent: FXEvent, modelView: BattleModel, body: () -> Any = {}) {
+    val title = "${this::class.simpleName}[${modelView.currentPlayer}] <- $fxEvent"
     threadPrintln {
         ln()
         ln(line(title.length))

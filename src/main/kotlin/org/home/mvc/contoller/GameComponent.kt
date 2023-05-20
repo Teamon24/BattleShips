@@ -8,9 +8,9 @@ import tornadofx.ScopedInstance
 abstract class GameBean: Component(), ScopedInstance
 
 abstract class GameComponent: GameBean() {
-    protected val model: BattleModel by GameScope.inject()
-    protected val applicationProperties = model.applicationProperties
-    protected open val currentPlayer = model.currentPlayer
+    protected val modelView: BattleModel by GameScope.inject()
+    protected val applicationProperties = modelView.applicationProperties
+    protected open val currentPlayer = modelView.currentPlayer
 }
 
 abstract class GameController : GameComponent()

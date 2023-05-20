@@ -23,7 +23,7 @@ internal fun BattleView.shipWasAdded() {
         processFleetEdit(
             it,
             ::ShipAdditionAction,
-            { model, player, onTrue -> model.lastShipWasAdded(player, onTrue) },
+            { modelView, player, onTrue -> modelView.lastShipWasAdded(player, onTrue) },
             ::ReadyAction,
             ::PlayerIsReadyReceived
         )
@@ -35,7 +35,7 @@ internal fun BattleView.shipWasDeleted() {
         processFleetEdit(
             it,
             ::ShipDeletionAction,
-            { model, player, onTrue -> model.lastShipWasDeleted(player, onTrue) },
+            { modelView, player, onTrue -> modelView.lastShipWasDeleted(player, onTrue) },
             ::NotReadyAction,
             ::PlayerIsNotReadyReceived
         )
@@ -49,15 +49,15 @@ private fun BattleView.processFleetEdit(
     createReadinessAction: (String) -> PlayerReadinessAction,
     createEvent: (String) -> PlayerReadinessReceived
 ) {
-    logEvent(event, model)
+    logEvent(event, modelView)
 
     event {
-        model {
+        modelView {
             fleetsReadiness.update(event)
             battleController.send {
                 player.isCurrent {
                     + action(shipType, currentPlayer)
-                    lastShipWasEdited(model, player) {
+                    lastShipWasEdited(modelView, player) {
                         eventbus(createEvent(player))
                         + createReadinessAction(player)
                     }

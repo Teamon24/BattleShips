@@ -1,13 +1,13 @@
 package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import home.extensions.CollectionsExtensions.containsOnly
 import org.home.mvc.AppView
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
+import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
+import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -21,9 +21,10 @@ import org.home.mvc.view.component.transferTo
 import org.home.mvc.view.openMessageWindow
 import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.initialAppColor
-import org.home.style.StyleUtils.textFillTransition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
+import org.home.utils.NodeUtils.disableIf
+import org.home.utils.StyleUtils.textFillTransition
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.action
@@ -38,22 +39,23 @@ internal fun BattleView.playerWasDisconnected() {
 
 internal fun BattleView.playerLeaved() {
     subscribeToRemove<PlayerLeaved> {
-        "${it.player} покинул ${model.battleIsEnded then "поле боя" or "бой"}"
+        "${it.player} покинул ${modelView.battleIsEnded then "поле боя" or "бой"}"
     }
 }
 
 internal fun BattleView.playerWasDefeated() {
     subscribe<PlayerWasDefeated> { event ->
-        model {
+        modelView {
 
             logEvent(event, this)
             val defeated = event.player
             defeatedPlayers.add(defeated)
 
-            val fleetGrid = playersFleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
-            val fleetReadiness = playersFleetsReadinessPanes[defeated]!!
+            val fleetGrid = fleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
+            val fleetReadiness = fleetsReadinessPanes[defeated]!!
 
             defeatedStyleComponent {
+                log { "${defeatedStyleComponent.name}#defeated" }
                 defeated(defeated, fleetGrid, fleetReadiness)
             }
 
@@ -78,20 +80,23 @@ private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
     crossinline function: (HasAPlayer) -> String
 ) {
     subscribe<T> {
-        logEvent(it, model)
+        logEvent(it, modelView)
         removePlayer(it.player)
         openMessageWindow { function(it) }
     }
 }
 
 private fun BattleView.removePlayer(player: String) {
-    model {
-
-        playersAndShips.remove(player)
+    modelView {
+        enemiesView.remove(player)
+        battleIsStarted.not().so {
+            startButtonController {
+                battleStartButton.updateStyle(player, false)
+            }
+        }
         hasAWinner().and(battleIsStarted).so {
             battleController.endBattle()
         }
-        removeEnemyFleet(player)
         hasOnePlayerLeft().so { battleController.disconnect() }
     }
 }
@@ -122,19 +127,4 @@ fun BattleView.updateLeaveBattleFieldButton() {
     }
 }
 
-internal fun BattleView.removeEnemyFleet(player: String) {
-    playersFleetsReadinessPanes {
-        remove(player)
-        keys.containsOnly(currentPlayer).so { selectedEnemyFleetReadinessPane.center = null }
-    }
 
-    playersFleetGridsPanes {
-        remove(player)
-        keys.containsOnly(currentPlayer).so {
-            selectedEnemyFleetPane.center = null
-            selectedEnemyLabel.text = ""
-        }
-    }
-
-    log { "removed from panes: $player" }
-}

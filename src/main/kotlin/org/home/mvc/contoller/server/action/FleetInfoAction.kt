@@ -7,11 +7,11 @@ class FleetSettingsAction(
     val width: Int,
     val shipsTypes: Map<Int, Int>): Action()
 {
-    constructor(model: BattleModel) : this(
-        model.height.value,
-        model.width.value,
+    constructor(modelView: BattleModel) : this(
+        modelView.height.value,
+        modelView.width.value,
         // ObserversMap не сериализуется, поэтому - toMutableMap()
-        model.shipsTypes.value.toMutableMap()
+        modelView.shipsTypes.value.toMutableMap()
     )
 }
 

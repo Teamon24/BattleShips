@@ -8,9 +8,9 @@ import javafx.scene.control.Button
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
-import org.home.mvc.ApplicationProperties.Companion.startButtonTransitionTime
-import org.home.mvc.contoller.GameComponent
+import org.home.app.ApplicationProperties.Companion.startButtonTransitionTime
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.GameController
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.allAreReady
 import org.home.style.AppStyles.Companion.initialAppColor
@@ -23,7 +23,7 @@ import tornadofx.style
 
 class BattleStartButton(text: String) : Button(text)
 
-class BattleStartButtonController : GameComponent() {
+class BattleStartButtonController : GameController() {
     private val battleController: BattleController<Action> by di()
 
     fun create(): BattleStartButton {
@@ -39,7 +39,7 @@ class BattleStartButtonController : GameComponent() {
 
     private fun BattleStartButton.updateStyle() {
         isDisable = true
-        model.hasReady(currentPlayer) so { fillTransition() }
+        modelView.hasReady(currentPlayer) so { fillTransition() }
     }
 
     fun BattleStartButton.updateStyle(player: String, ready: Boolean) {
@@ -48,11 +48,11 @@ class BattleStartButtonController : GameComponent() {
         }
 
         if (applicationProperties.isServer) {
-            isDisable = !model.allAreReady
+            isDisable = !modelView.allAreReady
         } else {
             if (currentPlayer != player) return
 
-            when (model.hasReady(currentPlayer)) {
+            when (modelView.hasReady(currentPlayer)) {
                 true -> fillTransition()
                 else -> reverseFillTransition()
             }

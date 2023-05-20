@@ -7,8 +7,10 @@ import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TIMELINE
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
 import org.home.mvc.view.fleet.style.FleetGridStyleCssChange
+import org.home.mvc.view.fleet.style.FleetGridStyleTimeline
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.koin.core.component.KoinScopeComponent
 import org.koin.core.component.createScope
@@ -71,6 +73,7 @@ object GameScope {
         T::class == FleetGridStyleAddClass::class -> CLASS
         T::class == FleetGridStyleCssChange::class -> CSS
         T::class == FleetGridStyleTransition::class -> TRANSITION
+        T::class == FleetGridStyleTimeline::class -> TIMELINE
         else -> throw RuntimeException("no when-branch for ${T::class}")
     }
 }

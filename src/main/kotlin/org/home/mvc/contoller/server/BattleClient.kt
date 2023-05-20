@@ -95,8 +95,8 @@ class BattleClient : GameController(), BattleController<Action> {
         log { "connected to $ip:$port" }
         send {
             +ConnectionAction(currentPlayer)
-            model.hasReady(currentPlayer) {
-                val fleetReadiness = model
+            modelView.hasReady(currentPlayer) {
+                val fleetReadiness = modelView
                     .fleetsReadiness[currentPlayer]!!
                     .mapValues { it.value.value }
 
@@ -146,7 +146,7 @@ class BattleClient : GameController(), BattleController<Action> {
 
             is ShotAction -> {
                 if (action.target == currentPlayer) {
-                    model.registersAHit(action.shot)
+                    modelView.registersAHit(action.shot)
                         .yes { onHit(action) }
                         .no { onMiss(action) }
                 }
@@ -169,7 +169,7 @@ class BattleClient : GameController(), BattleController<Action> {
     }
 
     private fun onHit(shotAction: ShotAction) {
-        val ships = model.shipsOf(currentPlayer)
+        val ships = modelView.shipsOf(currentPlayer)
         val hitShip = ships.removeAndGetBy(shotAction.shot)
 
         eventbus {
@@ -202,7 +202,7 @@ class BattleClient : GameController(), BattleController<Action> {
 
 
     override fun startBattle() {
-        model.setReady(currentPlayer)
+        modelView.setReady(currentPlayer)
         send(ReadyAction(currentPlayer))
     }
 

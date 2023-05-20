@@ -4,10 +4,11 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
+import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.excludeAll
 import org.home.mvc.AppView
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleFieldText
-import org.home.mvc.ApplicationProperties.Companion.leaveBattleText
+import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
+import org.home.app.ApplicationProperties.Companion.leaveBattleText
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.NewServerReceived
@@ -20,6 +21,8 @@ import org.home.mvc.view.component.transferTo
 import org.home.mvc.view.component.transitTo
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.IpUtils.freePort
+import org.home.utils.NodeUtils.disable
+import org.home.utils.NodeUtils.enable
 import org.home.utils.log
 import org.home.utils.logEvent
 import tornadofx.View
@@ -56,17 +59,19 @@ internal fun BattleView.subscribe() {
 
 internal fun BattleView.playerTurnToShoot() {
     subscribe<TurnReceived> { event ->
-        logEvent(event, model)
-        model {
+        logEvent(event, modelView)
+        modelView {
             turn.value = event.player
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
                 log { "defeated = $defeatedPlayers" }
-                playersFleetGridsPanes.excludeAll(defeatedPlayers).enable()
-                playersFleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
+                modelView {
+                    fleetGridsPanes.excludeAll(defeatedPlayers).enable()
+                    fleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
+                }
             } else {
-                playersFleetGridsPanes.disable()
-                playersFleetsReadinessPanes.disable()
+                fleetGridsPanes.exclude(currentPlayer).disable()
+                fleetsReadinessPanes.exclude(currentPlayer).disable()
             }
         }
     }
@@ -74,8 +79,8 @@ internal fun BattleView.playerTurnToShoot() {
 
 internal fun BattleView.battleIsStarted() {
     subscribe<BattleIsStarted> { event ->
-        model.battleIsStarted = true
-        logEvent(event, model)
+        modelView.battleIsStarted = true
+        logEvent(event, modelView)
         battleViewExitButton.text = leaveBattleText
 
         battleViewExitButton.action {
@@ -83,14 +88,14 @@ internal fun BattleView.battleIsStarted() {
             transitTo<AppView>(BACKWARD)
         }
 
-        playersFleetGridsPanes.entries
-            .zip(playersFleetsReadinessPanes.entries) { fleet, readiness ->
-            readinessStyleComponent {
-                notReady(fleet.key, fleet.value, readiness.value)
+        fleetGridsPanes.entries
+            .zip(fleetsReadinessPanes.entries) { fleet, readiness ->
+                readinessStyleComponent {
+                    notReady(fleet.key, fleet.value, readiness.value)
+                }
             }
-        }
 
-        model.readyPlayers.clear()
+        modelView.readyPlayers.clear()
         battleStartButton.hide()
         updateCurrentPlayerFleetGrid()
 
@@ -101,16 +106,15 @@ internal fun BattleView.battleIsStarted() {
 
 internal fun BattleView.battleIsEnded() {
     subscribe<BattleIsEnded> { event ->
-        logEvent(event, model)
+        logEvent(event, modelView)
 
         openMessageWindow {
             val player = event.player
-            model.hasCurrent(player).so {
-                playersFleetGridsPanes[currentPlayer]!!.enable()
-                playersFleetsReadinessPanes[currentPlayer]!!.enable()
+            modelView.hasCurrent(player).so {
+                fleetGridsPanes[player]!!.enable()
+                fleetsReadinessPanes[player]!!.enable()
             }
-
-            model.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
+            modelView.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
         }
 
         battleViewExitButton.text = leaveBattleFieldText
@@ -121,8 +125,8 @@ data class NewServerInfo(val player: String, val ip: String, val port: Int)
 
 internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> { event ->
-        logEvent(event, model)
-        model {
+        logEvent(event, modelView)
+        modelView {
             event {
                 newServer = NewServerInfo(player, applicationProperties.ip, freePort())
                 playersNumber.value -= 1

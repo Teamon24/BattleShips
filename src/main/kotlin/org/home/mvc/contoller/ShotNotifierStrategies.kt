@@ -2,41 +2,37 @@ package org.home.mvc.contoller
 
 import home.extensions.AnysExtensions.className
 import home.extensions.CollectionsExtensions.exclude
-import org.home.mvc.ApplicationProperties
+import javafx.beans.property.SimpleListProperty
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.MissAction
 import org.home.mvc.contoller.server.action.SinkingAction
-import org.home.net.server.PlayersSockets
-import tornadofx.Controller
 import kotlin.reflect.KClass
 
-object ShotNotifierStrategies: Controller() {
-    private val applicationProperties: ApplicationProperties by di()
+object ShotNotifierStrategies: GameComponent() {
+    private var notifyAllStrategy: ShotNotifierStrategy? = null
+    private var notifyOnlyShooterStrategy: ShotNotifierStrategy? = null
 
-    private var notifyAll: ShotNotifierStrategy? = null
-    private var notifyOnlyShooter: ShotNotifierStrategy? = null
-
-    fun create(sockets: PlayersSockets): ShotNotifierStrategy {
+    fun create(enemies: SimpleListProperty<String>): ShotNotifierStrategy {
         return if (applicationProperties.isToNotifyAll) {
-            notifyAll ?: ShotNotifierStrategy
-                .Builder(sockets)
+            notifyAllStrategy ?: ShotNotifierStrategy
+                .Builder(enemies)
                 .notifyAll(MissAction::class)
                 .notifyAll(HitAction::class)
                 .notifyAll(SinkingAction::class)
                 .build()
-                .also { notifyAll = it }
+                .also { notifyAllStrategy = it }
         } else {
-            notifyOnlyShooter ?: ShotNotifierStrategy
-                .Builder(sockets)
+            notifyOnlyShooterStrategy ?: ShotNotifierStrategy
+                .Builder(enemies)
                 .onlyShooterNotifier()
-                .also { notifyOnlyShooter = it }
+                .also { notifyOnlyShooterStrategy = it }
         }
     }
 }
 
-abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
+abstract class ShotNotifierStrategy(private val enemies: SimpleListProperty<String>) {
 
     protected val map = HashMap<KClass<out HasAShot>, Boolean>().apply {
         val notifyOnlyWhoMadeAShot = true
@@ -54,22 +50,21 @@ abstract class ShotNotifierStrategy(private val sockets: PlayersSockets) {
             "There is no boolean flag for ${HasAShot::class.className}'s descendant: ${hasAShot.className}"
         )
 
-        val toSend = hashMapOf<String, MutableList<Action>>()
+        val enemiesAndMessages = hashMapOf<String, MutableList<Action>>()
         if(toNotifyShooter) {
-            toSend[hasAShot.player] = mutableListOf(hasAShot)
+            enemiesAndMessages[hasAShot.player] = mutableListOf(hasAShot)
         } else {
-            toSend.putAll(
-                sockets
-                    .map { it.player!! }
+            enemiesAndMessages.putAll(
+                enemies
                     .exclude(hasAShot.target)
                     .associateWith { mutableListOf(hasAShot) }
             )
         }
 
-        return toSend
+        return enemiesAndMessages
     }
 
-    internal class Builder(private val sockets: PlayersSockets) {
+    internal class Builder(private val sockets: SimpleListProperty<String>) {
         private val strategy = object : ShotNotifierStrategy(sockets) {}
         fun notifyAll(hasAShot: KClass<out HasAShot>) = apply { strategy.shouldNotifyAll(hasAShot) }
         fun build() = strategy

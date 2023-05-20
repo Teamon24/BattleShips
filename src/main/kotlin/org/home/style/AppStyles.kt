@@ -8,23 +8,23 @@ import javafx.scene.paint.Color.ORANGERED
 import javafx.scene.paint.Color.RED
 import javafx.scene.paint.Color.WHITE
 import javafx.scene.paint.Color.rgb
-import org.home.style.ColorUtils.color
-import org.home.style.ColorUtils.opacity
-import org.home.style.CssUtils.background
-import org.home.style.CssUtils.border
-import org.home.style.CssUtils.center
-import org.home.style.CssUtils.fillParent
-import org.home.style.CssUtils.gridMargin
-import org.home.style.CssUtils.height
-import org.home.style.CssUtils.hover
-import org.home.style.CssUtils.margin
-import org.home.style.CssUtils.noBorder
-import org.home.style.CssUtils.padding
-import org.home.style.CssUtils.radius
-import org.home.style.CssUtils.selected
-import org.home.style.CssUtils.size
-import org.home.style.CssUtils.square
-import org.home.style.CssUtils.text
+import org.home.utils.ColorUtils.color
+import org.home.utils.ColorUtils.opacity
+import org.home.utils.CssUtils.background
+import org.home.utils.CssUtils.border
+import org.home.utils.CssUtils.center
+import org.home.utils.CssUtils.fillParent
+import org.home.utils.CssUtils.gridMargin
+import org.home.utils.CssUtils.height
+import org.home.utils.CssUtils.hover
+import org.home.utils.CssUtils.margin
+import org.home.utils.CssUtils.noBorder
+import org.home.utils.CssUtils.padding
+import org.home.utils.CssUtils.radius
+import org.home.utils.CssUtils.selected
+import org.home.utils.CssUtils.size
+import org.home.utils.CssUtils.square
+import org.home.utils.CssUtils.text
 import tornadofx.CssRule
 import tornadofx.CssSelection
 import tornadofx.CssSelectionBlock
@@ -157,6 +157,7 @@ class AppStyles : Stylesheet() {
 
         //---- components style ------------------------------------------------------------
         listView {
+            jetBrainFont()
             noBorder()
             focusTraversable = false
         }

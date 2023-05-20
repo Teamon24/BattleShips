@@ -5,8 +5,7 @@ import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
-import javafx.scene.paint.Color.BLACK
-import org.home.mvc.ApplicationProperties.Companion.defeatFillTransitionTime
+import org.home.app.ApplicationProperties.Companion.defeatFillTransitionTime
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
@@ -18,16 +17,14 @@ import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.defeatedPlayerColor
-import org.home.style.AppStyles.Companion.defeatedShipNumberLabel
 import org.home.style.AppStyles.Companion.hitCellColor
 import org.home.style.AppStyles.Companion.missCellColor
 import org.home.style.AppStyles.Companion.sunkCellColor
-import org.home.style.ColorUtils.opacity
-import org.home.style.CssUtils.noBorder
-import org.home.style.StyleUtils.backgroundColor
-import org.home.style.StyleUtils.fillBackground
-import org.home.style.StyleUtils.textColor
-import org.home.style.StyleUtils.toggle
+import org.home.utils.ColorUtils.opacity
+import org.home.utils.CssUtils.noBorder
+import org.home.utils.StyleUtils.backgroundColor
+import org.home.utils.StyleUtils.fillBackground
+import org.home.utils.StyleUtils.textColor
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
 import tornadofx.style
@@ -68,7 +65,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
         fleetReadiness: ShipsTypesPane
     ) {
 
-        model.playerLabel(defeated).apply {
+        modelView.playerLabel(defeated).apply {
             fillBackground(backgroundColor, defeatedPlayerColor)
         }
 
@@ -84,7 +81,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
             }
             .onEachFleetCells {
                 it.coord
-                    .notIn(model.getShotsAt(defeated))
+                    .notIn(modelView.getShotsAt(defeated))
                     .so {
                         it.fillBackground(to = defeatedEmptyCellColor)
                     }
@@ -104,7 +101,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
         fleetGrid
             .onEachTitleCells { it.fillBackground(to = titleColor) }
             .onEachFleetCells {
-                model {
+                modelView {
                     player.decks()
                         .contains(it.coord)
                         .thus { it.fillBackground(to = AppStyles.readyColor.opacity(0.9)) }
@@ -124,7 +121,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
         fleetGrid
             .onEachTitleCells { it.fillBackground(to = AppStyles.titleCellColor) }
             .onEachFleetCells {
-                model {
+                modelView {
                     player.decks()
                         .contains(it.coord)
                         .thus { it.fillBackground(to = AppStyles.selectedColor) }

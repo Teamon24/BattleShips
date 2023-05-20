@@ -6,8 +6,8 @@ import org.home.mvc.view.component.GridPaneExtensions.cell
 import tornadofx.addChildIfPossible
 
 class FleetGridCreator: GameComponent() {
-    private val rowRange = 1.. model.height.value
-    private val colRange = 1.. model.width.value
+    private val rowRange = 1.. modelView.height.value
+    private val colRange = 1.. modelView.width.value
 
     fun titledFleetGrid() = FleetGrid().also {
         fleetCells(it, rowRange, colRange)
