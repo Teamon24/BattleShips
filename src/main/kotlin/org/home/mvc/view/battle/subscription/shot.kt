@@ -56,7 +56,7 @@ private inline fun BattleView.processShot(event: ThereWasAShot,
             }
 
             openMessageWindow(message)
-            markShot(fleetGridsPanes[target]!!, hasAShot.shot)
+            markShot(fleets(target), hasAShot.shot)
         }
     }
 }
@@ -72,7 +72,7 @@ private fun BattleView.processSunk(event: ThereWasAShot) {
 
             openMessageWindow(message)
 
-            val fleetGrid = fleetGridsPanes[target]!!
+            val fleetGrid = fleets(target)
 
             markSunk(fleetGrid, shot)
             markSunk(fleetGrid, modelView.getShipBy(hasAShot))

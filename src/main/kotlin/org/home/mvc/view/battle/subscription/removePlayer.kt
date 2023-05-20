@@ -51,8 +51,8 @@ internal fun BattleView.playerWasDefeated() {
             val defeated = event.player
             defeatedPlayers.add(defeated)
 
-            val fleetGrid = fleetGridsPanes[defeated]!!.disableIf(defeated.isNotCurrent)
-            val fleetReadiness = fleetsReadinessPanes[defeated]!!
+            val fleetGrid = fleets(defeated).disableIf(defeated.isNotCurrent)
+            val fleetReadiness = fleetsReadiness(defeated)
 
             defeatedStyleComponent {
                 log { "${defeatedStyleComponent.name}#defeated" }

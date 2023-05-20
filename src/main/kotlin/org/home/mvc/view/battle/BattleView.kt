@@ -3,16 +3,13 @@ package org.home.mvc.view.battle
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.control.Button
-import javafx.scene.control.Label
-import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
 import org.home.app.di.GameScope
 import org.home.mvc.AppView
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleModel
 import org.home.mvc.view.GameView
@@ -25,17 +22,13 @@ import org.home.mvc.view.component.GridPaneExtensions.row
 import org.home.mvc.view.component.backTransitButton
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
-import org.home.mvc.view.fleet.style.FleetGridStyleTimeline
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.style.AppStyles
-import org.home.utils.StyleUtils.leftPadding
 import tornadofx.addClass
 import tornadofx.flowpane
 import tornadofx.gridpane
 import tornadofx.label
-import kotlin.collections.set
 
 class BattleView : GameView("Battle View") {
     internal val readinessStyleComponent by GameScope.fleetGridStyle<FleetGridStyleAddClass>()
@@ -44,32 +37,46 @@ class BattleView : GameView("Battle View") {
 
     internal val battleController by di<BattleController<Action>>()
 
-    private val fleetGridController by GameScope.inject<FleetGridController>()
-    private val shipsTypesPaneController by GameScope.inject<ShipsTypesPaneController>()
-
     internal val startButtonController by GameScope.inject<BattleStartButtonController>()
 
+    internal val currentFleetController by GameScope.inject<CurrentFleetController>()
     internal val enemiesView by GameScope.inject<EnemiesViewController>()
 
-    internal val fleetGridsPanes           = enemiesView.fleetGridsPanes
-    internal val fleetsReadinessPanes      = enemiesView.fleetsReadinessPanes
-    private val selectedLabel              = enemiesView.selectedEnemyLabel
-    private val selectedFleetPane          = enemiesView.selectedFleetPane
-    private val selectedFleetReadinessPane = enemiesView.selectedFleetReadinessPane
+    internal val currentFleetGridPane = currentFleetController.fleetGrid()
+    internal val currentFleetReadinessPane = currentFleetController.fleetReadinessPane()
 
+    internal val enemiesFleetGridsPanes      = enemiesView.fleetGridsPanes
+    internal val enemiesFleetsReadinessPanes = enemiesView.fleetsReadinessPanes
 
-    private val currentFleetGridPane = BorderPane(fleetGridController.activeFleetGrid()).apply {
-        fleetGridsPanes[currentPlayer] = center as FleetGrid
+    private val selectedLabel                = enemiesView.selectedEnemyLabel
+    private val selectedFleetPane            = enemiesView.selectedFleetPane
+    private val selectedFleetReadinessPane   = enemiesView.selectedFleetReadinessPane
+
+    fun fleets(): Map<String, FleetGrid> {
+        return enemiesFleetGridsPanes + (currentPlayer to currentFleetGridPane.center as FleetGrid)
     }
 
-    private val currentFleetReadinessPane = shipsTypesPaneController
-        .shipTypesPane(currentPlayer)
-        .transposed().apply {
-            leftPadding(10)
-            fleetsReadinessPanes[currentPlayer] = this
-        }
+    fun fleetsReadiness(): Map<String, ShipsTypesPane> {
+        return enemiesFleetsReadinessPanes + (currentPlayer to currentFleetReadinessPane.center as ShipsTypesPane)
+    }
 
-    private val currentPlayerLabel = Label(currentPlayer).addClass(AppStyles.currentPlayerLabel)
+    fun fleets(player: String): FleetGrid {
+        return modelView
+            .hasCurrent(player)
+            .then { currentFleetGridPane.center as FleetGrid }
+            .or { enemiesFleetGridsPanes[player]!! }
+    }
+
+    fun fleetsReadiness(player: String? = null): ShipsTypesPane {
+        return modelView
+            .hasCurrent(player)
+            .then { currentFleetReadinessPane.center as ShipsTypesPane }
+            .or { enemiesFleetsReadinessPanes[player]!! }
+    }
+
+
+
+    private val currentPlayerLabel = currentFleetController.playerLabel()
 
     fun BattleModel.playerLabel(player: String) = player.isCurrent then currentPlayerLabel or selectedLabel
 
@@ -138,7 +145,7 @@ class BattleView : GameView("Battle View") {
             row(1) {
                 col(0) {
                     gridpane {
-                        cell(0, 0) { currentPlayerFleet() }
+                        cell(0, 0) { currentFleetGridPane.also { add(it) } }
                         cell(0, 1) { currentFleetReadinessPane.also { add(it) } }
                     }
                 }
@@ -169,29 +176,5 @@ class BattleView : GameView("Battle View") {
         cell(row, 1) {
             battleStartButton.also { add(it) }
         }
-    }
-
-
-    private fun EventTarget.currentPlayerFleet() =
-        currentFleetGridPane
-            .also { add(it) }
-            .also { pane ->
-                modelView.shipsOf(currentPlayer).let {
-                    (pane.center as FleetGrid).addShips(it)
-                }
-            }
-
-
-
-    internal fun updateCurrentPlayerFleetGrid() {
-        fleetGridController
-            .fleetGrid()
-            .addShips(modelView.shipsOf(currentPlayer))
-            .also {
-
-                fleetGridsPanes[currentPlayer] = it
-                currentFleetGridPane.center = it
-            }
-
     }
 }

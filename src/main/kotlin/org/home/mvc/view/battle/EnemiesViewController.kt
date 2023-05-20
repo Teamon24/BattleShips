@@ -26,13 +26,16 @@ import org.home.utils.log
 import tornadofx.onLeftClick
 import tornadofx.selectedItem
 
+typealias PlayersAndFleets = LinkedHashMap<String, FleetGrid>
+typealias PlayersAndFleetsReadiness = LinkedHashMap<String, ShipsTypesPane>
+
 class EnemiesViewController : GameComponent() {
     companion object {
         private val fadeTime = enemySelectionFadeTime.toDouble()
     }
 
-    internal val fleetGridsPanes = hashMapOf<String, FleetGrid>()
-    internal val fleetsReadinessPanes = hashMapOf<String, ShipsTypesPane>()
+    internal val fleetGridsPanes = PlayersAndFleets()
+    internal val fleetsReadinessPanes = PlayersAndFleetsReadiness()
 
     private val fleetGridController by GameScope.inject<FleetGridController>()
     private val shipsTypesPaneController by GameScope.inject<ShipsTypesPaneController>()

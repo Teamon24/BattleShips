@@ -59,10 +59,7 @@ private inline fun BattleView.handle(
 ) {
     setReadiness(player)
     readinessStyleComponent {
-        fleetStyleReadiness(
-            fleetGridsPanes[player]!!,
-            fleetsReadinessPanes[player]!!
-        )
+        fleetStyleReadiness(fleets(player), fleetsReadiness(player))
     }
 
     startButtonController {

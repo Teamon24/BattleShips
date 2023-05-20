@@ -66,12 +66,12 @@ internal fun BattleView.playerTurnToShoot() {
                 openMessageWindow { "Ваш ход" }
                 log { "defeated = $defeatedPlayers" }
                 modelView {
-                    fleetGridsPanes.excludeAll(defeatedPlayers).enable()
-                    fleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
+                    enemiesFleetGridsPanes.excludeAll(defeatedPlayers).enable()
+                    enemiesFleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
                 }
             } else {
-                fleetGridsPanes.exclude(currentPlayer).disable()
-                fleetsReadinessPanes.exclude(currentPlayer).disable()
+                enemiesFleetGridsPanes.disable()
+                enemiesFleetsReadinessPanes.disable()
             }
         }
     }
@@ -88,8 +88,8 @@ internal fun BattleView.battleIsStarted() {
             transitTo<AppView>(BACKWARD)
         }
 
-        fleetGridsPanes.entries
-            .zip(fleetsReadinessPanes.entries) { fleet, readiness ->
+        fleets().entries
+            .zip(fleetsReadiness().entries) { fleet, readiness ->
                 readinessStyleComponent {
                     notReady(fleet.key, fleet.value, readiness.value)
                 }
@@ -97,7 +97,8 @@ internal fun BattleView.battleIsStarted() {
 
         modelView.readyPlayers.clear()
         battleStartButton.hide()
-        updateCurrentPlayerFleetGrid()
+
+        currentFleetController.updateCurrentPlayerFleetGrid()
 
         //НАЙТИ КАК УДАЛИТЬ EventHandler'ы у FleetGreed
         openMessageWindow { "Бой начался" }
@@ -108,12 +109,13 @@ internal fun BattleView.battleIsEnded() {
     subscribe<BattleIsEnded> { event ->
         logEvent(event, modelView)
 
+        val player = event.player
+        modelView.hasCurrent(player).so {
+            currentFleetGridPane.enable()
+            currentFleetReadinessPane.enable()
+        }
+
         openMessageWindow {
-            val player = event.player
-            modelView.hasCurrent(player).so {
-                fleetGridsPanes[player]!!.enable()
-                fleetsReadinessPanes[player]!!.enable()
-            }
             modelView.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
         }
 

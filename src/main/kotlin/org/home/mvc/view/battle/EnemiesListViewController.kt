@@ -43,7 +43,6 @@ class EnemiesListViewController: GameComponent() {
             }
 
             override fun updateItem(playerName: String?, empty: Boolean) {
-                log { "enemies list view items on cell update - ${view.items.toMutableList()}" }
                 super.updateItem(playerName, empty)
 
                 if (item == null || empty) {

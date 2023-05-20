@@ -17,6 +17,7 @@ import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleModel
+import org.home.mvc.view.battle.CurrentFleetController
 import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.EnemiesListViewController
 import org.home.mvc.view.battle.SettingsFieldsController
@@ -84,6 +85,7 @@ fun gameScoped(): Module {
             scoped { FleetGridHandlers() }
             scoped { EnemiesViewController() }
             scoped { EnemiesListViewController() }
+            scoped { CurrentFleetController() }
 
             scoped { AwaitConditions() }
 
