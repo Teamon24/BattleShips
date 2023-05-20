@@ -25,7 +25,7 @@ internal fun BattleView.connectedPlayersReceived() {
 internal fun BattleView.fleetsReadinessReceived() {
     subscribe<FleetsReadinessReceived> { event ->
         logEvent(event, modelView)
-        modelView.fleetsReadiness {
+        modelView.getFleetsReadiness().apply {
             event.states.forEach { (player, state) ->
                 get(player) ?: run { put(player, mutableMapOf()) }
 
@@ -33,7 +33,7 @@ internal fun BattleView.fleetsReadinessReceived() {
                     val shipNumberProperty = get(player)!![shipType]
                     shipNumberProperty ?: run {
                         get(player)!![shipType] = SimpleIntegerProperty(number)
-                        return@fleetsReadiness
+                        return@apply
                     }
 
                     shipNumberProperty.value = number

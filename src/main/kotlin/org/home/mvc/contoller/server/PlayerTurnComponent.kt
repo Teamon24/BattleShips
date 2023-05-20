@@ -20,7 +20,7 @@ class PlayerTurnComponent: GameComponent() {
     fun startTurn(): String {
         backingTurnList {
             clear()
-            addAll(modelView.players.shuffled())
+            addAll(modelView.getPlayers().shuffled())
             log { "turn $this" }
             turnPlayer = first()
         }

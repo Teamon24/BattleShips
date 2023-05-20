@@ -39,7 +39,7 @@ internal fun BattleView.playerWasDisconnected() {
 
 internal fun BattleView.playerLeaved() {
     subscribeToRemove<PlayerLeaved> {
-        "${it.player} покинул ${modelView.battleIsEnded then "поле боя" or "бой"}"
+        "${it.player} покинул ${modelView.battleIsEnded() then "поле боя" or "бой"}"
     }
 }
 
@@ -49,7 +49,7 @@ internal fun BattleView.playerWasDefeated() {
 
             logEvent(event, this)
             val defeated = event.player
-            defeatedPlayers.add(defeated)
+            getDefeatedPlayers().add(defeated)
 
             val fleetGrid = fleets(defeated).disableIf(defeated.isNotCurrent)
             val fleetReadiness = fleetsReadiness(defeated)
@@ -89,12 +89,12 @@ private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
 private fun BattleView.removePlayer(player: String) {
     modelView {
         enemiesView.remove(player)
-        battleIsStarted.not().so {
+        battleIsStarted().not().so {
             startButtonController {
                 battleStartButton.updateStyle(player, false)
             }
         }
-        hasAWinner().and(battleIsStarted).so {
+        hasAWinner().and(battleIsStarted()).so {
             battleController.endBattle()
         }
         hasOnePlayerLeft().so { battleController.disconnect() }

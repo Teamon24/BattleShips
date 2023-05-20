@@ -106,14 +106,14 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         val enemySelectionFadeTime: Long
         val startButtonTransitionTime: Long
         val leaveBattleFieldButtonTransitionTime: Long
-        val defeatFillTransitionTime: Long
+        val enemyFleetFillTransitionTime: Long
 
         init {
             fillingTransitionTime.also {
                 enemySelectionFadeTime = it * 4
                 startButtonTransitionTime = it
                 leaveBattleFieldButtonTransitionTime = it
-                defeatFillTransitionTime = it * 5
+                enemyFleetFillTransitionTime = it * 5
             }
         }
 

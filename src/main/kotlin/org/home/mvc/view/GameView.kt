@@ -4,9 +4,10 @@ import home.extensions.AnysExtensions.name
 import javafx.scene.Node
 import javafx.scene.control.Alert
 import javafx.stage.Stage
+import org.home.app.ApplicationProperties
 import org.home.app.di.GameScope
 import org.home.mvc.ResizeHelper
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.utils.log
 import tornadofx.View
 import tornadofx.box
@@ -16,8 +17,8 @@ import kotlin.system.exitProcess
 
 abstract class GameView(title: String = ""): View(title = title) {
 
-    internal val modelView: BattleModel by GameScope.inject()
-    internal val applicationProperties = modelView.applicationProperties
+    internal val modelView by GameScope.inject<BattleViewModel>()
+    internal val applicationProperties by di<ApplicationProperties>()
     internal val currentPlayer = applicationProperties.currentPlayer
 
     open fun exit() {

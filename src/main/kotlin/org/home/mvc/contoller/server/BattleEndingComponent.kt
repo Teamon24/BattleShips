@@ -9,7 +9,7 @@ import org.home.mvc.contoller.server.action.BattleEndAction
 class BattleEndingComponent: GameComponent() {
     fun endBattle() {
         modelView {
-            battleIsEnded = true
+            battleIsEnded(true)
             eventbus {
                 +BattleIsEnded(BattleEndAction(getWinner()))
             }

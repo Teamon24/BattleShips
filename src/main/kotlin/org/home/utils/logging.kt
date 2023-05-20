@@ -8,7 +8,7 @@ import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
 import javafx.event.Event
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
@@ -97,15 +97,15 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any 
     }
 }
 
-inline fun BattleModel.log(disabled: Boolean = false, block: BattleModel.() -> Any) {
+inline fun BattleViewModel.log(disabled: Boolean = false, block: BattleViewModel.() -> Any) {
     if (!disabled) {
         threadPrintln("::: MODEL[${refNumber}] ::: " + block())
     }
 }
 
 @JvmName("logEvent")
-fun View.logEvent(fxEvent: FXEvent, modelView: BattleModel, body: () -> Any = {}) {
-    val title = "${this::class.simpleName}[${modelView.currentPlayer}] <- $fxEvent"
+fun View.logEvent(fxEvent: FXEvent, modelView: BattleViewModel, body: () -> Any = {}) {
+    val title = "${this::class.simpleName}[${modelView.getCurrentPlayer()}] <- $fxEvent"
     threadPrintln {
         ln()
         ln(line(title.length))

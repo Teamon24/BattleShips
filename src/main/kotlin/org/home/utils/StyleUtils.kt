@@ -11,12 +11,13 @@ import javafx.scene.layout.Region
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
+import org.home.app.ApplicationProperties
 import org.home.app.ApplicationProperties.Companion.fillingTransitionTime
+import org.home.style.AppStyles
 import org.home.style.Transition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
 import org.home.utils.ColorUtils.color
-import org.home.utils.StyleUtils.fillBackground
 import tornadofx.CssRule
 import tornadofx.addClass
 import tornadofx.box
@@ -29,10 +30,10 @@ object StyleUtils {
     val Region.backgroundColor: Color get() = background?.fills?.get(0)?.fill?.color ?: WHITE
     val Labeled.textColor: Color get() = textFill?.color ?: WHITE
 
-    fun Region.fillBackground(from: Color = backgroundColor, to: Color) =
+    fun Region.fillBackground(from: Color = backgroundColor, to: Color, time: Long = fillingTransitionTime) =
         style {
             filling(this@fillBackground) {
-                millis = fillingTransitionTime
+                millis = time
                 transition(from, to) { backgroundColor += it }
             }.onFinish {
                 this@fillBackground.backgroundProperty().value = Background(BackgroundFill(to, null, null))

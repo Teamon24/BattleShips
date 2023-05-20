@@ -5,7 +5,8 @@ import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
-import org.home.app.ApplicationProperties.Companion.defeatFillTransitionTime
+import org.home.app.ApplicationProperties
+import org.home.app.ApplicationProperties.Companion.enemyFleetFillTransitionTime
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
@@ -21,7 +22,6 @@ import org.home.style.AppStyles.Companion.hitCellColor
 import org.home.style.AppStyles.Companion.missCellColor
 import org.home.style.AppStyles.Companion.sunkCellColor
 import org.home.utils.ColorUtils.opacity
-import org.home.utils.CssUtils.noBorder
 import org.home.utils.StyleUtils.backgroundColor
 import org.home.utils.StyleUtils.fillBackground
 import org.home.utils.StyleUtils.textColor
@@ -34,17 +34,11 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
 
     override fun FleetCell.removeAnyColor(): FleetCell { TODO("Not yet implemented" ) }
 
-    override fun FleetCell.addMiss() = apply {
-        fillBackground(to = missCellColor)
-    }
+    private val time = enemyFleetFillTransitionTime
 
-    override fun FleetCell.addHit()  = apply {
-        fillBackground(to = hitCellColor)
-    }
-
-    override fun FleetCell.addSunk() = apply {
-        fillBackground(to = sunkCellColor)
-    }
+    override fun FleetCell.addMiss() = apply { fillBackground(to = missCellColor, time = time) }
+    override fun FleetCell.addHit()  = apply { fillBackground(to = hitCellColor, time = time) }
+    override fun FleetCell.addSunk() = apply { fillBackground(to = sunkCellColor, time = time) }
 
     override fun FleetCellLabel.addSelectionColor(): FleetCellLabel { TODO("Not yet implemented" ) }
 
@@ -56,6 +50,8 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
 
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) { TODO("Not yet implemented" ) }
 
+
+
     override fun BattleView.defeated(
         defeated: String,
         fleetGrid: FleetGrid,
@@ -63,14 +59,14 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
     ) {
 
         modelView.playerLabel(defeated).apply {
-            fillBackground(backgroundColor, defeatedPlayerColor)
+            fillBackground(backgroundColor, defeatedPlayerColor, time)
         }
 
         fleetGrid
              .onEachTitleCells { fleetCell ->
                 fleetCell.style {
                     filling(fleetCell) {
-                        millis = defeatFillTransitionTime
+                        millis = time
                         transition(fleetCell.backgroundColor, defeatedColor) { backgroundColor += it }
                         transition(fleetCell.textColor, sunkCellColor) { textFill = it }
                     }
@@ -80,13 +76,13 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
                 it.coord
                     .notIn(modelView.getShotsAt(defeated))
                     .so {
-                        it.fillBackground(to = defeatedEmptyCellColor)
+                        it.fillBackground(to = defeatedEmptyCellColor, time = time)
                     }
             }
 
         fleetReadiness
-            .forEachTypeLabel { it.fillBackground(it.backgroundColor, defeatedColor) }
-            .forEachNumberLabel { it.fillBackground(it.backgroundColor, defeatedColor) }
+            .forEachTypeLabel { it.fillBackground(to = defeatedColor, time = time) }
+            .forEachNumberLabel { it.fillBackground(to = defeatedColor, time = time) }
     }
 
     override fun BattleView.ready(
@@ -96,17 +92,20 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
     ) {
         val titleColor = AppStyles.readyColor.darker()
         fleetGrid
-            .onEachTitleCells { it.fillBackground(to = titleColor) }
+            .onEachTitleCells { it.fillBackground(to = titleColor, time = ApplicationProperties.fillingTransitionTime) }
             .onEachFleetCells {
                 modelView {
                     player.decks()
                         .contains(it.coord)
-                        .thus { it.fillBackground(to = AppStyles.readyColor.opacity(0.9)) }
+                        .thus { it.fillBackground(
+                            to = AppStyles.readyColor.opacity(0.9),
+                            time = ApplicationProperties.fillingTransitionTime
+                        ) }
                 }
             }
 
         fleetReadiness.forEachTypeLabel {
-            it.fillBackground(it.backgroundColor, titleColor)
+            it.fillBackground(it.backgroundColor, titleColor, ApplicationProperties.fillingTransitionTime)
         }
     }
 
@@ -116,18 +115,27 @@ object FleetGridStyleTransition: FleetGridStyleComponent {
         fleetReadiness: ShipsTypesPane
     ) {
         fleetGrid
-            .onEachTitleCells { it.fillBackground(to = AppStyles.titleCellColor) }
+            .onEachTitleCells { it.fillBackground(
+                to = AppStyles.titleCellColor,
+                time = ApplicationProperties.fillingTransitionTime
+            ) }
             .onEachFleetCells {
                 modelView {
                     player.decks()
                         .contains(it.coord)
-                        .thus { it.fillBackground(to = AppStyles.selectedColor) }
-                        .otherwise { it.fillBackground(to = AppStyles.initialAppColor) }
+                        .thus { it.fillBackground(
+                            to = AppStyles.selectedColor,
+                            time = ApplicationProperties.fillingTransitionTime
+                        ) }
+                        .otherwise { it.fillBackground(
+                            to = AppStyles.initialAppColor,
+                            time = ApplicationProperties.fillingTransitionTime
+                        ) }
                 }
             }
 
         fleetReadiness.forEachTypeLabel {
-            it.fillBackground(it.backgroundColor, AppStyles.selectedColor)
+            it.fillBackground(it.backgroundColor, AppStyles.selectedColor, ApplicationProperties.fillingTransitionTime)
         }
     }
 }

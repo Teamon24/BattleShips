@@ -8,9 +8,9 @@ import tornadofx.style
 import tornadofx.textfield
 
 class SettingsFieldsController: GameController() {
-    fun EventTarget.widthField() = intField(modelView.width)
-    fun EventTarget.heightField() = intField(modelView.height)
-    fun EventTarget.playersField() = intField(modelView.playersNumber)
+    fun EventTarget.widthField() = intField(modelView.getWidth())
+    fun EventTarget.heightField() = intField(modelView.getHeight())
+    fun EventTarget.playersField() = intField(modelView.getPlayersNumber())
 
     private fun EventTarget.intField(prop: SimpleIntegerProperty): TextField {
         return textfield(prop) {

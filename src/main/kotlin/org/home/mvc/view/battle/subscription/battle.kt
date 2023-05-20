@@ -4,16 +4,16 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.excludeAll
-import org.home.mvc.AppView
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.ApplicationProperties.Companion.leaveBattleText
+import org.home.mvc.AppView
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.server.action.NewServerConnectionAction
+import org.home.mvc.model.invoke
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.component.Transit.BACKWARD
@@ -64,10 +64,10 @@ internal fun BattleView.playerTurnToShoot() {
             turn.value = event.player
             if (currentPlayer == event.player) {
                 openMessageWindow { "Ваш ход" }
-                log { "defeated = $defeatedPlayers" }
+                log { "defeated = ${getDefeatedPlayers()}" }
                 modelView {
-                    enemiesFleetGridsPanes.excludeAll(defeatedPlayers).enable()
-                    enemiesFleetsReadinessPanes.excludeAll(defeatedPlayers).enable()
+                    enemiesFleetGridsPanes.excludeAll(getDefeatedPlayers()).enable()
+                    enemiesFleetsReadinessPanes.excludeAll(getDefeatedPlayers()).enable()
                 }
             } else {
                 enemiesFleetGridsPanes.disable()
@@ -79,7 +79,7 @@ internal fun BattleView.playerTurnToShoot() {
 
 internal fun BattleView.battleIsStarted() {
     subscribe<BattleIsStarted> { event ->
-        modelView.battleIsStarted = true
+        modelView.battleIsStarted(true)
         logEvent(event, modelView)
         battleViewExitButton.text = leaveBattleText
 
@@ -95,7 +95,7 @@ internal fun BattleView.battleIsStarted() {
                 }
             }
 
-        modelView.readyPlayers.clear()
+        modelView.getReadyPlayers().clear()
         battleStartButton.hide()
 
         currentFleetController.updateCurrentPlayerFleetGrid()
@@ -130,12 +130,13 @@ internal fun BattleView.serverTransferReceived() {
         logEvent(event, modelView)
         modelView {
             event {
-                newServer = NewServerInfo(player, applicationProperties.ip, freePort())
-                playersNumber.value -= 1
+                val newServerInfo = NewServerInfo(player, applicationProperties.ip, freePort())
+                setNewServer(newServerInfo)
+                getPlayersNumber().value -= 1
                 player.isCurrent {
                     applicationProperties.isServer = true
                     battleController {
-                        send(NewServerConnectionAction(newServer))
+                        send(NewServerConnectionAction(getNewServer()))
                         disconnect()
                     }
                 }

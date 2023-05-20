@@ -31,8 +31,8 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
     private var threadIndicator: Thread? = null
     private val connectedPlayers =
         Collections
-            .synchronizedList(modelView.players.toMutableList())
-            .apply { remove(modelView.newServer.player) }
+            .synchronizedList(modelView.getPlayers().toMutableList())
+            .apply { remove(modelView.getNewServer().player) }
 
 
     override fun exit() {
@@ -49,10 +49,11 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
             battleIsContinuedReceived()
         }
 
-        title = "${modelView.currentPlayer.uppercase()}: перенос сервера"
+        title = "${modelView.getCurrentPlayer().uppercase()}: перенос сервера"
         applicationProperties.isServer.yes {
                 modelView {
                     label("Вы новый сервер")
+                    val newServer = getNewServer()
                     battleController.connect(newServer.ip, newServer.port)
                 }
             } no {

@@ -34,7 +34,7 @@ class ShotProcessingComponent: GameComponent() {
     private val sockets = multiServerSockets.get()
 
     private val notifierStrategies: ShotNotifierStrategies by di()
-    private val shotNotifier = notifierStrategies.create(modelView.enemies)
+    private val shotNotifier = notifierStrategies.create(modelView.getEnemies())
 
     private val turnList = playerTurnComponent.turnList
     private inline val <E> Collection<E>.hasPlayers get() = hasElements

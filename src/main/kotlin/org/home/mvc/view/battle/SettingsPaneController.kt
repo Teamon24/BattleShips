@@ -11,14 +11,14 @@ import javafx.scene.image.ImageView
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.GridPane
-import org.home.app.di.GameScope
 import org.home.app.ApplicationProperties.Companion.heightFieldLabel
 import org.home.app.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.app.ApplicationProperties.Companion.playersNumberLabel
 import org.home.app.ApplicationProperties.Companion.squareSize
 import org.home.app.ApplicationProperties.Companion.widthFieldLabel
+import org.home.app.di.GameScope
 import org.home.mvc.contoller.GameComponent
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.marginGrid
 import org.home.mvc.view.component.GridPaneExtensions.row
@@ -89,15 +89,15 @@ class SettingsPaneController: GameComponent() {
             modelView.addSquareSizeListener(this)
         }
 
-    private fun BattleModel.addSquareSizeListener(checkBox: CheckBox) {
-        width.addListener(changeListener(checkBox, ::setHeight, ::setWidth))
-        height.addListener(changeListener(checkBox, ::setWidth, ::setHeight))
+    private fun BattleViewModel.addSquareSizeListener(checkBox: CheckBox) {
+        getWidth().addListener(changeListener(checkBox, ::setHeight, ::setWidth))
+        getHeight().addListener(changeListener(checkBox, ::setWidth, ::setHeight))
     }
 
-    private fun BattleModel.changeListener(
+    private fun BattleViewModel.changeListener(
         checkBox: CheckBox,
-        setterFirstSize: (BattleModel, Number?) -> Unit,
-        setterSecondSize: (BattleModel, Number?) -> Unit
+        setterFirstSize: (BattleViewModel, Number?) -> Unit,
+        setterSecondSize: (BattleViewModel, Number?) -> Unit
     ): ChangeListener<Number> {
         val battleModel = this@changeListener
         return ChangeListener { _, _, newValue ->
@@ -106,11 +106,11 @@ class SettingsPaneController: GameComponent() {
         }
     }
 
-    private fun setHeight(modelView: BattleModel, newValue: Number?) {
-        modelView.height.value = newValue as Int?
+    private fun setHeight(modelView: BattleViewModel, newValue: Number?) {
+        modelView.getHeight().value = newValue as Int?
     }
 
-    private fun setWidth(modelView: BattleModel, newValue: Number?) {
-        modelView.width.value = newValue as Int?
+    private fun setWidth(modelView: BattleViewModel, newValue: Number?) {
+        modelView.getWidth().value = newValue as Int?
     }
 }

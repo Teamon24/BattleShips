@@ -23,17 +23,15 @@ import tornadofx.removeClass
 import tornadofx.runLater
 
 class ShipsTypesPaneComponent: GameComponent() {
-    private fun lastShipType() = modelView.shipsTypes.maxOfOrNull { entry -> entry.key } ?: 0
-
     fun addShipTypeButton(gridPane: GridPane) {
         BattleButton("+").also {
             it.action {
                 runLater {
-                    val column = lastShipType() + 1
+                    val column = modelView.lastShipType() + 1
                     shipTypeLabel(gridPane, column)
                     shipsNumberLabel(gridPane, column, 1)
 
-                    val shipsTypes = modelView.shipsTypes
+                    val shipsTypes = modelView.getShipsTypes()
 
                     shipsTypes.forEach { (shipType, number) ->
                         shipsTypes[shipType] = number + 1
@@ -52,10 +50,11 @@ class ShipsTypesPaneComponent: GameComponent() {
         BattleButton("-").also {
             it.action {
                 runLater {
-                    if ((lastShipType() != 0)) {
-                        gridPane.removeColumn(lastShipType())
-                        val shipsTypes = modelView.shipsTypes
-                        shipsTypes.remove(lastShipType())
+                    val lastShipType = modelView.lastShipType()
+                    if (lastShipType != 0) {
+                        gridPane.removeColumn(lastShipType)
+                        val shipsTypes = modelView.getShipsTypes()
+                        shipsTypes.remove(lastShipType)
                         shipsTypes.forEach { (shipType, number) ->
                             val newNumber = number - 1
                             shipsTypes[shipType] = newNumber
@@ -110,7 +109,7 @@ class ShipsTypesPaneComponent: GameComponent() {
     private fun FleetCellLabel.updateClass(it: String?, shipType: Int) {
         when {
             it == "0" -> addClass(fullShipNumberLabel)
-            0 < it!!.toInt() && it.toInt() <= modelView.shipsTypes[shipType]!! -> removeClass(fullShipNumberLabel)
+            0 < it!!.toInt() && it.toInt() <= modelView.getShipsNumber(shipType) -> removeClass(fullShipNumberLabel)
             else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$it\"")
         }
     }

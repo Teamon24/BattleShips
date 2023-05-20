@@ -1,5 +1,6 @@
 package org.home.app.di
 
+import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.so
 import org.home.app.di.GameScope.GameInject.FX
 import org.home.app.di.GameScope.GameInject.KOIN
@@ -47,24 +48,32 @@ object GameScope {
         }
     }
 
-    inline fun <reified T> inject(): ReadOnlyProperty<Component, T> where
-            T : Component,
-            T : ScopedInstance = ReadOnlyProperty { _, _ ->
-
-        when (gameInject) {
-            KOIN -> KoinScopes.getGameScope().get<T>()
-            FX -> find<T>(FxScopes.getGameScope())
-        }
-    }
-
-    inline fun <reified T : FleetGridStyleComponent> fleetGridStyle():
-            ReadOnlyProperty<Component, FleetGridStyleComponent> =
-
+    inline fun <reified T> inject(): ReadOnlyProperty<Component, T> where T : Component, T : ScopedInstance =
         ReadOnlyProperty { _, _ ->
             when (gameInject) {
-                KOIN -> KoinScopes.getGameScope().get() {
-                    parametersOf(getType<T>())
-                }
+                KOIN -> KoinScopes.getGameScope().get<T>()
+                FX -> find<T>(FxScopes.getGameScope())
+            }
+        }
+
+    inline fun <reified T, reified P> inject(parameter: P): ReadOnlyProperty<Component, T> =
+        ReadOnlyProperty { _, _ -> injectable(parameter) }
+
+    inline fun <reified T, reified P> injectable(parameter: P) where T : Component, T : ScopedInstance =
+        when (gameInject) {
+            KOIN -> KoinScopes.getGameScope().get<T>() { parametersOf(parameter) }
+            FX -> throw RuntimeException(
+                "FX di does not maintain parameters (parameter = ${parameter?.name}). Only - koin"
+            )
+        }
+
+    inline fun
+            <reified T : FleetGridStyleComponent>
+            fleetGridStyle(): ReadOnlyProperty<Component, FleetGridStyleComponent>
+    =
+        ReadOnlyProperty { _, _ ->
+            when (gameInject) {
+                KOIN -> KoinScopes.getGameScope().get() { parametersOf(getType<T>()) }
                 FX -> find(FxScopes.getGameScope())
             }
         }

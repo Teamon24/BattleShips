@@ -2,7 +2,7 @@ package org.home.app.di
 
 import home.extensions.AnysExtensions.name
 import org.home.app.di.GameScope.NewGameScope
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModelImpl
 import org.home.utils.componentName
 import org.home.utils.log
 import org.koin.java.KoinJavaComponent.getKoin
@@ -40,7 +40,7 @@ object FxScopes: Scopes<FxScope>() {
 
     override fun createNew() {
         _gameScope = getScope()
-        BattleModel().inScope(getGameScope())
+        BattleViewModelImpl().inScope(getGameScope())
         log { "$name created NEW - ${getGameScope().name}" }
     }
 

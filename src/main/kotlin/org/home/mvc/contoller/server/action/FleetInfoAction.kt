@@ -1,17 +1,17 @@
 package org.home.mvc.contoller.server.action
 
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 
 class FleetSettingsAction(
     val height: Int,
     val width: Int,
     val shipsTypes: Map<Int, Int>): Action()
 {
-    constructor(modelView: BattleModel) : this(
-        modelView.height.value,
-        modelView.width.value,
+    constructor(modelView: BattleViewModel) : this(
+        modelView.getHeight().value,
+        modelView.getWidth().value,
         // ObserversMap не сериализуется, поэтому - toMutableMap()
-        modelView.shipsTypes.value.toMutableMap()
+        modelView.getShipsTypes().toMutableMap()
     )
 }
 

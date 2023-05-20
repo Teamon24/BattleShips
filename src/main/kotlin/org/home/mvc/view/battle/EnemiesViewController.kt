@@ -175,7 +175,7 @@ class EnemiesViewController : GameComponent() {
         afterInit: N.() -> Unit = {},
     ) {
         modelView {
-            enemies.firstOrNull()?.also { player ->
+            getEnemies().firstOrNull()?.also { player ->
                 fadeOut(player)
                 playersNodes[player]!!.apply { afterInit() }
             }

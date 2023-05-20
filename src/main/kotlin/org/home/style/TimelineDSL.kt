@@ -6,7 +6,7 @@ import javafx.animation.Timeline
 import javafx.scene.control.Labeled
 import javafx.scene.layout.Region
 import javafx.scene.paint.Color
-import org.home.app.ApplicationProperties.Companion.defeatFillTransitionTime
+import org.home.app.ApplicationProperties.Companion.enemyFleetFillTransitionTime
 import org.home.style.FillTransitions.backgroundFill
 import org.home.style.FillTransitions.textFill
 import org.home.style.TimelineUtils.play
@@ -67,7 +67,7 @@ object TimelineDSL {
             }
         }
 
-        val timeStep = defeatFillTransitionTime / size
+        val timeStep = enemyFleetFillTransitionTime / size
         val frames = map.entries.map { (i, keyValues) ->
             KeyFrame((i * timeStep).millis, *keyValues.toTypedArray())
         }

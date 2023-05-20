@@ -97,7 +97,7 @@ class BattleClient : GameController(), BattleController<Action> {
             +ConnectionAction(currentPlayer)
             modelView.hasReady(currentPlayer) {
                 val fleetReadiness = modelView
-                    .fleetsReadiness[currentPlayer]!!
+                    .fleetReadiness(currentPlayer)
                     .mapValues { it.value.value }
 
                 +ReadyAction(currentPlayer)

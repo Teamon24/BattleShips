@@ -17,6 +17,10 @@ inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
     dslContainer(addEvents).forEach(this::fire)
 }
 
+interface UiEventBus {
+
+}
+
 sealed class BattleEvent: FXEvent() {
 
     override val scope: Scope get() = FxScopes.getGameScope()

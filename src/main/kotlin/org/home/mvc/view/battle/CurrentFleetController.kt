@@ -9,6 +9,7 @@ import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.currentPlayerLabel
 import org.home.utils.StyleUtils.leftPadding
 import tornadofx.addClass
 
@@ -31,7 +32,7 @@ class CurrentFleetController: GameController() {
             .toBorderPane()
     }
 
-    fun playerLabel() = Label(currentPlayer).addClass(AppStyles.currentPlayerLabel)
+    fun playerLabel() = Label(currentPlayer).addClass(currentPlayerLabel)
 
     private fun <T: Node> T.toBorderPane(): BorderPane {
         return BorderPane(this)

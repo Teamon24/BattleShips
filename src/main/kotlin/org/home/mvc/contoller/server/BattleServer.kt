@@ -5,6 +5,7 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.AtomicBooleansExtensions.invoke
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
+import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.isNotEmpty
 import org.home.app.di.GameScope
@@ -28,8 +29,9 @@ import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.contoller.server.BattleClient.ActionTypeAbsentException
-import org.home.mvc.contoller.server.PlayersSocketsExtensions.isNotClosed
 import org.home.mvc.contoller.server.PlayersSocketsExtensions.exclude
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.isNotClosed
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.AreReadyAction
 import org.home.mvc.contoller.server.action.BattleContinuationAction
@@ -56,15 +58,14 @@ import org.home.mvc.contoller.server.action.ShipDeletionAction
 import org.home.mvc.contoller.server.action.ShotAction
 import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.mvc.model.thoseAreReady
 import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
-import org.home.utils.log
-import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.utils.SocketUtils.send
+import org.home.utils.log
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
@@ -106,13 +107,14 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
         modelView {
-            if (battleIsStarted && players.size > 1) {
+            if (battleIsStarted() && getPlayers().size > 1) {
                 playerTurnComponent {
                     hasATurn(currentPlayer) { nextTurn() }
                 }
                 send(NewServerAction(turnPlayer))
                 awaitConditions.newServerFound.await()
-                excluding(newServer.player).send(NewServerConnectionAction(newServer))
+                val foundNewServer = getNewServer()
+                excluding(foundNewServer.player).send(NewServerConnectionAction(foundNewServer))
             }
         }
         disconnect()
@@ -177,7 +179,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
                 action {
-                    newServer = NewServerInfo(player, ip, port)
+                    setNewServer(NewServerInfo(player, ip, port))
                 }
             }
 
@@ -186,7 +188,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
     private fun onConnect(socket: PlayerSocket, action: ConnectionAction) {
-        if (sockets.size + 1 < modelView.playersNumber.value) {
+        if (sockets.size + 1 < modelView.getPlayersNumber().value) {
             permitToConnect()
         }
 
@@ -197,14 +199,14 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             eventbus(ConnectedPlayerReceived(it))
 
             modelView {
-                log { "hasNoServerTransfer: $hasNoServerTransfer"}
-                hasNoServerTransfer {
+                log { "hasNoServerTransfer: ${hasNoServerTransfer()}"}
+                hasNoServerTransfer().so {
                     excluding(connected).send(it)
                     socket(connected).send {
                         +FleetSettingsAction(modelView)
-                        +ConnectionsAction(players.exclude(connected))
+                        +ConnectionsAction(getPlayers().exclude(connected))
                         +fleetsReadinessExcept(connected, modelView)
-                        readyPlayers.isNotEmpty {
+                        getReadyPlayers().isNotEmpty {
                             +AreReadyAction(thoseAreReady)
                         }
                     }
@@ -279,13 +281,13 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
         + event(toRemovedAction)
 
-        modelView.battleIsNotStarted {
+        modelView.battleIsNotStarted().so {
             permitToConnect()
         }
     }
 
-    private fun fleetsReadinessExcept(player: String, modelView: BattleModel): FleetsReadinessAction {
-        val states = modelView.fleetsReadiness
+    private fun fleetsReadinessExcept(player: String, modelView: BattleViewModel): FleetsReadinessAction {
+        val states = modelView.getFleetsReadiness()
             .exclude(player)
             .map { (player, state) ->
                 player to state.map { (shipType, number) -> shipType to number.value }.toMap()

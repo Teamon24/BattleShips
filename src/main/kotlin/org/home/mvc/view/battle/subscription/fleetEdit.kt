@@ -14,7 +14,7 @@ import org.home.mvc.contoller.server.action.PlayerReadinessAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShipAdditionAction
 import org.home.mvc.contoller.server.action.ShipDeletionAction
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.battle.BattleView
 import org.home.utils.logEvent
 
@@ -45,7 +45,7 @@ internal fun BattleView.shipWasDeleted() {
 private fun BattleView.processFleetEdit(
     event: FleetEditEvent,
     action: (Int, String) -> FleetEditAction,
-    lastShipWasEdited: (BattleModel, String, () -> Unit) -> Unit,
+    lastShipWasEdited: (BattleViewModel, String, () -> Unit) -> Unit,
     createReadinessAction: (String) -> PlayerReadinessAction,
     createEvent: (String) -> PlayerReadinessReceived
 ) {
@@ -53,7 +53,7 @@ private fun BattleView.processFleetEdit(
 
     event {
         modelView {
-            fleetsReadiness.update(event)
+            updateFleetReadiness(event)
             battleController.send {
                 player.isCurrent {
                     + action(shipType, currentPlayer)

@@ -16,7 +16,8 @@ import org.home.mvc.contoller.server.PlayerSocket
 import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.mvc.contoller.server.action.Action
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
+import org.home.mvc.model.BattleViewModelImpl
 import org.home.mvc.view.battle.CurrentFleetController
 import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.EnemiesListViewController
@@ -70,7 +71,8 @@ fun netControllers(properties: String): Module {
 fun gameScoped(): Module {
     return module {
         scope<GameScope.NewGameScope> {
-            scoped { BattleModel() }
+            scoped<BattleViewModel> { BattleViewModelImpl() }
+
             scoped { FleetGridController() }
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }

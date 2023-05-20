@@ -11,7 +11,7 @@ import org.home.mvc.AppView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.server.action.Action
-import org.home.mvc.model.BattleModel
+import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.GameView
 import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
@@ -78,7 +78,7 @@ class BattleView : GameView("Battle View") {
 
     private val currentPlayerLabel = currentFleetController.playerLabel()
 
-    fun BattleModel.playerLabel(player: String) = player.isCurrent then currentPlayerLabel or selectedLabel
+    fun BattleViewModel.playerLabel(player: String) = player.isCurrent then currentPlayerLabel or selectedLabel
 
     internal lateinit var battleViewExitButton: Button
     internal var battleStartButton = startButtonController.create()
@@ -91,8 +91,8 @@ class BattleView : GameView("Battle View") {
         modelView {
             listOf(
                 turn,
-                defeatedPlayers,
-                readyPlayers
+                getDefeatedPlayers(),
+                getReadyPlayers()
             ).forEach {
                 it.addListener { _, _, new -> new?.run { enemiesView.refresh() } }
             }

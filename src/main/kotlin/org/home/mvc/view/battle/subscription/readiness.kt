@@ -31,21 +31,21 @@ fun BattleView.readyPlayersReceived() {
     this.subscribe<ReadyPlayersReceived> { event ->
         logEvent(event, modelView)
         event.players.forEach {
-            modelView.readyPlayers.add(it)
+            modelView.getReadyPlayers().add(it)
             handleReady(it)
         }
     }
 }
 
 private fun BattleView.handleReady(player: String) {
-    modelView.log { "ready = $readyPlayers" }
+    modelView.log { "ready = ${getReadyPlayers()}" }
     handle(player, true, modelView::setReady) { fleet, readiness ->
         ready(player, fleet, readiness)
     }
 }
 
 private fun BattleView.handleNotReady(player: String) {
-    modelView.log { "not ready = $readyPlayers" }
+    modelView.log { "not ready = ${getReadyPlayers()}" }
     handle(player, false, modelView::setNotReady) { fleet, readiness ->
         notReady(player, fleet, readiness)
     }

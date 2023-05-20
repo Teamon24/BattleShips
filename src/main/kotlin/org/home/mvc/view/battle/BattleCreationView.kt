@@ -40,7 +40,7 @@ class BattleCreationView : GameView("Настройки боя") {
     init {
         applicationProperties.isServer = true
         val currentView = this@BattleCreationView
-        currentView.title = applicationProperties.currentPlayer.uppercase()
+        currentView.title = modelView.getCurrentPlayer().uppercase()
         with(root) {
             centerGrid {
                 settingsPaneController {
