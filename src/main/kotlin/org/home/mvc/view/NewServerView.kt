@@ -10,6 +10,8 @@ import home.extensions.BooleansExtensions.yes
 import home.extensions.delete
 import javafx.scene.Parent
 import javafx.scene.layout.VBox
+import org.home.app.di.noScope
+import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
@@ -27,7 +29,7 @@ import kotlin.concurrent.thread
 
 
 class NewServerView(override val root: Parent = VBox()) : GameView() {
-    private val battleController: BattleController<Action> by di()
+    private val battleController by noScope<BattleController<Action>>()
     private var threadIndicator: Thread? = null
     private val connectedPlayers =
         Collections
@@ -35,10 +37,9 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
             .apply { remove(modelView.getNewServer().player) }
 
 
-    override fun exit() {
+    override fun onClose() {
         battleController.leaveBattle()
         battleController.disconnect()
-        super.exit()
     }
 
     init {

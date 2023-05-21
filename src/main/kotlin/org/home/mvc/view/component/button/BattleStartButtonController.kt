@@ -9,8 +9,9 @@ import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
 import org.home.app.ApplicationProperties.Companion.startButtonTransitionTime
+import org.home.app.di.noScope
+import org.home.mvc.GameController
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.GameController
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.allAreReady
 import org.home.style.AppStyles.Companion.initialAppColor
@@ -24,7 +25,7 @@ import tornadofx.style
 class BattleStartButton(text: String) : Button(text)
 
 class BattleStartButtonController : GameController() {
-    private val battleController: BattleController<Action> by di()
+    private val battleController by noScope<BattleController<Action>>()
 
     fun create(): BattleStartButton {
         val text = if (applicationProperties.isServer) "В бой" else "Готов"

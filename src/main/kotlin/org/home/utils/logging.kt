@@ -3,12 +3,16 @@ package org.home.utils
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.isNotUnit
+import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.refClass
 import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.then
 import javafx.event.Event
+import org.home.mvc.GameController
 import org.home.mvc.model.BattleViewModel
+import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
@@ -18,6 +22,7 @@ import org.home.utils.extensions.StringBuildersExtensions.add
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import tornadofx.Component
 import tornadofx.FXEvent
+import tornadofx.Scope
 import tornadofx.View
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -73,6 +78,7 @@ inline fun log(disabled: Boolean = false, block: () -> Any?) {
 }
 
 val Component.componentName get() = "$refClass-[$refNumber]"
+val Any.componentName get() = "$refClass-[$refNumber]"
 
 fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any = {}) {
     val dot = "."
@@ -210,6 +216,28 @@ fun MultiServer<*, *>.logMultiServerThreads(b: Boolean = true) {
 private fun MultiServerThread<*, *>.logMultiServerThread(lengthOfMax: Int) {
     val indent = " ".repeat(lengthOfMax - name.length)
     threadPrintln("$name$indent: alive/interrupted: $isAlive/$isInterrupted")
+}
+
+fun <T : View> View.logTransit(replacement: T) {
+    org.home.utils.log {
+        "|////////////////////////////////////////////////| $componentName |/////| |> ${replacement.componentName}"
+    }
+}
+
+inline fun Any.logInject(injection: Any, disabled: Boolean = false) {
+    disabled.otherwise {
+        org.home.utils.log {
+            "$componentName <== ${injection.componentName}"
+        }
+    }
+}
+
+inline fun Any.logInject(injection: Any, scope: Any, disabled: Boolean = false) {
+    disabled.otherwise {
+        org.home.utils.log {
+            "$componentName <== ${injection.componentName} with ${scope.name}"
+        }
+    }
 }
 
 

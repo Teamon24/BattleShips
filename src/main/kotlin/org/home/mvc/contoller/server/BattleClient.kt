@@ -1,5 +1,6 @@
 package org.home.mvc.contoller.server
 
+import home.ExceptionUtils.throwsOn
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
@@ -7,15 +8,14 @@ import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
 import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.otherwise
-import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
 import home.extensions.BooleansExtensions.yes
 import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.home.app.di.GameScope
-import org.home.mvc.contoller.GameController
+import org.home.app.di.gameScope
+import org.home.mvc.GameController
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleIsContinued
@@ -69,9 +69,9 @@ class BattleClient : GameController(), BattleController<Action> {
 
     override val currentPlayer: String get() = super.currentPlayer
 
-    private val battleEndingComponent: BattleEndingComponent by GameScope.inject()
+    private val battleEndingComponent: BattleEndingComponent by gameScope()
 
-    private val awaitConditions: AwaitConditions by GameScope.inject()
+    private val awaitConditions: AwaitConditions by gameScope()
 
     private lateinit var input: InputStream
     private lateinit var output: OutputStream
@@ -174,7 +174,7 @@ class BattleClient : GameController(), BattleController<Action> {
 
         eventbus {
             send {
-                hitShip.isDestroyed.thus {
+                hitShip.isDestroyed thus {
                     SinkingAction(shotAction).also {
                         +it
                         +ShipWasSunk(it)
@@ -200,29 +200,17 @@ class BattleClient : GameController(), BattleController<Action> {
         battleEndingComponent.endBattle()
     }
 
-
     override fun startBattle() {
         modelView.setReady(currentPlayer)
         send(ReadyAction(currentPlayer))
     }
 
     override fun leaveBattle() {
-        hasConnection().so {
-            send(LeaveAction(currentPlayer))
-        }
-
-        Platform.runLater {
-            disconnect()
-        }
+        hasConnection { send(LeaveAction(currentPlayer)) }
+        Platform.runLater { disconnect() }
     }
 
-    private fun hasConnection() =
-        try {
-            send(Ping)
-            true
-        } catch (e: Exception) {
-            false
-        }
+    private inline fun hasConnection(onTrue: () -> Unit) = throwsOn { send(Ping) }.otherwise(onTrue)
 
     override fun disconnect() {
         canProceed(false)
@@ -233,14 +221,6 @@ class BattleClient : GameController(), BattleController<Action> {
         input.close()
         output.close()
         serverSocket.close()
-    }
-
-    override fun onBattleViewExit() {
-        leaveBattle()
-    }
-
-    override fun onWindowClose() {
-        serverSocket.isNotClosed { leaveBattle() }
     }
 
     override fun continueBattle() {

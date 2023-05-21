@@ -2,13 +2,14 @@ package org.home.mvc.contoller.server
 
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AtomicBooleansExtensions.invoke
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.exclude
+import home.extensions.CollectionsExtensions.hasElements
 import home.extensions.CollectionsExtensions.isNotEmpty
-import org.home.app.di.GameScope
+import org.home.app.di.gameScope
+import org.home.app.di.noScope
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.events.BattleEvent
@@ -69,10 +70,10 @@ import org.home.utils.log
 
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
-    private val battleEndingComponent: BattleEndingComponent by GameScope.inject()
-    private val awaitConditions: AwaitConditions by GameScope.inject()
-    private val shotProcessingComponent: ShotProcessingComponent by di()
-    private val playerTurnComponent: PlayerTurnComponent by di()
+    private val battleEndingComponent: BattleEndingComponent by gameScope()
+    private val awaitConditions: AwaitConditions by gameScope()
+    private val shotProcessingComponent by noScope<ShotProcessingComponent>()
+    private val playerTurnComponent by noScope<PlayerTurnComponent>()
 
     private val turnPlayer get() = playerTurnComponent.turnPlayer!!
     override val currentPlayer = super.currentPlayer
@@ -107,7 +108,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
         modelView {
-            if (battleIsStarted() && getPlayers().size > 1) {
+            if (battleIsStarted() && getEnemies().hasElements) {
                 playerTurnComponent {
                     hasATurn(getCurrentPlayer()) { nextTurn() }
                 }
@@ -131,16 +132,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         val socket = PlayerSocket(serverSocket().accept())
         log { "client has been connected" }
         return socket
-    }
-
-    override fun onBattleViewExit() {
-        connector.canProceed(false)
-        leaveBattle()
-    }
-
-    override fun onWindowClose() {
-        connector.canProceed(false)
-        leaveBattle()
     }
 
     override fun onDisconnect(socket: PlayerSocket) {

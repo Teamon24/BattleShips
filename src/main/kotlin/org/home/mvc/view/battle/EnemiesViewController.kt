@@ -6,10 +6,11 @@ import home.extensions.BooleansExtensions.so
 import javafx.scene.Node
 import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
-import org.home.app.di.GameScope
 import org.home.app.ApplicationProperties.Companion.enemySelectionFadeTime
+import org.home.app.di.gameScope
+import org.home.app.di.noScope
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.GameComponent
+import org.home.mvc.GameComponent
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.server.action.Action
@@ -37,11 +38,11 @@ class EnemiesViewController : GameComponent() {
     internal val fleetGridsPanes = PlayersAndFleets()
     internal val fleetsReadinessPanes = PlayersAndFleetsReadiness()
 
-    private val fleetGridController by GameScope.inject<FleetGridController>()
-    private val shipsTypesPaneController by GameScope.inject<ShipsTypesPaneController>()
-    private val battleController by di<BattleController<Action>>()
+    private val fleetGridController by gameScope<FleetGridController>()
+    private val shipsTypesPaneController by gameScope<ShipsTypesPaneController>()
+    private val battleController by noScope<BattleController<Action>>()
 
-    private val enemiesListViewController by GameScope.inject<EnemiesListViewController>()
+    private val enemiesListViewController by gameScope<EnemiesListViewController>()
 
     private fun EnemiesViewController.notNulls(vararg anys: Any?) = anys.all { it != null }
 
@@ -49,10 +50,10 @@ class EnemiesViewController : GameComponent() {
         initByFirstIfPresent()
         enemiesListViewController.onSelect { currentPlayer, old, new ->
             when {
-                new.isAny(old, currentPlayer) -> return@onSelect
-                notNulls(old, new)            -> fadeOver(new!!)
-                old == null && new != null    -> fadeOut(new)
-                old != null && new == null    -> fadeIn()
+                new == old -> return@onSelect
+                old == null && new != null    -> fadeOutFirst(new)
+                notNulls(old, new)            -> fadeOverNext(new!!)
+                old != null && new == null    -> fadeInLast()
             }
             log { "selected: $selectedItem" }
         }
@@ -80,7 +81,7 @@ class EnemiesViewController : GameComponent() {
         fleetGridsPanes[connectedPlayer] = enemyFleetGrid().disable()
         fleetsReadinessPanes[connectedPlayer] = enemyFleetReadinessPane(connectedPlayer).disable()
         enemiesListViewController.selectIfFirst(connectedPlayer) {
-            fadeOut(it)
+            fadeOutFirst(it)
         }
     }
 
@@ -90,13 +91,13 @@ class EnemiesViewController : GameComponent() {
         modelView.remove(player)
     }
 
-    private fun fadeIn() {
+    private fun fadeInLast() {
         fadeIn(fadeTime, selectedEnemyLabel) { selectedEnemyLabel.text = "" }
         fadeIn(fadeTime, selectedFleetPane) { selectedFleetPane.center = null }
         fadeIn(fadeTime, selectedFleetReadinessPane) { selectedFleetReadinessPane.center = null }
     }
 
-    private fun fadeOver(selected: String) {
+    private fun fadeOverNext(selected: String) {
         log { "set to panes: $selected" }
 
         fadeOverLabel(selected)
@@ -104,19 +105,19 @@ class EnemiesViewController : GameComponent() {
         fadeOverReadiness(selected)
     }
 
-    private fun fadeOut(player: String) {
+    private fun fadeOutFirst(player: String) {
         selectedEnemyLabel {
             fadeOut(fadeTime, this) { text = player }
         }
 
         selectedFleetPane {
             assign(fleetGridsPanes[player]!!)
-            fadeOut(fadeTime, center) { assign(fleetGridsPanes[player]!!) }
+            fadeOut(fadeTime, center)
         }
 
         selectedFleetReadinessPane {
             assign(fleetsReadinessPanes[player]!!)
-            fadeOut(fadeTime, center) { assign(fleetsReadinessPanes[player]!!) }
+            fadeOut(fadeTime, center)
         }
     }
 
@@ -176,8 +177,10 @@ class EnemiesViewController : GameComponent() {
     ) {
         modelView {
             getEnemies().firstOrNull()?.also { player ->
-                fadeOut(player)
-                playersNodes[player]!!.apply { afterInit() }
+                selectedFleetPane.center ?: kotlin.run {
+                    fadeOutFirst(player)
+                    playersNodes[player]!!.apply { afterInit() }
+                }
             }
         }
     }

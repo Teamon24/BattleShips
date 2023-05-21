@@ -2,17 +2,6 @@
 
 package org.home.mvc.view.component
 
-import javafx.event.EventTarget
-import javafx.util.Duration
-import org.home.app.di.FxScopes
-import org.home.app.ApplicationProperties.Companion.backButtonText
-import org.home.mvc.view.component.Transit.BACKWARD
-import org.home.mvc.view.component.Transit.FORWARD
-import org.home.mvc.view.component.button.battleButton
-import org.home.utils.componentName
-import org.home.utils.log
-import tornadofx.View
-import tornadofx.ViewTransition
 import tornadofx.ViewTransition.Cover
 import tornadofx.ViewTransition.Direction.LEFT
 import tornadofx.ViewTransition.Direction.RIGHT
@@ -21,12 +10,14 @@ import tornadofx.ViewTransition.Metro
 import tornadofx.ViewTransition.Reveal
 import tornadofx.ViewTransition.Slide
 import tornadofx.ViewTransition.Swap
-import tornadofx.action
-import tornadofx.find
+import javafx.util.Duration
+import org.home.mvc.view.component.TransitType.BACKWARD
+import org.home.mvc.view.component.TransitType.FORWARD
+import tornadofx.ViewTransition
 import tornadofx.point
 import tornadofx.seconds
 
-enum class Transit { FORWARD, BACKWARD }
+enum class TransitType { FORWARD, BACKWARD }
 
 fun slide  (seconds: Duration)                    = Slide  (seconds)
 fun reveal (seconds: Duration)                    = Reveal (seconds, LEFT)
@@ -51,46 +42,14 @@ val reveal = reveal(duration)
 val fade   = fade(duration)
 val swap   = swap(duration, 0.9)
 
-inline fun <reified T : View> EventTarget.backTransitButton(
-    from: View,
-    text: String = backButtonText,
-    crossinline body: () -> Unit = {}
-) = battleButton(text) {
-        action {
-            body()
-            from.transitTo<T>(BACKWARD)
-        }
-    }
+fun metro(type: TransitType = FORWARD) = viewTransition<Metro>(type)
 
-inline fun <reified T : View> View.transitTo(type: Transit = FORWARD) {
-    transitLogic<T, Metro>(type)
-}
-
-inline fun <reified T : View> View.transferTo(type: Transit = FORWARD) {
-    transferLogic<T, Metro>(type)
-}
-
-inline fun <reified T : View, reified VT: ViewTransition> View.transitLogic(type: Transit) {
-    find<T>().also {
-        logTransit(it)
-        replaceWith(it, viewTransition<VT>(type))
-    }
-}
-
-inline fun <reified T : View, reified VT: ViewTransition> View.transferLogic(type: Transit) {
-    val view = find<T>(FxScopes.getGameScope())
-    view.also {
-        logTransit(it)
-        replaceWith(it, viewTransition<VT>(type))
-    }
-}
-
-inline fun <reified VT : ViewTransition> viewTransition(type: Transit) = when (type) {
+inline fun <reified VT : ViewTransition> viewTransition(type: TransitType) = when (type) {
     FORWARD -> forward<VT>(FORWARD)
     BACKWARD -> backward<VT>(BACKWARD)
 }
 
-inline fun <reified VT : ViewTransition> forward(transit: Transit) =
+inline fun <reified VT : ViewTransition> forward(type: TransitType) =
     when (VT::class) {
         Cover::class -> cover
         Fade::class -> fade
@@ -98,10 +57,10 @@ inline fun <reified VT : ViewTransition> forward(transit: Transit) =
         Reveal::class -> reveal
         Slide::class -> slide
         Swap::class -> swap
-        else -> throw RuntimeException(message<VT>(transit))
+        else -> throw RuntimeException(message<VT>(type))
     }
 
-inline fun <reified VT : ViewTransition> backward(transit: Transit) =
+inline fun <reified VT : ViewTransition> backward(type: TransitType) =
     when (VT::class) {
         Cover::class -> cover.back()
         Fade::class -> fade
@@ -109,15 +68,8 @@ inline fun <reified VT : ViewTransition> backward(transit: Transit) =
         Reveal::class -> reveal.back()
         Slide::class -> slide.back()
         Swap::class -> swap.back()
-        else -> throw RuntimeException(message<VT>(transit))
+        else -> throw RuntimeException(message<VT>(type))
     }
 
-inline fun <reified VT : ViewTransition> message(transit: Transit) =
-    "there is no when-branch for ${VT::class} in #${transit.name.lowercase()}"
-
-
-inline fun <reified T : View> View.logTransit(replacement: T) {
-    log {
-        "|////////////////////////////////////////////////| $componentName |/////| |> ${replacement.componentName}"
-    }
-}
+inline fun <reified VT : ViewTransition> message(type: TransitType) =
+    "there is no when-branch for ${VT::class} in #${type.name.lowercase()}"

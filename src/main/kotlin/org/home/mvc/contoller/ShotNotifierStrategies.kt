@@ -3,6 +3,7 @@ package org.home.mvc.contoller
 import home.extensions.AnysExtensions.className
 import home.extensions.CollectionsExtensions.exclude
 import javafx.beans.property.SimpleListProperty
+import org.home.mvc.GameComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction

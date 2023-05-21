@@ -3,7 +3,7 @@ package org.home.mvc.view.battle
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventTarget
 import javafx.scene.control.TextField
-import org.home.mvc.contoller.GameController
+import org.home.mvc.GameController
 import tornadofx.style
 import tornadofx.textfield
 

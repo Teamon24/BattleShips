@@ -1,7 +1,6 @@
-import org.apache.commons.lang3.StringUtils
-
-import java.util.function.BiConsumer
-import java.util.function.Consumer
+import java.nio.file.Files
+import java.util.function.Function
+import java.util.function.Predicate
 import java.util.stream.Collectors
 
 buildscript {
@@ -41,11 +40,6 @@ dependencies {
 
     implementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
 
-//    testImplementation("io.insert-koin:koin-test:$koin_version")
-//    testImplementation("io.insert-koin:koin-test-junit5:$koin_version")
-//    testImplementation 'org.mockito:mockito-core:5.2.0'
-//    testImplementation 'net.bytebuddy:byte-buddy:1.14.2'
-
     testImplementation 'org.testfx:testfx-core:4.0.13-alpha'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
@@ -77,7 +71,9 @@ ext {
     close = false
     resourcesFolder = "${projectDir.path}${sl}src${sl}main${sl}resources${sl}"
     playerPropPrefix = "player"
+    application = "application"
     application_dev = "application-dev"
+    application_debug = "application-debug"
 }
 
 def sl = rootProject.ext.sl
@@ -91,7 +87,7 @@ def javaCp = [java, "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
 def javaJar = [java, "-jar", jarFullpath, mainClassName]
 
 def playersNumber = 4
-def propsList = concat(application_dev, toString(createProperties(playersNumber)))
+def propsList = createProperties(playersNumber)
 
 task createProperties {
     deleteProperties()
@@ -130,25 +126,13 @@ task runPlayers {
         }
 
         def writer = new PrintWriter(pidsFile)
+
         processes.forEach {
             writer.println(it.pid())
         }
+
         writer.flush()
         writer.close()
-    }
-}
-
-tasks.runPlayers.dependsOn(build)
-
-task killPlayers {
-    doLast {
-        def processes = new ArrayList<Integer>()
-        readFile(pidsFile, (pid) -> processes.add(Integer.valueOf(pid)))
-
-        processes.forEach {
-            ProcessHandle.of(it).ifPresent(ProcessHandle::destroy)
-            println "process ${it} was killed"
-        }
     }
 }
 
@@ -158,12 +142,22 @@ static def process(List<String> command, Object... args) {
     return process
 }
 
-static def toString(Object... args) {
-    return Arrays.stream(args).map(Object::toString).collect(Collectors.toList())
+tasks.runPlayers.dependsOn(build)
+
+task killPlayers {
+    doLast {
+        Files
+           .readAllLines(pidsFile.toPath()).stream()
+           .forEach {
+               def pid = Integer.valueOf(it)
+               ProcessHandle.of(pid).ifPresent(ProcessHandle::destroy)
+               println "process ${it} was killed"
+           }
+    }
 }
 
-static def toString(List<?> args) {
-    return args.stream().map(Object::toString).collect(Collectors.toList())
+static def toString(Object... args) {
+    return Arrays.stream(args).map(Object::toString).collect(Collectors.toList())
 }
 
 static def concat(List<String> args1, List<String> args2) {
@@ -190,21 +184,65 @@ static def createFile(String path) {
     return file
 }
 
-def createProperties(Integer playersNumber) {
+List<String> createProperties(Integer playersNumber) {
     def properties = new ArrayList<String>(playersNumber)
-    def applicationProps = new File(propFilepath("application-dev"))
+    def applicationFile = new File(propFilepath((String) rootProject.ext.application))
+    def applicationDebugFile = new File(propFilepath((String) rootProject.ext.application_debug))
 
-    for (i in 1..<playersNumber) {
-        String playerProp = playerProp(i)
-        properties.add(playerProp)
-        def filePath = propFilepath(playerProp)
-        toFile(
-                (writer, content) -> writer.write(content),
-                filePath,
-                content(applicationProps, playerProp, i, playersNumber)
-        )
+    def lines = Files.readAllLines(applicationFile.toPath())
+    def debugLines = Files.readAllLines(applicationDebugFile.toPath())
+
+    for (playerNumber in 0..<playersNumber) {
+        properties.add(createProp(playerNumber, playersNumber, lines, debugLines))
     }
     return properties
+}
+
+private String createProp(int playerNumber, int playersNumber, List<String> lines, List<String> debugLines) {
+    def devLines = new ArrayList<String>()
+    String playerProp = playerProp(playerNumber)
+
+    if (playerNumber == 0) {
+        devLines.add(getLine(lines, it -> it.contains("currentPlayer")))
+    } else {
+        devLines.add("currentPlayer=$playerProp")
+    }
+    devLines.add("player=$playerNumber")
+    devLines.add("players=$playersNumber")
+
+    devLines.addAll(debugLines)
+    addIfAbsent(lines, devLines)
+
+    def propFile = createFile(propFilepath(playerProp))
+
+    Files.write(propFile.toPath(), devLines)
+    return playerProp
+}
+
+static def addIfAbsent(List<String> source, List<String> target) {
+    def strings = source
+            .stream()
+            .filter(s -> notIn(target, t -> propNameEqual(t, s)))
+            .toList()
+
+    target.addAll(strings)
+}
+
+
+def static notIn(List<String> strings, Function<String, Boolean> predicate) {
+    return !strings.stream().anyMatch(s -> predicate(s))
+}
+
+def static propNameEqual(String line, String another) {
+    return extractPropName(line) == extractPropName(another)
+}
+
+static def extractPropName(String line) {
+    line.substring(0, line.indexOf("="))
+}
+
+def static getLine(List<String> lines, Predicate<String> predicate) {
+    lines.stream().filter(predicate).findFirst().get()
 }
 
 def deleteProperties() {
@@ -213,49 +251,11 @@ def deleteProperties() {
         if (file.name.matches(rootProject.ext.playerPropPrefix + "-[\\d]+.properties")) file.delete()
 }
 
-private static void toFile(BiConsumer<PrintWriter, String> op, String filepath, String content) {
-    def propertiesFile = createFile(filepath)
-    def writer = new PrintWriter(propertiesFile)
-    op.accept(writer, content)
-    writer.flush()
-    writer.close()
-}
-
-private String playerProp(i) {
+private String playerProp(Integer i) {
     if (i == 0) return rootProject.ext.application_dev
     return "${rootProject.ext.playerPropPrefix}-${i}"
 }
 
-private static String content(File file, String playerProp, Integer playerNumber, Integer playersNumber) {
-    StringBuilder fileContent = new StringBuilder()
-    readFile(file, (line) -> fileContent.append(line).append("\n"))
-    def lines = Arrays.asList(fileContent.toString().split("\n")) as ArrayList<String>
-
-    set(lines, "currentPlayer", playerProp)
-    set(lines, "player", playerNumber)
-    set(lines, "players", playersNumber)
-
-    return StringUtils.join(lines, "\n")
-}
-
-private static set(ArrayList<String> lines, String prop, Object playerProp) {
-    String propWithEqual = "$prop="
-    def line = lines.stream().filter(it -> it.contains(propWithEqual)).findFirst().get()
-    def index = lines.indexOf(line)
-    lines.set(index, "$prop=$playerProp")
-}
-
 private String propFilepath(String prop) {
     return "${rootProject.ext.resourcesFolder}${prop}.properties"
-}
-
-static def readFile(File file, Consumer<String> body) {
-    def reader = new BufferedReader(new FileReader(file))
-    String line = reader.readLine()
-
-    while(line != null) {
-        line.trim()
-        body.accept(line)
-        line = reader.readLine()
-    }
 }

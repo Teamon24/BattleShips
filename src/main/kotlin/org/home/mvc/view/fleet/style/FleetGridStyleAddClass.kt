@@ -39,7 +39,7 @@ import org.home.utils.StyleUtils.toggle
 import tornadofx.addClass
 import tornadofx.removeClass
 
-object FleetGridStyleAddClass: FleetGridStyleComponent {
+object FleetGridStyleAddClass: FleetGridStyleComponent() {
     override val type = CLASS
 
     override fun FleetCell.removeAnyColor(): FleetCell = this

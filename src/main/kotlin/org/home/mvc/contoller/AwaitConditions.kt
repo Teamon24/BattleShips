@@ -1,5 +1,6 @@
 package org.home.mvc.contoller
 
+import org.home.mvc.GameComponent
 import org.home.mvc.contoller.Condition.Companion.condition
 
 class AwaitConditions: GameComponent() {

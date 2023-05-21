@@ -29,7 +29,7 @@ import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
 import tornadofx.style
 
-object FleetGridStyleTransition: FleetGridStyleComponent {
+object FleetGridStyleTransition: FleetGridStyleComponent() {
     override val type = TRANSITION
 
     override fun FleetCell.removeAnyColor(): FleetCell { TODO("Not yet implemented" ) }

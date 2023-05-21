@@ -5,9 +5,6 @@ import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import org.home.mvc.AppView
-import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
-import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.mvc.contoller.events.HasAPlayer
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -15,21 +12,11 @@ import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
-import org.home.mvc.view.component.Transit
 import org.home.mvc.view.component.button.BattleButton
-import org.home.mvc.view.component.transferTo
 import org.home.mvc.view.openMessageWindow
-import org.home.style.AppStyles.Companion.defeatedColor
-import org.home.style.AppStyles.Companion.initialAppColor
-import org.home.style.TransitionDSL.filling
-import org.home.style.TransitionDSL.transition
 import org.home.utils.NodeUtils.disableIf
-import org.home.utils.StyleUtils.textFillTransition
 import org.home.utils.log
 import org.home.utils.logEvent
-import tornadofx.action
-import tornadofx.button
-import tornadofx.style
 
 internal fun BattleView.playerWasDisconnected() {
     subscribeToRemove<PlayerWasDisconnected> {
@@ -65,7 +52,7 @@ internal fun BattleView.playerWasDefeated() {
             }
 
             defeated.isCurrent {
-                updateLeaveBattleFieldButton()
+                setDefeatedLeaveButton()
             }
 
             hasAWinner {
@@ -94,34 +81,27 @@ private fun BattleView.removePlayer(player: String) {
                 battleStartButton.updateStyle(player, false)
             }
         }
+
         hasAWinner().and(battleIsStarted()).so {
             battleController.endBattle()
         }
-        hasOnePlayerLeft().so { battleController.disconnect() }
+
+        hasOnePlayerLeft().so {
+            battleController.disconnect()
+        }
     }
 }
 
-fun BattleView.updateLeaveBattleFieldButton() {
-    (battleViewExitButton as BattleButton).disableHover()
+fun BattleView.setDefeatedLeaveButton() {
     val buttonIndices = battleViewExitButtonIndices
     root {
         children.removeIf { it.getIndices() == buttonIndices }
 
-        cell(buttonIndices.first, buttonIndices.second) {
-            button(leaveBattleFieldText) {
-                style {
-                    filling(this@button) {
-                        millis = leaveBattleFieldButtonTransitionTime
-                        transition(initialAppColor, defeatedColor) { backgroundColor += it }
-                        textFillTransition()
-                    }
+        viewSwitchButtonController {
+            cell(buttonIndices.first, buttonIndices.second) {
+                defeatedLeaveButton(currentView()).also {
+                    battleViewExitButton = it
                 }
-                action {
-                    battleController.onBattleViewExit()
-                    transferTo<AppView>(Transit.BACKWARD)
-                }
-            }.also {
-                battleViewExitButton = it
             }
         }
     }

@@ -4,7 +4,7 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.hasElements
-import org.home.mvc.contoller.GameComponent
+import org.home.mvc.GameComponent
 import org.home.utils.log
 
 class PlayerTurnComponent: GameComponent() {

@@ -5,9 +5,12 @@ import org.home.app.di.GameScope.NewGameScope
 import org.home.mvc.model.BattleViewModelImpl
 import org.home.utils.componentName
 import org.home.utils.log
+import org.home.utils.logInject
 import org.koin.java.KoinJavaComponent.getKoin
 import tornadofx.Component
 import tornadofx.ScopedInstance
+import tornadofx.View
+import kotlin.reflect.KClass
 
 typealias KScope = org.koin.core.scope.Scope
 typealias FxScope = tornadofx.Scope

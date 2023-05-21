@@ -10,8 +10,8 @@ import kotlin.system.exitProcess
 
 inline fun EventTarget.exitButton() = battleButton(exitText) { action { exitProcess(0) } }
 
-fun EventTarget.battleButton(text: String = "", graphic: Node? = null, op: Button.() -> Unit = {}) =
-    BattleButton(text).attachTo(this, op) {
+fun EventTarget.battleButton(text: String = "", graphic: Node? = null, noHover: Boolean = false, op: Button.() -> Unit = {}) =
+    BattleButton(text, noHover).attachTo(this, op) {
         if (graphic != null) it.graphic = graphic
     }
 

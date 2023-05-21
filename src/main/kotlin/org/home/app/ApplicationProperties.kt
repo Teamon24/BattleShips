@@ -2,9 +2,11 @@ package org.home.app
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
+import org.apache.commons.lang3.StringUtils
 import org.home.mvc.model.Ships
 import org.home.mvc.model.copy
 import org.home.mvc.model.ship
+import org.home.mvc.view.component.ViewSwitch.ViewSwitchType
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import org.home.utils.logEach
 import org.home.utils.logging
@@ -15,7 +17,6 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     private val Any?.asString get() = this as String?
     private val Any?.asInt get() = asString?.toInt()
     private val Any?.asBool get() = asString?.toBoolean()
-
     private val props = Properties().apply {
         put(gameTypeProperty, "")
     }
@@ -48,34 +49,35 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     }
 
     private fun JsonValue.asCoord() = asArray().run { (get(0).asInt() to get(1).asInt()) }
+
     private fun JsonValue.asCollection(): MutableCollection<JsonValue> = asArray().toMutableList()
-
     val player: Int? get() = props["player"].asInt
-    val players: Int? get() = props["players"].asInt
 
+    val players: Int? get() = props["players"].asInt!!
     val size: Int get() = props["size"].asInt!!
+
     val maxShipType: Int get() = props["maxShipType"].asInt!!
     val playersNumber: Int get() = props["playersNumber"].asInt!!
     val port: Int get() = props[portProperty].asInt!!
     val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty].asBool!!
-
     val ip: String get() = props["ip"] as String
+
     val ships: Ships? get() = (props["ships"] as Ships?)?.copy()
     val currentPlayer: String get() = props[currentPlayerProperty] as String
-
     var isServer: Boolean = false
-        set(value) {
-            props[isServerProperty] = value;
-            field = value
-        }
-        get() { return props[isServerProperty] as Boolean }
+
+    val viewSwitchType: ViewSwitchType =
+        ViewSwitchType
+            .values()
+            .first {
+                StringUtils.equalsIgnoreCase(it.name, props["viewSwitch"].asString?.trim())
+            }
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(property: String) = props[property] as T
 
     companion object {
         //properties names
-        private const val isServerProperty = "isServer"
         private const val gameTypeProperty = "gameType"
         private const val portProperty = "port"
         private const val currentPlayerProperty = "currentPlayer"
@@ -100,6 +102,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val incorrectCellRemovingTime = 100L
 
         //transitions
+        const val buttonHoverTransitionTime = 50L
         const val transitionSteps = 50
         const val fillingTransitionTime = 100L
 
@@ -107,6 +110,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         val startButtonTransitionTime: Long
         val leaveBattleFieldButtonTransitionTime: Long
         val enemyFleetFillTransitionTime: Long
+
 
         init {
             fillingTransitionTime.also {
@@ -117,7 +121,6 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
             }
         }
 
-        const val buttonHoverTransitionTime = 50L
 
         //app view animation
         const val appViewAnimationGridWidth = 20

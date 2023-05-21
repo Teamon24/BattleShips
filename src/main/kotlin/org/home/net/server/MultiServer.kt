@@ -1,9 +1,9 @@
 package org.home.net.server
 
-import org.home.mvc.contoller.GameController
+import org.home.app.di.noScope
+import org.home.mvc.GameController
 import org.home.mvc.contoller.server.PlayerSocket
 import org.home.utils.log
-import org.home.utils.logMultiServerThreads
 import tornadofx.Component
 import java.net.ServerSocket
 import java.net.Socket
@@ -22,10 +22,10 @@ abstract class MultiServer<M : Message, S : Socket>: GameController() {
         fun get() = sockets
     }
 
-    internal val processor: MessageProcessor<M, S> by di()
-    internal val receiver: MessageReceiver<M, S> by di()
-    internal val connector: ConnectionsListener<M, S> by di()
-    private val multiServerSockets: MultiServerSockets<S> by di()
+    internal val processor by noScope<MessageProcessor<M, S>>()
+    internal val receiver by noScope<MessageReceiver<M, S>>()
+    internal val connector by noScope<ConnectionsListener<M, S>>()
+    private val multiServerSockets by noScope<MultiServerSockets<S>>()
 
 
     val threads = listOf(connector, receiver, processor)

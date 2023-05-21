@@ -6,23 +6,25 @@ import home.extensions.BooleansExtensions.then
 import javafx.geometry.Pos
 import javafx.scene.control.Button
 import javafx.scene.layout.GridPane
-import org.home.app.di.GameScope
-import org.home.mvc.AppView
+import org.home.app.di.gameScope
+import org.home.app.di.noScope
+import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
-import org.home.mvc.view.GameView
 import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
 import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.row
-import org.home.mvc.view.component.backTransitButton
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
+import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
 import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.style.AppStyles
 import tornadofx.addClass
@@ -31,16 +33,16 @@ import tornadofx.gridpane
 import tornadofx.label
 
 class BattleView : GameView("Battle View") {
-    internal val readinessStyleComponent by GameScope.fleetGridStyle<FleetGridStyleAddClass>()
-    internal val shotStyleComponent by GameScope.fleetGridStyle<FleetGridStyleTransition>()
-    internal val defeatedStyleComponent by GameScope.fleetGridStyle<FleetGridStyleTransition>()
+    internal val readinessStyleComponent by gameScope<FleetGridStyleComponent>(CLASS)
+    internal val shotStyleComponent by gameScope<FleetGridStyleComponent>(TRANSITION)
+    internal val defeatedStyleComponent by gameScope<FleetGridStyleComponent>(TRANSITION)
 
-    internal val battleController by di<BattleController<Action>>()
+    internal val battleController by noScope<BattleController<Action>>()
 
-    internal val startButtonController by GameScope.inject<BattleStartButtonController>()
+    internal val startButtonController by gameScope<BattleStartButtonController>()
 
-    internal val currentFleetController by GameScope.inject<CurrentFleetController>()
-    internal val enemiesView by GameScope.inject<EnemiesViewController>()
+    internal val currentFleetController by gameScope<CurrentFleetController>()
+    internal val enemiesView by gameScope<EnemiesViewController>()
 
     internal val currentFleetGridPane = currentFleetController.fleetGrid()
     internal val currentFleetReadinessPane = currentFleetController.fleetReadinessPane()
@@ -86,8 +88,6 @@ class BattleView : GameView("Battle View") {
     init {
         title = currentPlayer.uppercase()
 
-        primaryStage.setOnCloseRequest { battleController.onWindowClose() }
-
         modelView {
             listOf(
                 turn,
@@ -104,9 +104,8 @@ class BattleView : GameView("Battle View") {
 
     override val root: GridPane
 
-    override fun exit() {
-        battleController.disconnect()
-        super.exit()
+    override fun onClose() {
+        battleController.leaveBattle()
     }
 
     private val battleViewExitButtonRow = 2
@@ -165,11 +164,10 @@ class BattleView : GameView("Battle View") {
 
     private fun GridPane.initRow(indices: Pair<Int, Int>) {
         val row = indices.first
-        cell(row, indices.second) {
-            backTransitButton<AppView>(this@BattleView) {
-                battleController.onBattleViewExit()
-            }.also {
-                battleViewExitButton = it
+
+        viewSwitchButtonController {
+            cell(row, indices.second) {
+                leaveButton(currentView()).also { battleViewExitButton = it }
             }
         }
 

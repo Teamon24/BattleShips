@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
+import org.home.mvc.GameComponent
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.removeColumn
 import org.home.mvc.view.component.button.BattleButton

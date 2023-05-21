@@ -1,7 +1,7 @@
 package org.home.mvc.view.fleet
 
 import javafx.scene.layout.GridPane
-import org.home.mvc.contoller.GameComponent
+import org.home.mvc.GameComponent
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import tornadofx.addChildIfPossible
 

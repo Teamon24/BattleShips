@@ -4,6 +4,7 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.removeFrom
 import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
+import org.home.app.di.noScope
 import org.home.utils.InfiniteTry.Companion.loop
 import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.doWhile
@@ -29,7 +30,7 @@ import kotlin.concurrent.thread
 sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     protected val sleepTime = 50L
     abstract val name: String
-    protected val multiServer: MultiServer<M, S> by di()
+    protected val multiServer by noScope<MultiServer<M, S>>()
     private lateinit var thread: Thread
     internal val canProceed = true.atomic
     abstract fun run()
@@ -113,7 +114,7 @@ class MessageProcessor<M: Message, S: Socket>: MultiServerThread<M, S>() {
             loop {
                 Thread.sleep(sleepTime)
                 val (socket, messages) = socketsMessages.take()
-                log { "taken - $messages" }
+                log { "taken from messages queue - $messages" }
 
                 messages.forEach { message ->
                     when (message) {

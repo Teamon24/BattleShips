@@ -2,6 +2,7 @@ package org.home.mvc.contoller
 
 
 import home.extensions.CollectionsExtensions.ifAbsent
+import org.home.mvc.GameController
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.events.ShipWasDeleted
 import org.home.mvc.contoller.events.eventbus

@@ -13,9 +13,9 @@ import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseDragEvent
 import javafx.scene.input.MouseEvent
 import kotlinx.coroutines.delay
-import org.home.app.di.GameScope
 import org.home.app.ApplicationProperties.Companion.incorrectCellRemovingTime
-import org.home.mvc.contoller.GameComponent
+import org.home.app.di.gameScope
+import org.home.mvc.GameComponent
 import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.model.Ship
 import org.home.mvc.model.addIfAbsent
@@ -43,7 +43,7 @@ import tornadofx.removeClass
 
 class FleetGridHandlers: GameComponent() {
     private val beingConstructed: Ship = mutableListOf()
-    private val shipsTypesController by GameScope.inject<ShipsTypesController>()
+    private val shipsTypesController by gameScope<ShipsTypesController>()
 
     private var mouseWentOutOfBound = false.atomic
     private var dragged = false.atomic

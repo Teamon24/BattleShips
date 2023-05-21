@@ -5,7 +5,8 @@ import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.hasElements
 import home.extensions.CollectionsExtensions.isEmpty
-import org.home.mvc.contoller.GameComponent
+import org.home.app.di.noScope
+import org.home.mvc.GameComponent
 import org.home.mvc.contoller.ShotNotifierStrategies
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.ShipWasHit
@@ -25,15 +26,16 @@ import org.home.mvc.model.removeAndGetBy
 import org.home.net.server.MultiServer
 import org.home.utils.PlayerSocketUtils.send
 import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
+import org.home.net.server.MultiServer.MultiServerSockets
 import org.home.utils.SocketUtils.send
 
 class ShotProcessingComponent: GameComponent() {
-    private val playerTurnComponent: PlayerTurnComponent by di()
+    private val playerTurnComponent by noScope<PlayerTurnComponent>()
 
-    private val multiServerSockets: MultiServer.MultiServerSockets<PlayerSocket> by di()
+    private val multiServerSockets by noScope<MultiServerSockets<PlayerSocket>>()
     private val sockets = multiServerSockets.get()
 
-    private val notifierStrategies: ShotNotifierStrategies by di()
+    private val notifierStrategies by noScope<ShotNotifierStrategies>()
     private val shotNotifier = notifierStrategies.create(modelView.getEnemies())
 
     private val turnList = playerTurnComponent.turnList

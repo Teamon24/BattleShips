@@ -16,8 +16,8 @@ import org.home.app.ApplicationProperties.Companion.ipAddressFieldLabel
 import org.home.app.ApplicationProperties.Companion.playersNumberLabel
 import org.home.app.ApplicationProperties.Companion.squareSize
 import org.home.app.ApplicationProperties.Companion.widthFieldLabel
-import org.home.app.di.GameScope
-import org.home.mvc.contoller.GameComponent
+import org.home.app.di.gameScope
+import org.home.mvc.GameComponent
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.marginGrid
@@ -30,7 +30,7 @@ import tornadofx.label
 import tornadofx.textfield
 
 class SettingsPaneController: GameComponent() {
-    private val settingsFieldsController by GameScope.inject<SettingsFieldsController>()
+    private val settingsFieldsController by gameScope<SettingsFieldsController>()
 
     private val ip = applicationProperties.ip
     private val freePort = applicationProperties.port

@@ -8,15 +8,15 @@ import javafx.scene.input.MouseDragEvent.MOUSE_DRAG_EXITED
 import javafx.scene.input.MouseDragEvent.MOUSE_EXITED
 import javafx.scene.input.MouseDragEvent.MOUSE_RELEASED
 import javafx.scene.input.MouseEvent
-import org.home.app.di.GameScope
-import org.home.mvc.contoller.GameController
+import org.home.app.di.gameScope
+import org.home.mvc.GameController
 import org.home.style.AppStyles
 
 
 class FleetGridController : GameController() {
-    private val fleetGridCreator: FleetGridCreator by GameScope.inject()
+    private val fleetGridCreator: FleetGridCreator by gameScope()
 
-    private val fleetGridHandlers by GameScope.inject<FleetGridHandlers>()
+    private val fleetGridHandlers by gameScope<FleetGridHandlers>()
 
     private val titleCellEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()
     private val fleetGridEventHandlers = mutableMapOf<EventType<out MouseEvent>, EventHandler<in MouseEvent>>()

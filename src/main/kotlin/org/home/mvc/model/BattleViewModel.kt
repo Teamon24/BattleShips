@@ -5,22 +5,19 @@ import home.extensions.BooleansExtensions.so
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleStringProperty
-import org.home.mvc.contoller.GameBean
+import org.home.mvc.GameViewModel
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.server.action.FleetSettingsAction
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.view.battle.subscription.NewServerInfo
-import tornadofx.ViewModel
 
-abstract class BattleViewModel: ViewModel() {
-
+abstract class BattleViewModel: GameViewModel() {
     abstract fun getWidth(): SimpleIntegerProperty
     abstract fun getHeight(): SimpleIntegerProperty
     abstract fun getPlayersNumber(): SimpleIntegerProperty
     abstract fun getNewServer(): NewServerInfo
     abstract fun getFleetsReadiness(): FleetsReadiness
     abstract fun getShipsTypes(): ShipsTypes
-
     abstract fun getPlayers(): SimpleListProperty<String>
     abstract fun getEnemies(): SimpleListProperty<String>
     abstract fun getDefeatedPlayers(): SimpleListProperty<String>
@@ -40,19 +37,21 @@ abstract class BattleViewModel: ViewModel() {
     abstract fun battleIsNotStarted(): Boolean
     abstract fun equalizeSizes()
     abstract fun setNewServer(value: NewServerInfo)
-
     abstract fun copyShipsTypes(): ShipsTypes
     abstract val turn: SimpleStringProperty
     abstract fun fleetReadiness(player: String): MutableMap<Int, SimpleIntegerProperty>
-
     abstract fun getHits(): Collection<Coord>
     abstract fun hasNo(target: String, hitCoord: Coord): Boolean
-
     abstract fun getCurrentPlayer(): String
     abstract fun updateFleetReadiness(event: FleetEditEvent)
     abstract fun putFleetSettings(settings: FleetSettingsAction)
-
     abstract fun hasNoServerTransfer(): Boolean
+    abstract fun add(player: String)
+    abstract fun remove(player: String)
+
+
+
+
     fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
@@ -88,9 +87,6 @@ abstract class BattleViewModel: ViewModel() {
     fun getShipsNumber(type: Int) = getShipsTypes()[type]!!
     fun lastShipType() = getShipsTypes().maxOfOrNull { entry -> entry.key } ?: 0
 
-
-    abstract fun add(player: String)
-    abstract fun remove(player: String)
 }
 
 inline operator fun BattleViewModel.invoke(crossinline b: BattleViewModel.() -> Unit) = this.b()

@@ -2,15 +2,12 @@ package org.home.mvc.model
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.removeFrom
-import home.extensions.BooleansExtensions.otherwise
-import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.yes
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
-import org.home.app.ApplicationProperties
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.server.action.FleetSettingsAction
@@ -31,8 +28,6 @@ typealias FleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleInte
 typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
 
 class BattleViewModelImpl : BattleViewModel() {
-    val applicationProperties: ApplicationProperties by di()
-
     private val _currentPlayer = applicationProperties.currentPlayer
     private val size = applicationProperties.size
 
@@ -62,7 +57,6 @@ class BattleViewModelImpl : BattleViewModel() {
 
     override fun remove(player: String) {
         playersAndShips.remove(player)
-        getPlayersNumber().value = getPlayersNumber().value - 1
     }
 
     override fun getWidth(): SimpleIntegerProperty = width
@@ -75,7 +69,7 @@ class BattleViewModelImpl : BattleViewModel() {
     override fun equalizeSizes() { getHeight().value = getWidth().value }
 
     override fun battleIsEnded(value: Boolean) { battleIsEnded = value.yes { battleIsStarted = false } }
-    override fun battleIsStarted(value: Boolean) { battleIsEnded = value.yes { battleIsEnded = false } }
+    override fun battleIsStarted(value: Boolean) { battleIsStarted = value.yes { battleIsEnded = false } }
     override fun battleIsEnded() = battleIsEnded
     override fun battleIsStarted() = battleIsStarted
     override fun battleIsNotStarted() = !battleIsStarted

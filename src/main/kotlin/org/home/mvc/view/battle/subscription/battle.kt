@@ -16,15 +16,14 @@ import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.model.invoke
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.component.Transit.BACKWARD
-import org.home.mvc.view.component.transferTo
-import org.home.mvc.view.component.transitTo
+import org.home.mvc.view.component.TransitType.BACKWARD
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.IpUtils.freePort
 import org.home.utils.NodeUtils.disable
 import org.home.utils.NodeUtils.enable
 import org.home.utils.log
 import org.home.utils.logEvent
+import tornadofx.App
 import tornadofx.View
 import tornadofx.action
 import tornadofx.hide
@@ -83,10 +82,10 @@ internal fun BattleView.battleIsStarted() {
         logEvent(event, modelView)
         battleViewExitButton.text = leaveBattleText
 
-        battleViewExitButton.action {
+        viewSwitchButtonController.setTransit<AppView>(battleViewExitButton, this@battleIsStarted) {
             battleController.leaveBattle()
-            transitTo<AppView>(BACKWARD)
         }
+
 
         fleets().entries
             .zip(fleetsReadiness().entries) { fleet, readiness ->
@@ -142,6 +141,7 @@ internal fun BattleView.serverTransferReceived() {
                 }
             }
         }
-        transferTo<NewServerView>(BACKWARD)
+
+        viewSwitch { backTransferTo(NewServerView::class) }
     }
 }

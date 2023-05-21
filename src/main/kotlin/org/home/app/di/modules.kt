@@ -19,12 +19,16 @@ import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.model.BattleViewModelImpl
 import org.home.mvc.view.battle.CurrentFleetController
-import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.EnemiesListViewController
+import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.SettingsFieldsController
 import org.home.mvc.view.battle.SettingsPaneController
-import org.home.mvc.view.component.button.BattleConnectionButtonController
+import org.home.mvc.view.component.ViewOpenWindow
+import org.home.mvc.view.component.ViewReplacement
+import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.OPEN
+import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.REPLACEMENT
 import org.home.mvc.view.component.button.BattleStartButtonController
+import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
 import org.home.mvc.view.fleet.FleetGridHandlers
@@ -41,6 +45,7 @@ import org.home.net.server.ConnectionsListener
 import org.home.net.server.MessageProcessor
 import org.home.net.server.MessageReceiver
 import org.home.net.server.MultiServer
+import org.home.net.server.MultiServer.MultiServerSockets
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -52,7 +57,7 @@ fun netControllers(properties: String): Module {
         single { ConnectionsListener<Action, PlayerSocket>() }
         single { MessageReceiver<Action, PlayerSocket>() }
         single { MessageProcessor<Action, PlayerSocket>() }
-        single { MultiServer.MultiServerSockets<PlayerSocket>() }
+        single { MultiServerSockets<PlayerSocket>() }
 
         single { BattleServer() }
         single { BattleClient() }
@@ -60,6 +65,17 @@ fun netControllers(properties: String): Module {
         single { PlayerTurnComponent() }
 
         single<MultiServer<Action, PlayerSocket>> { get<BattleServer>() }
+
+        single { ViewReplacement }
+        single { ViewOpenWindow }
+        single { ViewSwitchButtonController }
+
+        factory {
+            when (get<ApplicationProperties>().viewSwitchType) {
+                REPLACEMENT -> get<ViewReplacement>()
+                OPEN -> get<ViewOpenWindow>()
+            }
+        }
 
         factory<BattleController<Action>> {
             val isServer = get<ApplicationProperties>().isServer
@@ -77,7 +93,6 @@ fun gameScoped(): Module {
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }
             scoped { BattleStartButtonController() }
-            scoped { BattleConnectionButtonController() }
             scoped { SettingsPaneController() }
             scoped { SettingsFieldsController() }
 

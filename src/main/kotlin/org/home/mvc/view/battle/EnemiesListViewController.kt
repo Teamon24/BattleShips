@@ -7,7 +7,7 @@ import home.extensions.BooleansExtensions.yes
 import javafx.scene.control.ListCell
 import javafx.scene.control.ListView
 import javafx.util.Callback
-import org.home.mvc.contoller.GameComponent
+import org.home.mvc.GameComponent
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.model.invoke
 import org.home.style.AppStyles.Companion.defeatedListCell

@@ -1,5 +1,6 @@
 package org.home.mvc.view.component.button
 
+import home.extensions.BooleansExtensions.otherwise
 import javafx.scene.control.Button
 import org.home.app.ApplicationProperties.Companion.buttonHoverTransitionTime
 import org.home.style.AppStyles.Companion.selectedColor
@@ -10,7 +11,7 @@ import org.home.style.TransitionDSL.hovering
 import org.home.style.TransitionDSL.transition
 import tornadofx.style
 
-class BattleButton(text: String) : Button(text) {
+class BattleButton(text: String, noHover: Boolean = false) : Button(text) {
     private val currentNode = this@BattleButton
     var hoverTransition: Transition? = null
 
@@ -20,11 +21,13 @@ class BattleButton(text: String) : Button(text) {
     }
 
     init {
-        style {
-            hovering(currentNode) {
-                millis = buttonHoverTransitionTime
-                transition(initialAppColor, selectedColor) { backgroundColor += it }
-                textFillTransition()
+        noHover.otherwise {
+            style {
+                hovering(currentNode) {
+                    millis = buttonHoverTransitionTime
+                    transition(initialAppColor, selectedColor) { backgroundColor += it }
+                    textFillTransition()
+                }
             }
         }
     }

@@ -24,7 +24,7 @@ import org.home.style.AppStyles.Companion.titleCellColor
 import org.home.utils.ColorUtils.opacity
 import tornadofx.style
 
-object FleetGridStyleCssChange: FleetGridStyleComponent {
+object FleetGridStyleCssChange: FleetGridStyleComponent() {
     override val type = CSS
 
     override fun FleetCell.removeAnyColor() = background(initialAppColor)

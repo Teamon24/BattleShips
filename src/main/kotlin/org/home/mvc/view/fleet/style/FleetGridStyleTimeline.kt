@@ -15,7 +15,7 @@ import org.home.style.AppStyles.Companion.defeatedPlayerColor
 import org.home.style.AppStyles.Companion.sunkCellColor
 import org.home.style.TimelineDSL.keyValues
 
-object FleetGridStyleTimeline : FleetGridStyleComponent {
+object FleetGridStyleTimeline : FleetGridStyleComponent() {
     override val type get() = TIMELINE
 
     override fun FleetCellLabel.addSelectionColor() : FleetCellLabel  { TODO("Not yet implemented") }
