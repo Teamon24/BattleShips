@@ -16,6 +16,8 @@ import org.home.mvc.contoller.server.PlayerSocket
 import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.ShotProcessingComponent
 import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.contoller.serverTransfer.NewServerViewControllerForClient
+import org.home.mvc.contoller.serverTransfer.NewServerViewControllerForServer
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.model.BattleViewModelImpl
 import org.home.mvc.view.battle.CurrentFleetController
@@ -125,6 +127,12 @@ fun gameScoped(): Module {
                     CSS -> FleetGridStyleCssChange
                     TIMELINE -> FleetGridStyleTimeline
                 }
+            }
+
+            factory {
+                get<ApplicationProperties>().isServer
+                    .then { NewServerViewControllerForServer() }
+                    .or   { NewServerViewControllerForClient() }
             }
         }
     }

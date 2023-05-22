@@ -106,17 +106,31 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
         modelView {
+            if (battleIsEnded()) return@modelView
+
             if (battleIsStarted() && hasEnemies()) {
                 playerTurnComponent {
                     remove(currentPlayer)
                     currentPlayer.hasATurn { nextTurn() }
                     send(NewServerAction(turnPlayer!!, turnList))
                 }
-                awaitConditions.newServerFound.await()
-                excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
+                waitNewServerAndThenSend()
+            }
+
+            if (battleIsNotStarted() && hasEnemies()) {
+                send(NewServerAction(exclude(currentPlayer).first()))
+                waitNewServerAndThenSend()
             }
         }
+
         disconnect()
+    }
+
+    private fun waitNewServerAndThenSend() {
+        awaitConditions.newServerFound.await()
+        modelView {
+            excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
+        }
     }
 
     override fun endBattle() {
@@ -148,8 +162,12 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     }
 
     override fun setTurn(newServerInfo: NewServerInfo) {
-        playerTurnComponent.turnList = newServerInfo.turnList
-        playerTurnComponent.turnPlayer = newServerInfo.player
+        newServerInfo {
+            turnList.isNotEmpty {
+                playerTurnComponent.turnList = turnList
+                playerTurnComponent.turnPlayer = player
+            }
+        }
     }
 
     override fun process(socket: PlayerSocket, message: Action) {
@@ -203,7 +221,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                     excluding(connected).send(it)
                     socket(connected).send {
                         +FleetSettingsAction(modelView)
-                        +ConnectionsAction(getPlayers().exclude(connected))
+                        +ConnectionsAction(exclude(connected))
                         +fleetsReadinessExcept(connected, modelView)
                         getReadyPlayers().isNotEmpty {
                             +AreReadyAction(thoseAreReady)

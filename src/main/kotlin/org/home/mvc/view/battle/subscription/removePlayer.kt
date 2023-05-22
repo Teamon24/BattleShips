@@ -12,7 +12,6 @@ import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
-import org.home.mvc.view.component.button.BattleButton
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.NodeUtils.disableIf
 import org.home.utils.log
@@ -77,7 +76,7 @@ private fun BattleView.removePlayer(player: String) {
     modelView {
         enemiesView.remove(player)
         battleIsStarted().not().so {
-            startButtonController {
+            battleStartButtonController {
                 battleStartButton.updateStyle(player, false)
             }
         }

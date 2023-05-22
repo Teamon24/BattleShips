@@ -87,6 +87,8 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         private const val isToNotifyAllProperty = "isToNotifyAll"
 
         //ui
+        const val battleStartButtonTextForServer = "В бой"
+        const val battleStartButtonTextForClient = "Готов"
         const val yourTurnMessage = "Ваш ход"
         const val connectionButtonText = "Подключиться"
         const val squareSize = "квадрат"

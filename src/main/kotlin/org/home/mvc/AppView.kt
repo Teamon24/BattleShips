@@ -6,12 +6,14 @@ import org.home.app.ApplicationProperties.Companion.appViewAnimationGridHeight
 import org.home.app.ApplicationProperties.Companion.appViewAnimationGridWidth
 import org.home.app.ApplicationProperties.Companion.connectionButtonText
 import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
+import org.home.app.di.GameScope
 import org.home.mvc.view.Animations.appViewAnimationGrid
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
 import org.home.mvc.view.component.PannableScrollPane.Companion.pannableScrollPane
+import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.component.button.exitButton
 import tornadofx.Form
 import tornadofx.gridpane
@@ -38,12 +40,12 @@ class AppView : GameView("Sea Battle") {
                             viewSwitchButtonController {
                                 cell(0, 0) {
                                     newGameButton<BattleCreationView>(currentView(), createNewGameButtonText) {
-                                        applicationProperties.isServer = true
+                                        setServerNewGame(true)
                                     }
                                 }
                                 cell(1, 0) {
                                     newGameButton<BattleJoinView>(currentView(), connectionButtonText) {
-                                        applicationProperties.isServer = false
+                                        setServerNewGame(false)
                                     }
                                 }
                             }
@@ -55,5 +57,10 @@ class AppView : GameView("Sea Battle") {
                 }
             }
         }
+    }
+
+    private inline fun ViewSwitchButtonController.setServerNewGame(b: Boolean) {
+        applicationProperties.isServer = b
+        GameScope.createNew()
     }
 }

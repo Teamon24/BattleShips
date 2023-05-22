@@ -77,16 +77,15 @@ object ViewSwitchButtonController: ViewSwitchController() {
         from: View,
         text: String,
         crossinline onActionStart: () -> Unit
-    ): BattleButton {
-        return battleButton(text) {
+    ) =
+        battleButton(text) {
             action {
                 onActionStart()
                 viewSwitch {
-                    from.transferTo(T::class) { GameScope.createNew() }
+                    from.transferTo(T::class)
                 }
             }
         }
-    }
 
     fun EventTarget.createBattleButton(battleCreationView: BattleCreationView) =
         battleButtonLogic(

@@ -50,10 +50,13 @@ abstract class MultiServer<M : Message, S : Socket>: GameController() {
         receiver.start()
         processor.start()
         modelView {
+            log { "height          : ${getHeight()}" }
+            log { "width           : ${getWidth()}" }
+            log { "playersNumber   : ${getPlayersNumber()}" }
             log { "players         : ${getPlayers()}" }
             log { "enemies         : ${getEnemies()}" }
             log { "readyPlayers    : ${getReadyPlayers()}" }
-            log { "fleetsReadiness : ${getFleetsReadiness()}" }
+            log { "fleetsReadiness : ${noPropertyFleetReadiness()}" }
             log { "playersNumber   : ${getPlayersNumber()}" }
             log { "battleIsStarted : ${battleIsStarted()}" }
             log { "battleIsEnded   : ${battleIsEnded()}" }

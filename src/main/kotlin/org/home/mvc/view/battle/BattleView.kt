@@ -22,11 +22,9 @@ import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.row
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.fleet.FleetGrid
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CLASS
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
-import org.home.mvc.view.fleet.style.FleetGridStyleTransition
 import org.home.style.AppStyles
 import tornadofx.addClass
 import tornadofx.flowpane
@@ -40,7 +38,7 @@ class BattleView : GameView("Battle View") {
 
     internal val battleController by noScope<BattleController<Action>>()
 
-    internal val startButtonController by gameScope<BattleStartButtonController>()
+    internal val battleStartButtonController by gameScope<BattleStartButtonController>()
 
     internal val currentFleetController by gameScope<CurrentFleetController>()
     internal val enemiesView by gameScope<EnemiesViewController>()
@@ -85,7 +83,7 @@ class BattleView : GameView("Battle View") {
     fun BattleViewModel.playerLabel(player: String) = player.isCurrent then currentPlayerLabel or selectedLabel
 
     internal lateinit var battleViewExitButton: Button
-    internal var battleStartButton = startButtonController.create()
+    internal var battleStartButton = battleStartButtonController.create()
 
     init {
         title = currentPlayer.uppercase()

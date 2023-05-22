@@ -9,6 +9,8 @@ import javafx.scene.control.Button
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
+import org.home.app.ApplicationProperties.Companion.battleStartButtonTextForClient
+import org.home.app.ApplicationProperties.Companion.battleStartButtonTextForServer
 import org.home.app.ApplicationProperties.Companion.startButtonTransitionTime
 import org.home.app.di.gameScope
 import org.home.app.di.noScope
@@ -31,8 +33,12 @@ class BattleStartButtonController : GameController() {
     private val battleController by noScope<BattleController<Action>>()
     private val battleStartButtonComponent by gameScope<BattleStartButtonComponent>()
 
+    fun BattleStartButton.setServerText() {
+        text = battleStartButtonTextForServer
+    }
+
     fun create(): BattleStartButton {
-        val text = if (applicationProperties.isServer) "В бой" else "Готов"
+        val text = if (applicationProperties.isServer) battleStartButtonTextForServer else battleStartButtonTextForClient
         return BattleStartButton(text).apply {
             battleStartButtonComponent { updateStyle() }
             action {
@@ -44,6 +50,10 @@ class BattleStartButtonController : GameController() {
 
     fun BattleStartButton.updateStyle(player: String, ready: Boolean) {
         battleStartButtonComponent { updateStyle(player, ready) }
+    }
+
+    fun BattleStartButton.updateStyle(player: String) {
+        battleStartButtonComponent { update(player) }
     }
 }
 

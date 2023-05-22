@@ -2,6 +2,7 @@ package org.home.mvc.model
 
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
+import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.hasElements
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
@@ -54,7 +55,10 @@ abstract class BattleViewModel: GameViewModel() {
 
 
 
+    fun battleIsStarted(onTrue: () -> Unit) = battleIsStarted().so(onTrue)
+    fun exclude(player: String) = getPlayers().exclude(player)
     fun noPropertyFleetReadiness(player: String) = fleetReadiness(player).mapValues { it.value.value }
+    fun noPropertyFleetReadiness() = getFleetsReadiness().mapValues { it.value.mapValues { it.value.value } }
     fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
