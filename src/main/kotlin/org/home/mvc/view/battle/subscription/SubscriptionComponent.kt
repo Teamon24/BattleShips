@@ -1,6 +1,7 @@
 package org.home.mvc.view.battle.subscription
 
 import home.extensions.CollectionsExtensions.excludeAll
+import org.home.app.ApplicationProperties
 import org.home.mvc.GameComponent
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.invoke
@@ -11,13 +12,13 @@ import org.home.utils.NodeUtils.enable
 import org.home.utils.log
 
 class SubscriptionComponent: GameComponent() {
-    fun BattleView.playerTurn(event: TurnReceived) = playerTurn(event.player)
+    fun BattleView.onPlayerTurn(event: TurnReceived) = onPlayerTurn(event.player)
 
-    fun BattleView.playerTurn(player: String) {
+    fun BattleView.onPlayerTurn(player: String) {
         modelView {
             turn.value = player
             if (currentPlayer == player) {
-                openMessageWindow { "Ваш ход" }
+                openMessageWindow { ApplicationProperties.yourTurnMessage }
                 log { "defeated = ${getDefeatedPlayers()}" }
                 modelView {
                     enemiesFleetGridsPanes.excludeAll(getDefeatedPlayers()).enable()

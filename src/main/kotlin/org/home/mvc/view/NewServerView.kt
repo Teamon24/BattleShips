@@ -29,7 +29,6 @@ import tornadofx.runLater
 import java.util.*
 import kotlin.concurrent.thread
 
-
 class NewServerView(override val root: Parent = VBox()) : GameView() {
     init {
         title = "${modelView.getCurrentPlayer().uppercase()}: перенос сервера"
@@ -116,7 +115,7 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
             viewSwitch {
                 transferTo(BattleView::class) {
                     beforeTransfer {
-                        subscriptionComponent { playerTurn(modelView.getNewServer().player) }
+                        subscriptionComponent { onPlayerTurn(modelView.getNewServer().player) }
                     }
                 }
             }

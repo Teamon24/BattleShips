@@ -53,7 +53,7 @@ internal fun BattleView.subscribe() {
 internal fun BattleView.playerTurnToShoot() {
     subscribe<TurnReceived> { event ->
         logEvent(event, modelView)
-        subscriptionComponent { playerTurn(event) }
+        subscriptionComponent { onPlayerTurn(event) }
     }
 }
 

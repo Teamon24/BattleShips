@@ -6,8 +6,8 @@ import home.extensions.BooleansExtensions.yes
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
+import javafx.beans.property.SimpleSetProperty
 import javafx.beans.property.SimpleStringProperty
-import javafx.collections.ListChangeListener
 import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.events.ShipWasAdded
 import org.home.mvc.contoller.server.action.FleetSettingsAction
@@ -15,11 +15,12 @@ import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.utils.extensions.ObservablePropertiesExtensions.copy
-import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleListProperty
-import org.home.utils.extensions.ObservablePropertiesExtensions.emptySimpleMapProperty
+import org.home.utils.extensions.ObservablePropertiesExtensions.listProperty
+import org.home.utils.extensions.ObservablePropertiesExtensions.mapProperty
+import org.home.utils.extensions.ObservablePropertiesExtensions.setProperty
 import org.home.utils.extensions.onMapChange
 import org.home.utils.log
-import tornadofx.onChange
+import org.home.utils.logOnChange
 import java.util.concurrent.ConcurrentHashMap
 
 typealias PlayersAndShips = SimpleMapProperty<String, Ships>
@@ -37,16 +38,17 @@ class BattleViewModelImpl : BattleViewModel() {
     private val heightProp = SimpleIntegerProperty(size)
 
     private val playersNumberProp = SimpleIntegerProperty(applicationProperties.playersNumber)
-    private val width = bind { widthProp }.apply { onChange { log { "width - $value" } } }
-    private val height = bind { heightProp }.apply { onChange { log { "height - $value" } } }
-    private val playersNumber = bind { playersNumberProp }.apply { onChange { log { "playersNumber - $value" } } }
-    private val shipsTypes = emptySimpleMapProperty<Int, Int>().updateFleetReadiness().putInitials()
+    private val width = bind { widthProp }.logOnChange("width")
+    private val height = bind { heightProp }.logOnChange("height")
+    private val playersNumber = bind { playersNumberProp }.logOnChange("playersNumber")
+    private val shipsTypes = mapProperty<Int, Int>().updateFleetReadiness().putInitials()
+
     private val fleetsReadiness = FleetsReadiness()
 
-    private val players = emptySimpleListProperty<String>().logOnChange("players")
-    private val enemies = emptySimpleListProperty<String>().logOnChange("enemies")
-    private val defeatedPlayers = emptySimpleListProperty<String>().logOnChange("defeated")
-    private val readyPlayers = emptySimpleListProperty<String>().logOnChange("ready players")
+    private val players = listProperty<String>().logOnChange("players")
+    private val enemies = listProperty<String>().logOnChange("enemies")
+    private val defeatedPlayers = listProperty<String>().logOnChange("defeated")
+    private val readyPlayers = setProperty<String>().logOnChange("ready players")
 
     private var battleIsEnded = false
     private var battleIsStarted = false
@@ -101,7 +103,7 @@ class BattleViewModelImpl : BattleViewModel() {
     override fun getPlayers(): SimpleListProperty<String> = players
     override fun getEnemies(): SimpleListProperty<String> = enemies
     override fun getDefeatedPlayers(): SimpleListProperty<String> = defeatedPlayers
-    override fun getReadyPlayers(): SimpleListProperty<String> = readyPlayers
+    override fun getReadyPlayers(): SimpleSetProperty<String> = readyPlayers
 
     //-------------------------------------------------------------------------------------------------
     //shots
@@ -148,7 +150,7 @@ class BattleViewModelImpl : BattleViewModel() {
             .toMutableMap()
     }
 
-    private val playersAndShips = emptySimpleMapProperty<String, Ships>()
+    private val playersAndShips = mapProperty<String, Ships>()
         .notifyOnChange()
         .putInitials()
 
@@ -230,10 +232,6 @@ class BattleViewModelImpl : BattleViewModel() {
         tempCont.forEach {
             getRightNextTo(it, container)
         }
-    }
-
-    private fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
-        addListener(ListChangeListener { log { "$name - ${it.list}" } })
     }
 }
 

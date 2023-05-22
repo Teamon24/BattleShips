@@ -38,14 +38,14 @@ fun BattleView.readyPlayersReceived() {
 }
 
 private fun BattleView.handleReady(player: String) {
-    modelView.log { "ready = ${getReadyPlayers()}" }
+    modelView.log { "ready = $player" }
     handle(player, true, modelView::setReady) { fleet, readiness ->
         ready(player, fleet, readiness)
     }
 }
 
 private fun BattleView.handleNotReady(player: String) {
-    modelView.log { "not ready = ${getReadyPlayers()}" }
+    modelView.log { "not ready = $player" }
     handle(player, false, modelView::setNotReady) { fleet, readiness ->
         notReady(player, fleet, readiness)
     }

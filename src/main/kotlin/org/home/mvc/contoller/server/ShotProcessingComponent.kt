@@ -14,6 +14,7 @@ import org.home.mvc.contoller.events.ShipWasSunk
 import org.home.mvc.contoller.events.ThereWasAMiss
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.contoller.events.eventbus
+import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.mvc.contoller.server.action.DefeatAction
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.contoller.server.action.HitAction
@@ -23,10 +24,8 @@ import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
 import org.home.mvc.model.aintHit
 import org.home.mvc.model.removeAndGetBy
-import org.home.net.server.MultiServer
-import org.home.utils.PlayerSocketUtils.send
-import org.home.mvc.contoller.server.PlayersSocketsExtensions.get
 import org.home.net.server.MultiServer.MultiServerSockets
+import org.home.utils.PlayerSocketUtils.send
 import org.home.utils.SocketUtils.send
 
 class ShotProcessingComponent: GameComponent() {

@@ -79,6 +79,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     operator fun <T> get(property: String) = props[property] as T
 
     companion object {
+
         //properties names
         private const val gameTypeProperty = "gameType"
         private const val portProperty = "port"
@@ -86,6 +87,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         private const val isToNotifyAllProperty = "isToNotifyAll"
 
         //ui
+        const val yourTurnMessage = "Ваш ход"
         const val connectionButtonText = "Подключиться"
         const val squareSize = "квадрат"
         const val widthFieldLabel = "ширина"

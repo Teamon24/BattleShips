@@ -4,8 +4,8 @@ import home.extensions.AnysExtensions.invoke
 import javafx.geometry.Pos
 import org.home.app.ApplicationProperties.Companion.appViewAnimationGridHeight
 import org.home.app.ApplicationProperties.Companion.appViewAnimationGridWidth
+import org.home.app.ApplicationProperties.Companion.connectionButtonText
 import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
-import org.home.app.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.view.Animations.appViewAnimationGrid
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
@@ -30,12 +30,7 @@ class AppView : GameView("Sea Battle") {
                 content = gridpane {
 
                     cell(0, 0) {
-                        appViewAnimationGrid(
-                            appViewAnimationGridWidth,
-                            appViewAnimationGridHeight
-                        ).also {
-                            add(it)
-                        }
+                        appViewAnimationGrid(appViewAnimationGridWidth, appViewAnimationGridHeight)
                     }
 
                     cell(0, 0) {
@@ -47,7 +42,7 @@ class AppView : GameView("Sea Battle") {
                                     }
                                 }
                                 cell(1, 0) {
-                                    newGameButton<BattleJoinView>(currentView(), joinButtonText) {
+                                    newGameButton<BattleJoinView>(currentView(), connectionButtonText) {
                                         applicationProperties.isServer = false
                                     }
                                 }

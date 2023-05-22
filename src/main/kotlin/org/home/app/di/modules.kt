@@ -28,6 +28,8 @@ import org.home.mvc.view.component.ViewOpenWindow
 import org.home.mvc.view.component.ViewReplacement
 import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.OPEN
 import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.REPLACEMENT
+import org.home.mvc.view.component.button.BattleStartButtonComponentForClient
+import org.home.mvc.view.component.button.BattleStartButtonComponentForServer
 import org.home.mvc.view.component.button.BattleStartButtonController
 import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.fleet.FleetGridController
@@ -48,6 +50,7 @@ import org.home.net.server.MessageReceiver
 import org.home.net.server.MultiServer
 import org.home.net.server.MultiServer.MultiServerSockets
 import org.koin.core.module.Module
+import org.koin.core.scope.Scope
 import org.koin.dsl.module
 
 fun netControllers(properties: String): Module {
@@ -94,6 +97,13 @@ fun gameScoped(): Module {
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }
             scoped { BattleStartButtonController() }
+
+            scoped {
+                get<ApplicationProperties>().isServer
+                    .then { BattleStartButtonComponentForServer() }
+                    .or   { BattleStartButtonComponentForClient() }
+            }
+
             scoped { SettingsPaneController() }
             scoped { SettingsFieldsController() }
             scoped { SubscriptionComponent() }
@@ -119,3 +129,6 @@ fun gameScoped(): Module {
         }
     }
 }
+
+fun <T> Scope.isServer(forServer: T, forClient: T): T =
+    get<ApplicationProperties>().isServer.then { forServer }.or { forClient }

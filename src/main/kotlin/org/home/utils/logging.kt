@@ -10,7 +10,12 @@ import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.then
-import home.extensions.BooleansExtensions.thus
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleSetProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.collections.ListChangeListener
+import javafx.collections.SetChangeListener
 import javafx.event.Event
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.fleet.FleetCell
@@ -20,6 +25,7 @@ import org.home.net.server.MultiServerThread
 import org.home.utils.extensions.StringBuildersExtensions.LogBuilder
 import org.home.utils.extensions.StringBuildersExtensions.add
 import org.home.utils.extensions.StringBuildersExtensions.ln
+import tornadofx.ChangeListener
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.View
@@ -241,5 +247,20 @@ inline fun Any.logInject(injection: Any, scope: Any, disabled: Boolean = false) 
     }
 }
 
+fun SimpleIntegerProperty.logOnChange(name: String) = apply {
+    addListener(ChangeListener { _, _, newValue -> log { "$name - $newValue" } })
+}
+
+fun SimpleStringProperty.logOnChange(name: String) = apply {
+    addListener(ChangeListener { _, _, newValue -> log { "$name - $newValue" } })
+}
+
+fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
+    addListener(ListChangeListener { log { "$name - ${it.list}" } })
+}
+
+fun <T> SimpleSetProperty<T>.logOnChange(name: String) = apply {
+    addListener(SetChangeListener { log { "$name - ${it.set}" } })
+}
 
 private fun coord(it: Event) = (it.source as FleetCell).coord

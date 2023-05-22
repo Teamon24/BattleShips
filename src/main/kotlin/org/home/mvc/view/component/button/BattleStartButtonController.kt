@@ -1,5 +1,6 @@
 package org.home.mvc.view.component.button
 
+import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
@@ -9,7 +10,9 @@ import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
 import org.home.app.ApplicationProperties.Companion.startButtonTransitionTime
+import org.home.app.di.gameScope
 import org.home.app.di.noScope
+import org.home.mvc.GameComponent
 import org.home.mvc.GameController
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.server.action.Action
@@ -26,11 +29,12 @@ class BattleStartButton(text: String) : Button(text)
 
 class BattleStartButtonController : GameController() {
     private val battleController by noScope<BattleController<Action>>()
+    private val battleStartButtonComponent by gameScope<BattleStartButtonComponent>()
 
     fun create(): BattleStartButton {
         val text = if (applicationProperties.isServer) "В бой" else "Готов"
         return BattleStartButton(text).apply {
-            updateStyle()
+            battleStartButtonComponent { updateStyle() }
             action {
                 log { "battleController: ${battleController.name}" }
                 battleController.startBattle()
@@ -38,33 +42,33 @@ class BattleStartButtonController : GameController() {
         }
     }
 
-    private fun BattleStartButton.updateStyle() {
+    fun BattleStartButton.updateStyle(player: String, ready: Boolean) {
+        battleStartButtonComponent { updateStyle(player, ready) }
+    }
+}
+
+abstract class BattleStartButtonComponent: GameComponent() {
+    abstract fun BattleStartButton.update(player: String)
+
+    fun BattleStartButton.updateStyle() {
         isDisable = true
         modelView.hasReady(currentPlayer) so { fillTransition() }
     }
 
     fun BattleStartButton.updateStyle(player: String, ready: Boolean) {
         if (currentPlayer == player) {
-            ready thus { fillTransition() } otherwise { reverseFillTransition() }
+            ready
+                .thus      { fillTransition() }
+                .otherwise { reverseFillTransition() }
         }
-
-        if (applicationProperties.isServer) {
-            isDisable = !modelView.allAreReady
-        } else {
-            if (currentPlayer != player) return
-
-            when (modelView.hasReady(currentPlayer)) {
-                true -> fillTransition()
-                else -> reverseFillTransition()
-            }
-        }
+        update(player)
     }
 
-    private fun BattleStartButton.fillTransition(onFinish: () -> Unit = {}) {
+    protected fun BattleStartButton.fillTransition(onFinish: () -> Unit = {}) {
         fillTransition(initialAppColor, readyColor, BLACK, WHITE, onFinish)
     }
 
-    private fun BattleStartButton.reverseFillTransition(onFinish: () -> Unit = {}) {
+    protected fun BattleStartButton.reverseFillTransition(onFinish: () -> Unit = {}) {
         fillTransition(readyColor, initialAppColor, WHITE, BLACK, onFinish)
     }
 
@@ -82,6 +86,22 @@ class BattleStartButtonController : GameController() {
                 transition(textFrom, textTo) { textFill = it }
                 onFinish(onFinish)
             }
+        }
+    }
+}
+
+class BattleStartButtonComponentForServer : BattleStartButtonComponent() {
+    override fun BattleStartButton.update(player: String) {
+        isDisable = !modelView.allAreReady
+    }
+}
+
+class BattleStartButtonComponentForClient : BattleStartButtonComponent() {
+    override fun BattleStartButton.update(player: String) {
+        if (currentPlayer != player) return
+        when (modelView.hasReady(currentPlayer)) {
+            true -> fillTransition()
+            else -> reverseFillTransition()
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.home.mvc.view
 
+import javafx.event.EventTarget
 import javafx.geometry.Pos
 import javafx.scene.layout.GridPane
 import javafx.scene.paint.Color
@@ -13,6 +14,7 @@ import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.selectedColor
 import org.home.utils.ColorUtils.opacity
+import tornadofx.add
 import tornadofx.addChildIfPossible
 import tornadofx.addClass
 import tornadofx.animateFill
@@ -32,7 +34,7 @@ object Animations {
     private fun random(incl: Double, excl: Double) = Random().nextDouble(incl, excl)
     private const val twoPi = 2 * PI
 
-    fun appViewAnimationGrid(rows: Int, cols: Int): GridPane {
+    fun EventTarget.appViewAnimationGrid(rows: Int, cols: Int): GridPane {
         return object : GridPane() {
             init {
                 alignment = Pos.CENTER
@@ -50,6 +52,8 @@ object Animations {
                 }
                 randomCellFill(this, appViewAnimationTime)
             }
+        }.also {
+            add(it)
         }
     }
 

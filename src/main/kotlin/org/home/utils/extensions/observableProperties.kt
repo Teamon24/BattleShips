@@ -2,6 +2,7 @@ package org.home.utils.extensions
 
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
+import javafx.beans.property.SimpleSetProperty
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
 import javafx.collections.MapChangeListener
@@ -13,11 +14,14 @@ import java.beans.PropertyChangeSupport
 
 object ObservablePropertiesExtensions {
 
-    fun <K, V> emptySimpleMapProperty() =
+    fun <K, V> mapProperty() =
         SimpleMapProperty<K, V>(FXCollections.observableHashMap())
 
-    fun <E> emptySimpleListProperty() =
+    fun <E> listProperty() =
         SimpleListProperty<E>(FXCollections.observableList(mutableListOf()))
+
+    fun <E> setProperty() =
+        SimpleSetProperty<E>(FXCollections.observableSet(hashSetOf()))
 
     fun <K, V> SimpleMapProperty<K, V>.copy() = SimpleMapProperty(toMutableMap().toObservable())
 }

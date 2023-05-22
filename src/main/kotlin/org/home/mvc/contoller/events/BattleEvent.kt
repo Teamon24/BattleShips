@@ -1,13 +1,12 @@
 package org.home.mvc.contoller.events
 
+import home.extensions.AnysExtensions.invoke
 import org.home.app.di.FxScopes
 import org.home.mvc.contoller.server.action.BattleEndAction
+import org.home.mvc.contoller.server.action.TurnAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
 import org.home.utils.dslContainer
-import home.extensions.AnysExtensions.invoke
-import org.home.mvc.contoller.server.action.PlayerAction
-import org.home.mvc.contoller.server.action.TurnAction
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope
@@ -16,10 +15,6 @@ inline infix fun Component.eventbus(event: BattleEvent) = fire(event)
 
 inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
     dslContainer(addEvents).forEach(this::fire)
-}
-
-interface UiEventBus {
-
 }
 
 sealed class BattleEvent: FXEvent() {

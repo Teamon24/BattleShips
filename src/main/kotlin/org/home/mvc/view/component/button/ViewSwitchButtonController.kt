@@ -7,6 +7,7 @@ import javafx.scene.control.Button
 import org.home.app.ApplicationProperties
 import org.home.app.ApplicationProperties.Companion.backButtonText
 import org.home.app.ApplicationProperties.Companion.buttonHoverTransitionTime
+import org.home.app.ApplicationProperties.Companion.connectionButtonText
 import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.app.ApplicationProperties.Companion.joinButtonText
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime

@@ -5,6 +5,7 @@ import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.hasElements
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleSetProperty
 import javafx.beans.property.SimpleStringProperty
 import org.home.mvc.GameViewModel
 import org.home.mvc.contoller.events.FleetEditEvent
@@ -22,7 +23,7 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun getPlayers(): SimpleListProperty<String>
     abstract fun getEnemies(): SimpleListProperty<String>
     abstract fun getDefeatedPlayers(): SimpleListProperty<String>
-    abstract fun getReadyPlayers(): SimpleListProperty<String>
+    abstract fun getReadyPlayers(): SimpleSetProperty<String>
     abstract fun getShotsAt(target: String): Collection<Coord>
     abstract fun getShots(function: (HasAShot) -> Boolean): Collection<Coord>
     abstract fun getShipBy(hasAShot: HasAShot): MutableList<Coord>
