@@ -76,7 +76,6 @@ inline val Action.event get() = when (this) {
     is SinkingAction -> ShipWasSunk(this)
     is LeaveAction -> PlayerLeaved(this)
     is MissAction -> ThereWasAMiss(this)
-    is NewServerAction -> NewServerReceived(this)
     is NewServerConnectionAction -> NewServerConnectionReceived(this)
     is ConnectionsAction -> ConnectedPlayersReceived(this)
     is AreReadyAction -> ReadyPlayersReceived(this)

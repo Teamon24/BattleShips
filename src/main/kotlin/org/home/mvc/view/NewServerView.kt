@@ -2,17 +2,19 @@ package org.home.mvc.view
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
-import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import home.extensions.BooleansExtensions.yes
+import home.extensions.BooleansExtensions.thus
 import home.extensions.delete
 import javafx.scene.Parent
 import javafx.scene.layout.VBox
+import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.NewServerViewController
 import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.NewServerConnectionReceived
@@ -29,7 +31,12 @@ import kotlin.concurrent.thread
 
 
 class NewServerView(override val root: Parent = VBox()) : GameView() {
-    private val battleController by noScope<BattleController<Action>>()
+    init {
+        title = "${modelView.getCurrentPlayer().uppercase()}: перенос сервера"
+    }
+
+    internal val battleController by noScope<BattleController<Action>>()
+    internal val newServerViewController by gameScope<NewServerViewController>()
     private var threadIndicator: Thread? = null
     private val connectedPlayers =
         Collections
@@ -50,15 +57,15 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
             battleIsContinuedReceived()
         }
 
-        title = "${modelView.getCurrentPlayer().uppercase()}: перенос сервера"
-        applicationProperties.isServer.yes {
-                modelView {
-                    label("Вы новый сервер")
-                    val newServer = getNewServer()
-                    battleController.connect(newServer.ip, newServer.port)
-                }
-            } no {
-        root {
+        applicationProperties.isServer thus {
+            battleController.setTurn(modelView.getNewServer())
+            modelView {
+                label("Вы новый сервер")
+                val newServer = getNewServer()
+                battleController.connect(newServer.ip, newServer.port)
+            }
+        } otherwise {
+            root {
                 label("Идет перенос сервера") {
                     threadIndicator = thread(name = "indicator") {
                         while (connectedPlayers.isNotEmpty()) {
@@ -106,8 +113,13 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
         subscribe<BattleIsContinued> {
             logEvent(it, modelView)
             threadIndicator?.interrupt()
-            tornadofx.find<BattleView>().openWindow()
-            this@NewServerView.close()
+            viewSwitch {
+                transferTo(BattleView::class) {
+                    beforeTransfer {
+                        subscriptionComponent { playerTurn(modelView.getNewServer().player) }
+                    }
+                }
+            }
         }
     }
 

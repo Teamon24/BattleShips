@@ -7,6 +7,7 @@ import org.home.utils.RomansDigits
 import org.home.utils.dslContainer
 import home.extensions.AnysExtensions.invoke
 import org.home.mvc.contoller.server.action.PlayerAction
+import org.home.mvc.contoller.server.action.TurnAction
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope
@@ -67,6 +68,8 @@ object BattleIsContinued: BattleEvent()
 class BattleIsEnded(winner: String): HasAPlayer(winner) {
     constructor(battleEndAction: BattleEndAction): this(battleEndAction.player)
 }
-class TurnReceived(action: PlayerAction): HasAPlayer(action.player)
+class TurnReceived(turnPlayer: String): HasAPlayer(turnPlayer) {
+    constructor(action: TurnAction) : this(action.player)
+}
 
 

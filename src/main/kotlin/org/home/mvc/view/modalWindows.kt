@@ -33,5 +33,7 @@ private fun window(message: String) = object : UIComponent() {
                 close()
             }
         }
+        primaryStage.toFront()
+        currentStage?.toFront()
     }
 }

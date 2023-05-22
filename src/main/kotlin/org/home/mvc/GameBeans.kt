@@ -50,6 +50,8 @@ abstract class GameView(title: String = ""): View(title = title) {
 
     internal inline fun <reified T: GameView> T.currentView(): T = this
 
+    fun <T: GameView> T.beforeTransfer(block: T.() -> Unit) = this.block()
+
     abstract fun onClose()
 
     override fun onBeforeShow() {

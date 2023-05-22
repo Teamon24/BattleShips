@@ -3,6 +3,7 @@ package org.home.net.server
 import org.home.app.di.noScope
 import org.home.mvc.GameController
 import org.home.mvc.contoller.server.PlayerSocket
+import org.home.mvc.model.invoke
 import org.home.utils.log
 import tornadofx.Component
 import java.net.ServerSocket
@@ -48,6 +49,15 @@ abstract class MultiServer<M : Message, S : Socket>: GameController() {
         connector.start()
         receiver.start()
         processor.start()
+        modelView {
+            log { "players         : ${getPlayers()}" }
+            log { "enemies         : ${getEnemies()}" }
+            log { "readyPlayers    : ${getReadyPlayers()}" }
+            log { "fleetsReadiness : ${getFleetsReadiness()}" }
+            log { "playersNumber   : ${getPlayersNumber()}" }
+            log { "battleIsStarted : ${battleIsStarted()}" }
+            log { "battleIsEnded   : ${battleIsEnded()}" }
+        }
     }
 
     private var connectionBarrier = CountDownLatch(1)

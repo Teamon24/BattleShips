@@ -2,6 +2,7 @@ package org.home.mvc.contoller.server
 
 import home.ExceptionUtils.throwsOn
 import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
 import home.extensions.AtomicBooleansExtensions.atomic
@@ -18,7 +19,9 @@ import org.home.app.di.gameScope
 import org.home.mvc.GameController
 import org.home.mvc.contoller.AwaitConditions
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.events.BattleEvent
 import org.home.mvc.contoller.events.BattleIsContinued
+import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.PlayerWasDefeated
@@ -35,6 +38,7 @@ import org.home.mvc.contoller.server.action.FleetsReadinessAction
 import org.home.mvc.contoller.server.action.HitAction
 import org.home.mvc.contoller.server.action.LeaveAction
 import org.home.mvc.contoller.server.action.MissAction
+import org.home.mvc.contoller.server.action.NewServerAction
 import org.home.mvc.contoller.server.action.NotReadyAction
 import org.home.mvc.contoller.server.action.ReadyAction
 import org.home.mvc.contoller.server.action.ShotAction
@@ -43,8 +47,10 @@ import org.home.mvc.contoller.server.action.event
 import org.home.mvc.model.areDestroyed
 import org.home.mvc.model.isDestroyed
 import org.home.mvc.model.removeAndGetBy
+import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.Ping
+import org.home.utils.DSLContainer
 import org.home.utils.InfiniteTry.Companion.loop
 import org.home.utils.InfiniteTryBase.Companion.catch
 import org.home.utils.InfiniteTryBase.Companion.doWhile
@@ -95,13 +101,11 @@ class BattleClient : GameController(), BattleController<Action> {
         log { "connected to $ip:$port" }
         send {
             +ConnectionAction(currentPlayer)
-            modelView.hasReady(currentPlayer) {
-                val fleetReadiness = modelView
-                    .fleetReadiness(currentPlayer)
-                    .mapValues { it.value.value }
-
-                +ReadyAction(currentPlayer)
-                +FleetsReadinessAction(mapOf(currentPlayer to fleetReadiness))
+            modelView {
+                hasReady(currentPlayer) {
+                    +ReadyAction(currentPlayer)
+                    +FleetsReadinessAction(mapOf(currentPlayer to noPropertyFleetReadiness(currentPlayer)))
+                }
             }
             listen()
         }
@@ -133,67 +137,56 @@ class BattleClient : GameController(), BattleController<Action> {
     }
 
     private fun process(action: Action) {
-        action.event?.also {
-            eventbus(it)
-            return
-        }
+        eventbus {
+            action.event?.also { +it; return@eventbus }
 
-        when (action) {
-            is FleetSettingsAction -> awaitConditions.fleetSettingsReceived.notifyUI { putFleetSettings(action) }
+            when (action) {
+                is NewServerAction -> +NewServerReceived(action)
+                is FleetSettingsAction -> awaitConditions.fleetSettingsReceived.notifyUI { putFleetSettings(action) }
 
-            is NotReadyAction -> eventbus(PlayerIsNotReadyReceived(action))
-            is ReadyAction -> eventbus(PlayerIsReadyReceived(action))
+                is NotReadyAction -> +PlayerIsNotReadyReceived(action)
+                is ReadyAction -> +PlayerIsReadyReceived(action)
 
-            is ShotAction -> {
-                if (action.target == currentPlayer) {
-                    modelView.registersAHit(action.shot)
-                        .yes { onHit(action) }
-                        .no { onMiss(action) }
+                is ShotAction -> {
+                    if (action.target == currentPlayer) {
+                        modelView.registersAHit(action.shot)
+                            .yes { onHit(action) }
+                            .no { onMiss(action) }
+                    }
                 }
-            }
 
-            is BattleContinuationAction -> {
-                awaitConditions.canContinueBattle.notifyUI()
-                eventbus(BattleIsContinued)
-            }
+                is BattleContinuationAction -> {
+                    awaitConditions.canContinueBattle.notifyUI()
+                    +BattleIsContinued
+                }
 
-            else -> throw ActionTypeAbsentException(action.className, this.className, "process")
+                else -> throw ActionTypeAbsentException(action.className, this.className, "process")
+            }
         }
     }
 
-    private fun onMiss(action: ShotAction) {
+    private fun DSLContainer<BattleEvent>.onMiss(action: ShotAction) {
         MissAction(action).also {
             send(it)
-            eventbus(ThereWasAMiss(it))
+            +ThereWasAMiss(it)
         }
     }
 
-    private fun onHit(shotAction: ShotAction) {
+    private fun DSLContainer<BattleEvent>.onHit(shotAction: ShotAction) {
         val ships = modelView.shipsOf(currentPlayer)
         val hitShip = ships.removeAndGetBy(shotAction.shot)
 
-        eventbus {
             send {
                 hitShip.isDestroyed thus {
-                    SinkingAction(shotAction).also {
-                        +it
-                        +ShipWasSunk(it)
-                    }
+                    +SinkingAction(shotAction).also { +ShipWasSunk(it) }
                 } otherwise {
-                    HitAction(shotAction).also {
-                        +it
-                        +ShipWasHit(it)
-                    }
+                    +HitAction(shotAction).also { +ShipWasHit(it) }
                 }
 
                 ships.areDestroyed {
-                    DefeatAction(shotAction.player, currentPlayer).also {
-                        +it
-                        +PlayerWasDefeated(it)
-                    }
+                    +DefeatAction(shotAction.player, currentPlayer).also { +PlayerWasDefeated(it) }
                 }
             }
-        }
     }
 
     override fun endBattle() {
@@ -225,5 +218,9 @@ class BattleClient : GameController(), BattleController<Action> {
 
     override fun continueBattle() {
         awaitConditions.canContinueBattle.await()
+    }
+
+    override fun setTurn(newServerInfo: NewServerInfo) {
+        throw RuntimeException("${this.name}#setTurn should not be invoked")
     }
 }

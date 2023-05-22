@@ -2,6 +2,7 @@ package org.home.utils
 
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.isAny
 import home.extensions.AnysExtensions.isNotUnit
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.refClass
@@ -9,10 +10,9 @@ import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.then
+import home.extensions.BooleansExtensions.thus
 import javafx.event.Event
-import org.home.mvc.GameController
 import org.home.mvc.model.BattleViewModel
-import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.fleet.FleetCell
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
@@ -22,7 +22,6 @@ import org.home.utils.extensions.StringBuildersExtensions.add
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import tornadofx.Component
 import tornadofx.FXEvent
-import tornadofx.Scope
 import tornadofx.View
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -105,7 +104,9 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any 
 
 inline fun BattleViewModel.log(disabled: Boolean = false, block: BattleViewModel.() -> Any) {
     if (!disabled) {
-        threadPrintln("::: MODEL[${refNumber}] ::: " + block())
+        val result = block()
+        result.isAny(Unit)
+            .otherwise { threadPrintln("::: MODEL[${refNumber}] ::: $result") }
     }
 }
 

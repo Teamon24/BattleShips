@@ -2,6 +2,7 @@ package org.home.app
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
+import home.extensions.BooleansExtensions.so
 import org.apache.commons.lang3.StringUtils
 import org.home.mvc.model.Ships
 import org.home.mvc.model.copy
@@ -65,6 +66,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     val ships: Ships? get() = (props["ships"] as Ships?)?.copy()
     val currentPlayer: String get() = props[currentPlayerProperty] as String
     var isServer: Boolean = false
+    fun isServer(onTrue: () -> Unit) = isServer.so(onTrue)
 
     val viewSwitchType: ViewSwitchType =
         ViewSwitchType

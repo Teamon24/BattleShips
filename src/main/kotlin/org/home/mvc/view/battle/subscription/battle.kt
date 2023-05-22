@@ -4,7 +4,6 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import home.extensions.CollectionsExtensions.excludeAll
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.ApplicationProperties.Companion.leaveBattleText
 import org.home.mvc.AppView
@@ -16,16 +15,11 @@ import org.home.mvc.contoller.server.action.NewServerConnectionAction
 import org.home.mvc.model.invoke
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.component.TransitType.BACKWARD
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.IpUtils.freePort
-import org.home.utils.NodeUtils.disable
 import org.home.utils.NodeUtils.enable
-import org.home.utils.log
 import org.home.utils.logEvent
-import tornadofx.App
 import tornadofx.View
-import tornadofx.action
 import tornadofx.hide
 
 
@@ -59,20 +53,7 @@ internal fun BattleView.subscribe() {
 internal fun BattleView.playerTurnToShoot() {
     subscribe<TurnReceived> { event ->
         logEvent(event, modelView)
-        modelView {
-            turn.value = event.player
-            if (currentPlayer == event.player) {
-                openMessageWindow { "Ваш ход" }
-                log { "defeated = ${getDefeatedPlayers()}" }
-                modelView {
-                    enemiesFleetGridsPanes.excludeAll(getDefeatedPlayers()).enable()
-                    enemiesFleetsReadinessPanes.excludeAll(getDefeatedPlayers()).enable()
-                }
-            } else {
-                enemiesFleetGridsPanes.disable()
-                enemiesFleetsReadinessPanes.disable()
-            }
-        }
+        subscriptionComponent { playerTurn(event) }
     }
 }
 
@@ -122,22 +103,22 @@ internal fun BattleView.battleIsEnded() {
     }
 }
 
-data class NewServerInfo(val player: String, val ip: String, val port: Int)
+data class NewServerInfo(val player: String, val turnList: List<String>, val ip: String, val port: Int)
 
 internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> { event ->
         logEvent(event, modelView)
         modelView {
             event {
-                val newServerInfo = NewServerInfo(player, applicationProperties.ip, freePort())
+                val newServerInfo = NewServerInfo(player, turnList, applicationProperties.ip, freePort())
                 setNewServer(newServerInfo)
                 getPlayersNumber().value -= 1
                 player.isCurrent {
-                    applicationProperties.isServer = true
                     battleController {
                         send(NewServerConnectionAction(getNewServer()))
                         disconnect()
                     }
+                    applicationProperties.isServer = true
                 }
             }
         }

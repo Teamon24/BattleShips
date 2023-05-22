@@ -2,6 +2,7 @@ package org.home.mvc.model
 
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
+import home.extensions.CollectionsExtensions.hasElements
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleStringProperty
@@ -52,6 +53,7 @@ abstract class BattleViewModel: GameViewModel() {
 
 
 
+    fun noPropertyFleetReadiness(player: String) = fleetReadiness(player).mapValues { it.value.value }
     fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
@@ -59,6 +61,7 @@ abstract class BattleViewModel: GameViewModel() {
     fun setReady(player: String)  { getReadyPlayers().add(player) }
     fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
 
+    inline fun hasEnemies() = getEnemies().hasElements
     inline val String?.isCurrent get() = getCurrentPlayer() == this
     inline val String?.isNotCurrent get() = getCurrentPlayer() != this
     inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)

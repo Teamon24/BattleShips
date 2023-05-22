@@ -55,11 +55,11 @@ private inline fun BattleView.handle(
     player: String,
     ready: Boolean,
     setReadiness: (String) -> Unit,
-    fleetStyleReadiness: FleetGridStyleComponent.(FleetGrid, ShipsTypesPane) -> Unit,
+    setReadinessStyle: FleetGridStyleComponent.(FleetGrid, ShipsTypesPane) -> Unit,
 ) {
     setReadiness(player)
     readinessStyleComponent {
-        fleetStyleReadiness(fleets(player), fleetsReadiness(player))
+        setReadinessStyle(fleets(player), fleetsReadiness(player))
     }
 
     startButtonController {

@@ -23,6 +23,7 @@ import org.home.mvc.view.battle.EnemiesListViewController
 import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.SettingsFieldsController
 import org.home.mvc.view.battle.SettingsPaneController
+import org.home.mvc.view.battle.subscription.SubscriptionComponent
 import org.home.mvc.view.component.ViewOpenWindow
 import org.home.mvc.view.component.ViewReplacement
 import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.OPEN
@@ -95,6 +96,7 @@ fun gameScoped(): Module {
             scoped { BattleStartButtonController() }
             scoped { SettingsPaneController() }
             scoped { SettingsFieldsController() }
+            scoped { SubscriptionComponent() }
 
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }

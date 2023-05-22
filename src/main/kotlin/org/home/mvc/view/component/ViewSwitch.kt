@@ -5,6 +5,7 @@ import org.home.app.di.FxScopes
 import org.home.app.di.GameScope
 import org.home.app.di.ViewInjector
 import org.home.mvc.GameBean
+import org.home.mvc.view.component.Next
 import org.home.mvc.view.component.TransitType.BACKWARD
 import org.home.mvc.view.component.TransitType.FORWARD
 import org.home.utils.logTransit
@@ -13,7 +14,7 @@ import tornadofx.find
 import kotlin.reflect.KClass
 
 typealias Next = View
-typealias NextClass<T> = KClass<T>
+typealias NextClass<Next> = KClass<Next>
 typealias Prev = View
 typealias TransitLogic = Prev.(Next, TransitType) -> Unit
 
@@ -25,17 +26,16 @@ abstract class ViewSwitch: GameBean() {
 
     protected abstract val transition: TransitLogic
 
-    fun <T : View> View.backTransitTo(to: KClass<T>) = transitLogic(to, BACKWARD, transition)
-    fun <T : View> View.backTransferTo(to: KClass<T>) = transferLogic(to, BACKWARD, transition)
+    fun <Next : View> View.backTransitTo(to: KClass<Next>) = transitLogic(to, BACKWARD, transition)
+    fun <Next : View> View.backTransferTo(to: KClass<Next>) = transferLogic(to, BACKWARD, transition)
 
-    fun <T : View> View.transitTo(to: KClass<T>) = transitLogic(to, FORWARD, transition)
+    fun <Next : View> View.transitTo(to: KClass<Next>) = transitLogic(to, FORWARD, transition)
 
-    fun <T : View> View.transferTo(to: KClass<T>, before: () -> Unit = {}) {
-        before()
-        transferLogic(to, FORWARD, transition)
+    fun <Next : View, Prev: View> Prev.transferTo(to: KClass<Next>, before: Next.() -> Unit = {}) {
+        transferLogic(to, FORWARD, transition, before)
     }
 
-    private inline fun <T : View> View.transitLogic(to: KClass<T>, type: TransitType, transition: TransitLogic) {
+    private inline fun <Next : View> View.transitLogic(to: KClass<Next>, type: TransitType, transition: TransitLogic) {
         val prevView = this
         val nextView = find(to)
         ViewInjector {
@@ -47,11 +47,17 @@ abstract class ViewSwitch: GameBean() {
 
     }
 
-    private inline fun <T : View> View.transferLogic(to: KClass<T>, type: TransitType, transition: TransitLogic) {
+    private inline fun <Next : View> View.transferLogic(
+        to: KClass<Next>,
+        type: TransitType,
+        transition: TransitLogic,
+        before: Next.() -> Unit = {}
+    ) {
         val prevView = this
         ViewInjector {
             getView(to, FxScopes.getGameScope()).also {
                 prevView.logTransit(it)
+                it.before()
                 prevView.transition(it, type)
             }
         }

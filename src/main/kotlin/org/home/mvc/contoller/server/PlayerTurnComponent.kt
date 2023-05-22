@@ -9,8 +9,15 @@ import org.home.utils.log
 
 class PlayerTurnComponent: GameComponent() {
 
-    private val backingTurnList = mutableListOf<String>()
-    val turnList: List<String> get() = backingTurnList
+    private var backingTurnList = mutableListOf<String>()
+    var turnList: List<String>
+        get() = backingTurnList
+        set(value) {
+            backingTurnList.apply {
+                clear()
+                addAll(value)
+            }
+        }
 
     var turnPlayer: String? = null
 
@@ -48,4 +55,5 @@ class PlayerTurnComponent: GameComponent() {
     inline fun hasPlayers(onTrue: () -> Unit) = turnList.hasPlayers(onTrue)
     inline fun battleIsStarted(onTrue: () -> Unit) = (turnPlayer != null).thus(onTrue)
     inline fun hasATurn(player: String, onTrue: () -> Unit) = player.hasATurn.thus(onTrue)
+    inline fun String.hasATurn(onTrue: (String) -> Unit) = hasATurn.thus { onTrue(this) }
 }

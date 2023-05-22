@@ -6,7 +6,6 @@ import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.exclude
-import home.extensions.CollectionsExtensions.hasElements
 import home.extensions.CollectionsExtensions.isNotEmpty
 import org.home.app.di.gameScope
 import org.home.app.di.noScope
@@ -75,7 +74,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     private val shotProcessingComponent by noScope<ShotProcessingComponent>()
     private val playerTurnComponent by noScope<PlayerTurnComponent>()
 
-    private val turnPlayer get() = playerTurnComponent.turnPlayer!!
     override val currentPlayer = super.currentPlayer
 
     private fun socket(player: String): PlayerSocket = sockets[player]
@@ -108,11 +106,12 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override fun leaveBattle() {
         send(LeaveAction(currentPlayer))
         modelView {
-            if (battleIsStarted() && getEnemies().hasElements) {
+            if (battleIsStarted() && hasEnemies()) {
                 playerTurnComponent {
-                    hasATurn(getCurrentPlayer()) { nextTurn() }
+                    remove(currentPlayer)
+                    currentPlayer.hasATurn { nextTurn() }
+                    send(NewServerAction(turnPlayer!!, turnList))
                 }
-                send(NewServerAction(turnPlayer))
                 awaitConditions.newServerFound.await()
                 excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
             }
@@ -143,6 +142,16 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         }
     }
 
+    override fun continueBattle() {
+        send(BattleContinuationAction)
+        eventbus(BattleIsContinued)
+    }
+
+    override fun setTurn(newServerInfo: NewServerInfo) {
+        playerTurnComponent.turnList = newServerInfo.turnList
+        playerTurnComponent.turnPlayer = newServerInfo.player
+    }
+
     override fun process(socket: PlayerSocket, message: Action) {
         val action = message
 
@@ -169,7 +178,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
                 action {
-                    setNewServer(NewServerInfo(player, ip, port))
+                    setNewServer(NewServerInfo(player, playerTurnComponent.turnList, ip, port))
                 }
             }
 
@@ -204,6 +213,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             }
         }
     }
+
 
     private fun processFleetEdit(action: FleetEditAction, event: (FleetEditAction) -> FleetEditEvent) {
         action.let {
@@ -260,6 +270,16 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         }
     }
 
+    private fun fleetsReadinessExcept(player: String, modelView: BattleViewModel): FleetsReadinessAction {
+        val states = modelView.getFleetsReadiness()
+            .exclude(player)
+            .map { (player, state) ->
+                player to state.map { (shipType, number) -> shipType to number.value }.toMap()
+            }
+            .toMap()
+
+        return FleetsReadinessAction(states)
+    }
 
     private fun DSLContainer<BattleEvent>.removeAndFire(
         toRemovedAction: PlayerAction,
@@ -274,22 +294,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         modelView.battleIsNotStarted().so {
             permitToConnect()
         }
-    }
-
-    private fun fleetsReadinessExcept(player: String, modelView: BattleViewModel): FleetsReadinessAction {
-        val states = modelView.getFleetsReadiness()
-            .exclude(player)
-            .map { (player, state) ->
-                player to state.map { (shipType, number) -> shipType to number.value }.toMap()
-            }
-            .toMap()
-
-        return FleetsReadinessAction(states)
-    }
-
-    override fun continueBattle() {
-        send(BattleContinuationAction)
-        eventbus(BattleIsContinued)
     }
 }
 

@@ -13,6 +13,7 @@ import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
+import org.home.mvc.view.battle.subscription.SubscriptionComponent
 import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
 import org.home.mvc.view.component.GridPaneExtensions.cell
@@ -43,6 +44,7 @@ class BattleView : GameView("Battle View") {
 
     internal val currentFleetController by gameScope<CurrentFleetController>()
     internal val enemiesView by gameScope<EnemiesViewController>()
+    internal val subscriptionComponent by gameScope<SubscriptionComponent>()
 
     internal val currentFleetGridPane = currentFleetController.fleetGrid()
     internal val currentFleetReadinessPane = currentFleetController.fleetReadinessPane()
