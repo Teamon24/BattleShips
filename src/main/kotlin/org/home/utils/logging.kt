@@ -7,9 +7,7 @@ import home.extensions.AnysExtensions.isNotUnit
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.refClass
 import home.extensions.AnysExtensions.refNumber
-import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.otherwise
-import home.extensions.BooleansExtensions.then
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleSetProperty
@@ -29,13 +27,14 @@ import tornadofx.ChangeListener
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.View
+import java.net.ServerSocket
 import java.net.Socket
 import kotlin.concurrent.thread
 
 const val N = 40
 const val COM_SIGN = "-"
-const val LEFT_ARROW = "<|"
-const val RIGHT_ARROW = "|>"
+const val LEFT_ARROW  = "<<<"
+const val RIGHT_ARROW = ">>>"
 const val UI_EVENT_SIGN = "+"
 
 val comString = COM_SIGN.repeat(N)
@@ -131,21 +130,29 @@ fun View.logEvent(fxEvent: FXEvent, modelView: BattleViewModel, body: () -> Any 
     }
 }
 
-inline fun logTitle(titleContent: String = "", disabled: Boolean = false, block: () -> Any = {}) {
+inline fun logTitle(titleContent: String = "",
+                    disabled: Boolean = false,
+                    block: () -> Any = {},
+                    titleSymbolsNumber: Int = 15
+) {
     if (!disabled) {
         val titleSign = "="
-        val dots = titleSign.repeat(5)
-        val ttl = listOf(dots, titleContent, dots)
-
+        val titleSide = titleSign.repeat(titleSymbolsNumber)
         val any = block()
-        val title = titleContent.isNotEmpty() then ttl.joinToString(" ") or titleSign.repeat(any.toString().length)
-        threadPrintln(title)
-        any.isNotUnit {
-            threadPrintln(it)
-        }
-        threadPrintln(title)
+        val title = titleContent.ifBlank { titleSign.repeat(any.toString().length) }
+        val ttl = listOf(titleSide, title, titleSide)
+        threadPrintln(ttl.joinToString(" "))
     }
 }
+
+inline fun logEmptyTitle(emptyTitleLength: Int,
+                         disabled: Boolean = false,
+                         block: () -> Any = {},
+                         titleSymbolsNumber: Int = 15
+) {
+    logTitle("=".repeat(emptyTitleLength), disabled, block, titleSymbolsNumber)
+}
+
 
 fun line(length: Int) = UI_EVENT_SIGN.repeat(length)
 
@@ -178,7 +185,7 @@ inline fun <T> logSend(socket: Socket, block: () -> T) {
 
 inline fun <T> logComLogic(socket: Socket, comLine: (String) -> String, block: () -> T) {
     val dashesNumber = N
-    val uppercase = socket.toString().replace("null ", "").uppercase()
+    val uppercase = socket.omitIfLocalhost()
     val line = comLine(COM_SIGN.repeat(dashesNumber))
     val title = "$line $uppercase $line"
     val title2 = "$line ${COM_SIGN.repeat(uppercase.length)} $line"
@@ -233,7 +240,7 @@ fun <T : View> View.logTransit(replacement: T) {
 
 inline fun Any.logInject(injection: Any, disabled: Boolean = false) {
     disabled.otherwise {
-        org.home.utils.log {
+        log {
             "$componentName <== ${injection.componentName}"
         }
     }
@@ -241,7 +248,7 @@ inline fun Any.logInject(injection: Any, disabled: Boolean = false) {
 
 inline fun Any.logInject(injection: Any, scope: Any, disabled: Boolean = false) {
     disabled.otherwise {
-        org.home.utils.log {
+        log {
             "$componentName <== ${injection.componentName} with ${scope.name}"
         }
     }
@@ -261,6 +268,67 @@ fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
 
 fun <T> SimpleSetProperty<T>.logOnChange(name: String) = apply {
     addListener(SetChangeListener { log { "$name - ${it.set}" } })
+}
+
+fun Socket.omitIfLocalhost(): String {
+    return toString()
+        .lowercase()
+        .replace("socket", "CLIENT")
+        .replace("127.0.0.1", "")
+        .replace("addr=", "")
+        .replace("localhost/", "")
+        .replace("localhost", "")
+        .replace(",port", "")
+        .replace(",localport=", "/local=")
+        .replace("socket", "")
+        .replace("null ", "")
+        .uppercase()
+
+}
+
+fun ServerSocket.omitIfLocalhost(): String {
+    return toString()
+        .lowercase()
+        .replace("serversocket", "SERVER")
+        .replace("127.0.0.1", "")
+        .replace("addr=", "")
+        .replace("localhost/", "")
+        .replace("localhost", "")
+        .replace(",port", "")
+        .replace(",localport=", "/local=")
+        .replace("null ", "")
+        .uppercase()
+}
+
+fun MultiServer<*, *>.logServerStart() {
+    val i = 24
+    serverSocket().omitIfLocalhost().also {
+        logEmptyTitle(it.length, titleSymbolsNumber = i)
+        logTitle(it, titleSymbolsNumber = i)
+        logEmptyTitle(it.length, titleSymbolsNumber = i)
+        connector { logStart(it, i) }
+        receiver { logStart(it, i) }
+        processor { logStart(it, i) }
+        logEmptyTitle(it.length, titleSymbolsNumber = i)
+    }
+}
+
+fun BattleViewModel.logProps() {
+    log { "height          : ${getHeight()}" }
+    log { "width           : ${getWidth()}" }
+    log { "playersNumber   : ${getPlayersNumber()}" }
+    log { "players         : ${getPlayers()}" }
+    log { "enemies         : ${getEnemies()}" }
+    log { "readyPlayers    : ${getReadyPlayers()}" }
+    log { "fleetsReadiness : ${noPropertyFleetReadiness()}" }
+    log { "playersNumber   : ${getPlayersNumber()}" }
+    log { "battleIsStarted : ${battleIsStarted()}" }
+    log { "battleIsEnded   : ${battleIsEnded()}" }
+}
+
+private fun MultiServerThread<out Message, out Socket>.logStart(toString: String, i: Int) {
+    val s = "STARTED"
+    logTitle("${name}${" ".repeat(toString.length - name.length - s.length)}$s", titleSymbolsNumber = i)
 }
 
 private fun coord(it: Event) = (it.source as FleetCell).coord

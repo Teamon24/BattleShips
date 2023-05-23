@@ -3,7 +3,7 @@ package org.home.mvc.view.battle
 import home.extensions.AnysExtensions.invoke
 import org.home.app.ApplicationProperties.Companion.battleFieldCreationMenuTitle
 import org.home.app.di.gameScope
-import org.home.mvc.AppView
+import org.home.mvc.view.AppView
 import org.home.mvc.GameView
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.view.component.GridPaneExtensions.cell

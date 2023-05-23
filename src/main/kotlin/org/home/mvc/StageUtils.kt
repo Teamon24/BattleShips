@@ -115,6 +115,3 @@ object StageUtils {
         return arrayListOf
     }
 }
-
-operator fun Dimension.component1() = this.width.toDouble()
-operator fun Dimension.component2() = this.height.toDouble()

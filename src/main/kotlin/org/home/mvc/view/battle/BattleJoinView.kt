@@ -2,7 +2,7 @@ package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
 import org.home.app.ApplicationProperties.Companion.ipAddressFieldLabel
-import org.home.mvc.AppView
+import org.home.mvc.view.AppView
 import org.home.mvc.GameView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
@@ -26,7 +26,7 @@ class BattleJoinView : GameView("Присоединиться к битве") {
         }
 
         viewSwitchButtonController {
-            cell(1, 1) { joinBattleButton(currentView()) }
+            cell(1, 1) { connectBattleButton(currentView()) }
             cell(2, 1) { backButton(currentView(), AppView::class) }
         }
     }

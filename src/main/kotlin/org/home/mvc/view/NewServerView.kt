@@ -7,8 +7,10 @@ import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.server.PlayerTurnComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.contoller.serverTransfer.NewServerViewController
+import tornadofx.runLater
 import java.util.*
 
 class NewServerView(override val root: Parent = VBox()) : GameView() {
@@ -20,6 +22,7 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
 
     internal val battleController by noScope<BattleController<Action>>()
     private val newServerViewController by gameScope<NewServerViewController>()
+    internal val playerTurnComponent by gameScope<PlayerTurnComponent>()
     internal var threadIndicator: Thread? = null
     internal val connectedPlayers =
         Collections
@@ -32,8 +35,16 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
         battleController.disconnect()
     }
 
+    fun interruptIndicator() {
+        runLater {
+            threadIndicator?.interrupt()
+        }
+    }
+
     init {
-        newServerViewController { subscribe() }
-        newServerViewController { init() }
+        newServerViewController {
+            subscribe()
+            initialize()
+        }
     }
 }

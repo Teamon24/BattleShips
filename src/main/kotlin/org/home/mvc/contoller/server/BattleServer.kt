@@ -112,13 +112,13 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                 playerTurnComponent {
                     remove(currentPlayer)
                     currentPlayer.hasATurn { nextTurn() }
-                    send(NewServerAction(turnPlayer!!, turnList))
+                    send(NewServerAction(turnPlayer!!, turnList, getReadyPlayers().toMutableSet()))
                 }
                 waitNewServerAndThenSend()
             }
 
             if (battleIsNotStarted() && hasEnemies()) {
-                send(NewServerAction(exclude(currentPlayer).first()))
+                send(NewServerAction(exclude(currentPlayer).first(), readyPlayers = getReadyPlayers().toMutableSet()))
                 waitNewServerAndThenSend()
             }
         }
@@ -128,6 +128,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
     private fun waitNewServerAndThenSend() {
         awaitConditions.newServerFound.await()
+        Thread.sleep(1000)
         modelView {
             excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
         }
@@ -161,15 +162,6 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         eventbus(BattleIsContinued)
     }
 
-    override fun setTurn(newServerInfo: NewServerInfo) {
-        newServerInfo {
-            turnList.isNotEmpty {
-                playerTurnComponent.turnList = turnList
-                playerTurnComponent.turnPlayer = player
-            }
-        }
-    }
-
     override fun process(socket: PlayerSocket, message: Action) {
         val action = message
 
@@ -196,7 +188,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
                 action {
-                    setNewServer(NewServerInfo(player, playerTurnComponent.turnList, ip, port))
+                    setNewServer(newServer)
                 }
             }
 
@@ -290,11 +282,11 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
     private fun fleetsReadinessExcept(player: String, modelView: BattleViewModel): FleetsReadinessAction {
         val states = modelView.getFleetsReadiness()
-            .exclude(player)
-            .map { (player, state) ->
-                player to state.map { (shipType, number) -> shipType to number.value }.toMap()
+            .exclude(player).entries.associate { (player, state) ->
+                player to state.entries.associate { (shipType, number) ->
+                    shipType to number.value
+                }
             }
-            .toMap()
 
         return FleetsReadinessAction(states)
     }

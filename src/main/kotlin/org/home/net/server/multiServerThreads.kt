@@ -18,7 +18,6 @@ import org.home.utils.SocketUtils.receive
 import org.home.utils.log
 import org.home.utils.logError
 import org.home.utils.logReceive
-import org.home.utils.logTitle
 import tornadofx.Controller
 import java.io.EOFException
 import java.io.IOException
@@ -38,7 +37,6 @@ sealed class MultiServerThread<M: Message, S: Socket>: Controller() {
     fun start() {
         canProceed(true)
         thread = thread(name = name, block = ::run)
-        logTitle("$name is STARTED")
     }
 
     fun interrupt() {

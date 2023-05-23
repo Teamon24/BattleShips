@@ -39,7 +39,6 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun battleIsStarted(): Boolean
     abstract fun battleIsNotStarted(): Boolean
     abstract fun equalizeSizes()
-    abstract fun setNewServer(value: NewServerInfo)
     abstract fun copyShipsTypes(): ShipsTypes
     abstract val turn: SimpleStringProperty
     abstract fun fleetReadiness(player: String): MutableMap<Int, SimpleIntegerProperty>
@@ -51,9 +50,11 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun hasNoServerTransfer(): Boolean
     abstract fun add(player: String)
     abstract fun remove(player: String)
+    abstract fun setNewServer(newServerInfo: NewServerInfo)
 
-
-
+    fun newServer(init: NewServerInfo.() -> Unit) {
+        setNewServer(NewServerInfo().apply(init))
+    }
 
     fun battleIsStarted(onTrue: () -> Unit) = battleIsStarted().so(onTrue)
     fun exclude(player: String) = getPlayers().exclude(player)
@@ -64,6 +65,7 @@ abstract class BattleViewModel: GameViewModel() {
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
     fun setReady(player: String)  { getReadyPlayers().add(player) }
+    fun setAllReady(readyPlayers: Collection<String>)  { getReadyPlayers().addAll(readyPlayers) }
     fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
 
     inline fun hasEnemies() = getEnemies().hasElements

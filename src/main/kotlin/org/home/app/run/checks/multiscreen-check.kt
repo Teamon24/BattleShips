@@ -1,4 +1,4 @@
-package org.home.app.run
+package org.home.app.run.checks
 
 import javafx.geometry.Rectangle2D
 import javafx.scene.Parent
@@ -13,7 +13,6 @@ import java.awt.MouseInfo
 
 
 fun main() {
-    Thread.sleep(2000)
     launch<MultiscreenCheck>()
 }
 

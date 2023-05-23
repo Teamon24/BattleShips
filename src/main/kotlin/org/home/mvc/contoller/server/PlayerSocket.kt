@@ -1,5 +1,6 @@
 package org.home.mvc.contoller.server
 
+import home.extensions.AnysExtensions.className
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetAddress
@@ -10,15 +11,23 @@ import java.net.SocketOption
 import java.nio.channels.SocketChannel
 
 class PlayerSocket(private val socket: Socket) : Socket() {
+
     var player: String? = null
+
+    private fun Any.omitIfLocalhost(): String {
+        return toString()
+            .replace("127.0.0.1", "")
+            .replace("localhost", "")
+    }
 
     override fun toString(): String {
         try {
-            if (isConnected)
-                return "$player ($inetAddress:$port <-> ${socket.localSocketAddress})"
-        } catch (_: SocketException) {}
-        return "PlayerSocket[unconnected]"
-
+            if (isConnected) {
+                return "$player [${inetAddress.omitIfLocalhost()}:$port]"
+            }
+        } catch (_: SocketException) {
+        }
+        return "${this.className}[unconnected]"
     }
     override fun close() = socket.close()
 

@@ -44,7 +44,7 @@ internal fun BattleView.shipWasDeleted() {
 
 private fun BattleView.processFleetEdit(
     event: FleetEditEvent,
-    action: (Int, String) -> FleetEditAction,
+    fleetEditAction: (Int, String) -> FleetEditAction,
     lastShipWasEdited: (BattleViewModel, String, () -> Unit) -> Unit,
     createReadinessAction: (String) -> PlayerReadinessAction,
     createEvent: (String) -> PlayerReadinessReceived
@@ -56,7 +56,7 @@ private fun BattleView.processFleetEdit(
             updateFleetReadiness(event)
             battleController.send {
                 player.isCurrent {
-                    + action(shipType, currentPlayer)
+                    + fleetEditAction(shipType, currentPlayer)
                     lastShipWasEdited(modelView, player) {
                         eventbus(createEvent(player))
                         + createReadinessAction(player)

@@ -14,8 +14,8 @@ class ShipsTypesController : GameController() {
     private val shipsTypes = modelView.copyShipsTypes()
 
     fun validates(newShip: Collection<Coord>): Boolean {
-        modelView.log { "ships: ${shipsOf(currentPlayer)}" }
-        log { "$shipsTypes" }
+        log { "ships - ${modelView.shipsOf(currentPlayer)}" }
+        log { "fleetReadiness - $shipsTypes" }
         newShip.ifEmpty { return false }
 
         val newShipSize = newShip.size
@@ -24,7 +24,7 @@ class ShipsTypesController : GameController() {
         val shipsNumber = shipsTypes[newShipSize]
         if (shipsNumber == 0) return false
 
-        log { "new ship is valid: $newShip" }
+        log { "ship is valid: $newShip" }
         return true
     }
 
@@ -41,6 +41,7 @@ class ShipsTypesController : GameController() {
                         add(newShip)
                         eventbus(it)
                         log { "ship addition - $newShip" }
+                        log { "ships - ${modelView.shipsOf(currentPlayer)}" }
                     }
                 }
             }
@@ -56,6 +57,7 @@ class ShipsTypesController : GameController() {
                     ships.remove(newShip)
                     eventbus(it)
                     log { "ship deletion - $newShip" }
+                    log { "ships - ${modelView.shipsOf(currentPlayer)}" }
                 }
             }
     }

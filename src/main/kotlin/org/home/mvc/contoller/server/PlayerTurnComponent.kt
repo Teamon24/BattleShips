@@ -1,6 +1,7 @@
 package org.home.mvc.contoller.server
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.hasElements
@@ -10,6 +11,7 @@ import org.home.utils.log
 class PlayerTurnComponent: GameComponent() {
 
     private var backingTurnList = mutableListOf<String>()
+
     var turnList: List<String>
         get() = backingTurnList
         set(value) {
@@ -17,9 +19,14 @@ class PlayerTurnComponent: GameComponent() {
                 clear()
                 addAll(value)
             }
+            log { "${this.name} turnList was set to $backingTurnList" }
         }
 
     var turnPlayer: String? = null
+        set(value) {
+            field = value
+            log { "${this.name} turnPlayer was set to $field" }
+        }
 
     inline val String.hasATurn get() = this == turnPlayer
     inline val <E> Collection<E>.hasPlayers get() = hasElements

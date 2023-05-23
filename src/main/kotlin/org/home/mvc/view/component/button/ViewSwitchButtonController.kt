@@ -4,22 +4,19 @@ import home.extensions.AnysExtensions.invoke
 import javafx.beans.property.SimpleStringProperty
 import javafx.event.EventTarget
 import javafx.scene.control.Button
-import org.home.app.ApplicationProperties
 import org.home.app.ApplicationProperties.Companion.backButtonText
 import org.home.app.ApplicationProperties.Companion.buttonHoverTransitionTime
 import org.home.app.ApplicationProperties.Companion.connectionButtonText
 import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
-import org.home.app.ApplicationProperties.Companion.joinButtonText
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.di.GameScope
 import org.home.app.di.noScope
-import org.home.mvc.AppView
-import org.home.mvc.GameController
 import org.home.mvc.GameView
 import org.home.mvc.ViewSwitchController
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.server.action.Action
+import org.home.mvc.view.AppView
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.battle.BattleView
@@ -32,7 +29,6 @@ import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.hovering
 import org.home.style.TransitionDSL.transition
-import org.home.utils.StyleUtils.backgroundColor
 import org.home.utils.StyleUtils.textFillTransition
 import tornadofx.View
 import tornadofx.action
@@ -44,6 +40,12 @@ object ViewSwitchButtonController: ViewSwitchController() {
     internal val ipAddress = SimpleStringProperty("$ip:$freePort")
 
     private val battleController by noScope<BattleController<Action>>()
+
+    fun setServerNewGame(isServer: Boolean) {
+        applicationProperties.isServer = isServer
+        GameScope.createNew()
+    }
+
 
     inline fun <reified T : View> setTransit(
         button: Button,
@@ -95,15 +97,13 @@ object ViewSwitchButtonController: ViewSwitchController() {
             "Не удалось создать хост ${ipAddress.value}"
         )
 
-
-    fun EventTarget.joinBattleButton(battleJoinView: BattleJoinView): BattleButton {
-        return battleButtonLogic(
-            joinButtonText,
+    fun EventTarget.connectBattleButton(battleJoinView: BattleJoinView) =
+        battleButtonLogic(
+            connectionButtonText,
             battleJoinView,
-            extract(),
+            getIpPort(),
             "Не удалось подключиться к хосту ${ipAddress.value}"
         )
-    }
 
     fun EventTarget.leaveButton(battleView: BattleView) =
         backButton(battleView, AppView::class) {
@@ -142,7 +142,7 @@ object ViewSwitchButtonController: ViewSwitchController() {
             }
         }
 
-    private fun extract(): Pair<String, Int> {
+    fun getIpPort(): Pair<String, Int> {
         val split = ipAddress.value.split(":")
         return split[0] to split[1].toInt()
     }

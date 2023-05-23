@@ -1,7 +1,7 @@
-package org.home.app.run
+package org.home.app.run.checks
 
 import org.home.app.AbstractApp
-import org.home.mvc.view.Animations.appViewAnimationGrid
+import org.home.mvc.Animations.appViewAnimationGrid
 import org.home.app.di.netControllers
 import org.koin.core.context.GlobalContext
 import tornadofx.View

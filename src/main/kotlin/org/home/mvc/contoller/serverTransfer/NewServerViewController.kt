@@ -23,19 +23,22 @@ sealed class NewServerViewController: GameController() {
 
     abstract fun NewServerView.subscriptions()
 
-    abstract fun NewServerView.init()
+    abstract fun NewServerView.initialize()
 
     private fun NewServerView.battleIsContinuedReceived() {
         subscribe<BattleIsContinued> {
             logEvent(it, modelView)
-            threadIndicator?.interrupt()
+            interruptIndicator()
             viewSwitch {
                 transferTo(BattleView::class) {
                     beforeTransfer {
                         subscriptionComponent {
-                            modelView.battleIsStarted { onPlayerTurn(modelView.getNewServer().player) }
+                            modelView {
+                                battleIsStarted { onPlayerTurn(getNewServer().player) }
+                                setAllReady(getNewServer().readyPlayers)
+                            }
+
                             battleStartButtonController {
-                                battleStartButton.setServerText()
                                 battleStartButton.updateStyle(currentPlayer)
                             }
                         }
@@ -47,7 +50,7 @@ sealed class NewServerViewController: GameController() {
 
     private fun NewServerView.playerLeaved() {
         subscribe<PlayerLeaved> {
-            TODO("${NewServerView::class.name}#subscribe<${PlayerLeaved::class.name}>")
+            TODO("${NewServerView::class.name}#subscribe<${it::class.name}>")
             logEvent(it, modelView)
             connectedPlayers.remove(it.player)
             root { label("Отключился: ${it.player}") }

@@ -27,19 +27,15 @@ import org.home.utils.log
 import tornadofx.action
 import tornadofx.style
 
-class BattleStartButton(text: String) : Button(text)
+class BattleStartButton(text: String = "") : Button(text)
 
 class BattleStartButtonController : GameController() {
     private val battleController by noScope<BattleController<Action>>()
     private val battleStartButtonComponent by gameScope<BattleStartButtonComponent>()
 
-    fun BattleStartButton.setServerText() {
-        text = battleStartButtonTextForServer
-    }
-
     fun create(): BattleStartButton {
-        val text = if (applicationProperties.isServer) battleStartButtonTextForServer else battleStartButtonTextForClient
-        return BattleStartButton(text).apply {
+        return BattleStartButton().apply {
+            battleStartButtonComponent { setButtonText() }
             battleStartButtonComponent { updateStyle() }
             action {
                 log { "battleController: ${battleController.name}" }
@@ -53,12 +49,14 @@ class BattleStartButtonController : GameController() {
     }
 
     fun BattleStartButton.updateStyle(player: String) {
+        battleStartButtonComponent { setButtonText() }
         battleStartButtonComponent { update(player) }
     }
 }
 
 abstract class BattleStartButtonComponent: GameComponent() {
     abstract fun BattleStartButton.update(player: String)
+    abstract fun BattleStartButton.text()
 
     fun BattleStartButton.updateStyle() {
         isDisable = true
@@ -98,11 +96,17 @@ abstract class BattleStartButtonComponent: GameComponent() {
             }
         }
     }
+
+    fun BattleStartButton.setButtonText() { text() }
 }
 
 class BattleStartButtonComponentForServer : BattleStartButtonComponent() {
     override fun BattleStartButton.update(player: String) {
         isDisable = !modelView.allAreReady
+    }
+
+    override fun BattleStartButton.text() {
+        this.text = battleStartButtonTextForServer
     }
 }
 
@@ -113,5 +117,9 @@ class BattleStartButtonComponentForClient : BattleStartButtonComponent() {
             true -> fillTransition()
             else -> reverseFillTransition()
         }
+    }
+
+    override fun BattleStartButton.text() {
+        this.text = battleStartButtonTextForClient
     }
 }

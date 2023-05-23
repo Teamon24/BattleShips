@@ -66,7 +66,9 @@ class BattleViewModelImpl : BattleViewModel() {
     override fun getPlayersNumber(): SimpleIntegerProperty = playersNumber
 
     override fun getNewServer() = newServer!!
-    override fun setNewServer(value: NewServerInfo) { newServer = value }
+    override fun setNewServer(value: NewServerInfo) {
+        newServer = value
+    }
 
     override fun equalizeSizes() { getHeight().value = getWidth().value }
 

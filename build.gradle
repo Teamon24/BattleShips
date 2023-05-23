@@ -94,22 +94,28 @@ task createProperties {
     createProperties(playersNumber)
 }
 
-task player0 { doLast { runDev(concat(javaCp, mainClassName), playerProp(0)) } }
-task player1 { doLast { runDev(concat(javaCp, mainClassName), playerProp(1)) } }
-task player2 { doLast { runDev(concat(javaCp, mainClassName), playerProp(2)) } }
-task player3 { doLast { runDev(concat(javaCp, mainClassName), playerProp(3)) } }
-task player4 { doLast { runDev(concat(javaCp, mainClassName), playerProp(4)) } }
-task player5 { doLast { runDev(concat(javaCp, mainClassName), playerProp(5)) } }
-task player6 { doLast { runDev(concat(javaCp, mainClassName), playerProp(6)) } }
-task player7 { doLast { runDev(concat(javaCp, mainClassName), playerProp(7)) } }
 
-task multiscreenCheck { doLast { runDev(concat(javaCp, 'org.home.app.run.Multiscreen_checkKt')) } }
+task player0 { doLast { run(concat(javaCp, mainClassName), playerProp(0)) } }
+task player1 { doLast { run(concat(javaCp, mainClassName), playerProp(1)) } }
+task player2 { doLast { run(concat(javaCp, mainClassName), playerProp(2)) } }
+task player3 { doLast { run(concat(javaCp, mainClassName), playerProp(3)) } }
+
+task debug_player0 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(0)) } }
+task debug_player1 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(1)) } }
+task debug_player2 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(2)) } }
+task debug_player3 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(3)) } }
+
+task multiscreenCheck { doLast { run(concat(javaCp, 'org.home.app.run.checks.Multiscreen_checkKt')) } }
 
 tasks.player0.dependsOn(build)
 tasks.player0.dependsOn(createProperties)
+
+tasks.debug_player0.dependsOn(build)
+tasks.debug_player0.dependsOn(createProperties)
+
 tasks.multiscreenCheck.dependsOn(build)
 
-def runDev(List<String> command, Object... args) {
+def run(List<String> command, Object... args) {
     exec { commandLine concat(command, toString(args)) }
 }
 

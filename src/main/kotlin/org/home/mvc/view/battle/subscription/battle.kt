@@ -1,12 +1,13 @@
 package org.home.mvc.view.battle.subscription
 
+import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.ApplicationProperties.Companion.leaveBattleText
-import org.home.mvc.AppView
+import org.home.mvc.view.AppView
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.NewServerReceived
@@ -21,6 +22,7 @@ import org.home.utils.NodeUtils.enable
 import org.home.utils.logEvent
 import tornadofx.View
 import tornadofx.hide
+import java.io.Serializable
 
 
 inline fun View.subscriptions(subs: View.() -> Unit) {
@@ -103,22 +105,36 @@ internal fun BattleView.battleIsEnded() {
     }
 }
 
-data class NewServerInfo(val player: String, val turnList: List<String>, val ip: String, val port: Int)
+class NewServerInfo: Serializable {
+    lateinit var ip: String
+    var port: Int = 0
+    lateinit var player: String
+    lateinit var turnList: List<String>
+    lateinit var readyPlayers: Set<String>
+    override fun toString(): String {
+        return "${this.className}([$player][$ip:$port] /turn=$turnList /ready=$readyPlayers)"
+    }
+}
 
 internal fun BattleView.serverTransferReceived() {
     subscribe<NewServerReceived> { event ->
         logEvent(event, modelView)
+        val newServerPlayer = event.player
         modelView {
-            event {
-                val newServerInfo = NewServerInfo(player, turnList, applicationProperties.ip, freePort())
-                setNewServer(newServerInfo)
-                getPlayersNumber().value -= 1
-                player.isCurrent {
-                    battleController {
-                        send(NewServerConnectionAction(getNewServer()))
-                        disconnect()
-                    }
+            newServer {
+                ip = applicationProperties.ip
+                port = freePort()
+                player = newServerPlayer
+                turnList = event.turnList
+                readyPlayers = getReadyPlayers().toMutableSet()
+            }
+
+            getPlayersNumber().value -= 1
+            newServerPlayer.isCurrent {
+                battleController {
                     applicationProperties.isServer = true
+                    send(NewServerConnectionAction(getNewServer()))
+                    disconnect()
                 }
             }
         }

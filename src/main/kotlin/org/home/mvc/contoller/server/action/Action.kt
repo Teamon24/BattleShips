@@ -2,14 +2,12 @@ package org.home.mvc.contoller.server.action
 
 import home.extensions.AnysExtensions.name
 import home.extensions.delete
-import org.home.mvc.contoller.events.BattleIsContinued
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived
 import org.home.mvc.contoller.events.ConnectedPlayersReceived
 import org.home.mvc.contoller.events.FleetsReadinessReceived
 import org.home.mvc.contoller.events.NewServerConnectionReceived
-import org.home.mvc.contoller.events.NewServerReceived
 import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
@@ -46,7 +44,7 @@ sealed class Action: Message {
             is BattleContinuationAction -> prefix
             is BattleEndAction -> "$prefix(winner=$player)"
             is NewServerAction -> "$prefix(${player}, turn=${turnList})"
-            is NewServerConnectionAction -> run { "$prefix(${string()})" }
+            is NewServerConnectionAction -> run { "$prefix(${toStringPart()})" }
             is ShipAdditionAction -> "$prefix[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
             is ShipDeletionAction -> "$prefix[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
             is FleetSettingsAction -> buildString {

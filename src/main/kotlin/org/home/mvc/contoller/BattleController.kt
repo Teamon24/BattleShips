@@ -23,5 +23,4 @@ interface BattleController<M: Message> {
     fun endBattle()
 
     fun continueBattle()
-    fun setTurn(newServerInfo: NewServerInfo)
 }

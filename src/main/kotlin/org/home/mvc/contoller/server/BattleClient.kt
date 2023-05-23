@@ -107,8 +107,8 @@ class BattleClient : GameController(), BattleController<Action> {
                     +FleetsReadinessAction(mapOf(currentPlayer to noPropertyFleetReadiness(currentPlayer)))
                 }
             }
-            listen()
         }
+        listen()
         awaitConditions.fleetSettingsReceived.await()
     }
 
@@ -200,17 +200,14 @@ class BattleClient : GameController(), BattleController<Action> {
 
     override fun leaveBattle() {
         hasConnection { send(LeaveAction(currentPlayer)) }
-        Platform.runLater { disconnect() }
+        disconnect()
     }
 
     private inline fun hasConnection(onTrue: () -> Unit) = throwsOn { send(Ping) }.otherwise(onTrue)
 
     override fun disconnect() {
         canProceed(false)
-        runBlocking {
-            receiverJob.cancel()
-            log { "receiver's ${receiverJob.name} is canceled" }
-        }
+        receiverJob.cancel()
         input.close()
         output.close()
         serverSocket.close()
@@ -218,9 +215,5 @@ class BattleClient : GameController(), BattleController<Action> {
 
     override fun continueBattle() {
         awaitConditions.canContinueBattle.await()
-    }
-
-    override fun setTurn(newServerInfo: NewServerInfo) {
-        throw RuntimeException("${this.name}#setTurn should not be invoked")
     }
 }

@@ -1,4 +1,4 @@
-package org.home.mvc.view
+package org.home.mvc
 
 import javafx.event.EventTarget
 import javafx.geometry.Pos
