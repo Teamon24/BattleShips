@@ -10,7 +10,6 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.NodeUtils.disableIf
@@ -51,7 +50,10 @@ internal fun BattleView.playerWasDefeated() {
             }
 
             defeated.isCurrent {
-                setDefeatedLeaveButton()
+                battleViewExitButtonController {
+                    root.children.removeIf { it.getIndices() == indices }
+                    battleViewExitButtonController { root.setDefeated(currentView()) }
+                }
             }
 
             hasAWinner {
@@ -74,11 +76,9 @@ private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
 
 private fun BattleView.removePlayer(player: String) {
     modelView {
-        enemiesView.remove(player)
+        enemiesViewController.remove(player)
         battleIsStarted().not().so {
-            battleStartButtonController {
-                battleStartButton.updateStyle(player, false)
-            }
+            battleStartButtonController.updateStyle(player, false)
         }
 
         hasAWinner().and(battleIsStarted()).so {
@@ -87,21 +87,6 @@ private fun BattleView.removePlayer(player: String) {
 
         hasOnePlayerLeft().so {
             battleController.disconnect()
-        }
-    }
-}
-
-fun BattleView.setDefeatedLeaveButton() {
-    val buttonIndices = battleViewExitButtonIndices
-    root {
-        children.removeIf { it.getIndices() == buttonIndices }
-
-        viewSwitchButtonController {
-            cell(buttonIndices.first, buttonIndices.second) {
-                defeatedLeaveButton(currentView()).also {
-                    battleViewExitButton = it
-                }
-            }
         }
     }
 }

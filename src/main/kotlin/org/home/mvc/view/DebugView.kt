@@ -23,7 +23,6 @@ class DebugView : GameView() {
             ViewInjector {
                 getView(BattleView::class, FxScopes.getGameScope()).also {
                     root = it.root
-                    it.battleViewExitButton
                 }
             }
         }
@@ -38,7 +37,6 @@ class DebugView : GameView() {
                 }
             }
         }
-
     }
 
 

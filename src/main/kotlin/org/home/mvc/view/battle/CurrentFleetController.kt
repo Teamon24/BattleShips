@@ -9,6 +9,7 @@ import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.style.AppStyles.Companion.currentPlayerLabel
+import org.home.utils.NodeUtils.enable
 import org.home.utils.StyleUtils.leftPadding
 import tornadofx.addClass
 
@@ -16,21 +17,21 @@ class CurrentFleetController: GameController() {
     private val fleetGridController by gameScope<FleetGridController>()
     private val shipsTypesPaneController by gameScope<ShipsTypesPaneController>()
 
-    private val currentFleetPane = fleetGridController
+    private val fleetReadinessPane =  shipsTypesPaneController
+        .shipTypesPane(currentPlayer)
+        .transposed()
+        .apply { leftPadding(10) }
+        .toBorderPane()
+
+    private val fleetGridPane = fleetGridController
         .activeFleetGrid()
         .apply { addShips(modelView.shipsOf(currentPlayer)) }
         .toBorderPane()
 
-    fun fleetGrid() = currentFleetPane
 
-    fun fleetReadinessPane(): BorderPane {
-        return shipsTypesPaneController
-            .shipTypesPane(currentPlayer)
-            .transposed()
-            .apply { leftPadding(10) }
-            .toBorderPane()
-    }
 
+    fun fleetGrid() = fleetGridPane
+    fun fleetReadinessPane() = fleetReadinessPane
     fun playerLabel() = Label(currentPlayer).addClass(currentPlayerLabel)
 
     private fun <T: Node> T.toBorderPane(): BorderPane {
@@ -42,7 +43,12 @@ class CurrentFleetController: GameController() {
             .fleetGrid()
             .addShips(modelView.shipsOf(currentPlayer))
             .also {
-                currentFleetPane.center = it
+                fleetGridPane.center = it
             }
+    }
+
+    fun enableView() {
+        fleetGridPane.enable()
+        fleetReadinessPane.enable()
     }
 }

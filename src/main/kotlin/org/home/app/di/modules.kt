@@ -33,6 +33,7 @@ import org.home.mvc.view.component.ViewSwitch.ViewSwitchType.REPLACEMENT
 import org.home.mvc.view.component.button.BattleStartButtonComponentForClient
 import org.home.mvc.view.component.button.BattleStartButtonComponentForServer
 import org.home.mvc.view.component.button.BattleStartButtonController
+import org.home.mvc.view.component.button.BattleViewExitButtonController
 import org.home.mvc.view.component.button.ViewSwitchButtonController
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.fleet.FleetGridCreator
@@ -99,6 +100,7 @@ fun gameScoped(): Module {
             scoped { FleetGridCreator() }
             scoped { BattleEndingComponent() }
             scoped { BattleStartButtonController() }
+            scoped { BattleViewExitButtonController() }
 
             scoped {
                 get<ApplicationProperties>().isServer

@@ -7,7 +7,6 @@ import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.ApplicationProperties.Companion.leaveBattleText
-import org.home.mvc.view.AppView
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.NewServerReceived
@@ -21,7 +20,6 @@ import org.home.utils.IpUtils.freePort
 import org.home.utils.NodeUtils.enable
 import org.home.utils.logEvent
 import tornadofx.View
-import tornadofx.hide
 import java.io.Serializable
 
 
@@ -63,12 +61,8 @@ internal fun BattleView.battleIsStarted() {
     subscribe<BattleIsStarted> { event ->
         modelView.battleIsStarted(true)
         logEvent(event, modelView)
-        battleViewExitButton.text = leaveBattleText
-
-        viewSwitchButtonController.setTransit<AppView>(battleViewExitButton, this@battleIsStarted) {
-            battleController.leaveBattle()
-        }
-
+        battleViewExitButtonController.setText(leaveBattleText)
+        battleViewExitButtonController.setTransit(this@battleIsStarted)
 
         fleets().entries
             .zip(fleetsReadiness().entries) { fleet, readiness ->
@@ -78,7 +72,7 @@ internal fun BattleView.battleIsStarted() {
             }
 
         modelView.getReadyPlayers().clear()
-        battleStartButton.hide()
+        battleStartButtonController.hide()
 
         currentFleetController.updateCurrentPlayerFleetGrid()
 
@@ -93,15 +87,14 @@ internal fun BattleView.battleIsEnded() {
 
         val player = event.player
         modelView.hasCurrent(player).so {
-            currentFleetGridPane.enable()
-            currentFleetReadinessPane.enable()
+            currentFleetController.enableView()
         }
 
         openMessageWindow {
             modelView.hasCurrent(player) then "Вы победили" or "Победил \"$player\""
         }
 
-        battleViewExitButton.text = leaveBattleFieldText
+        battleViewExitButtonController.setText(leaveBattleFieldText)
     }
 }
 

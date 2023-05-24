@@ -122,16 +122,15 @@ typealias TaskName = String
 infix operator fun TaskName.invoke(block: String.() -> Unit): Unit = this.block()
 infix fun TaskName.task(action: Action<in Task>): TaskContainer = tasks { register(this@task, action) }
 infix fun TaskName.doLast(action: Action<in Task>): TaskContainer = tasks { register(this@doLast) { doLast(action) } }
-
-fun TaskName.javaCp(vararg args: String) { task { exec(javaCp, *args) } }
-fun Task.exec(command: List<String>, vararg args: String) = doLast { exec { commandLine(command + args) } }
+fun TaskName.javaCp(vararg args: String) { doLast { exec { commandLine(javaCp + args) } } }
 
 val pidsFile = "$projectDir${sl}pids.txt".createFile()
 
 "runPlayers".doLast {
     pidsFile.printWriter().use { writer ->
         propsList.indices.forEach { player ->
-            writer.println(process(javaCp + main + "app", propsList[player]).pid())
+            val command = javaCp + main + "app" + propsList[player]
+            writer.println(command.pid())
         }
     }
 }
@@ -144,12 +143,10 @@ val pidsFile = "$projectDir${sl}pids.txt".createFile()
     }
 }
 
-fun process(command: List<String>, vararg args: String) = ProcessBuilder(command + args).start()
-
+fun List<String>.pid() = ProcessBuilder(this).start().pid()
 fun String.createFile() = File(this).apply { createNewFile() }
 
 fun deleteProperties() = resourcesFolder.subfiles().doIfMatches(regex, File::delete) { it.name }
-
 fun createProperties(playersNumber: Int) = ArrayList<String>(playersNumber).apply {
     val lines = "appPropName".propFile().lines()
     val debugLines = "appPropNameDebug".propFile().lines()

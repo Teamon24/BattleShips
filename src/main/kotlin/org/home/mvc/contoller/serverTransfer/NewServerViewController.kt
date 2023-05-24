@@ -38,9 +38,7 @@ sealed class NewServerViewController: GameController() {
                                 setAllReady(getNewServer().readyPlayers)
                             }
 
-                            battleStartButtonController {
-                                battleStartButton.updateStyle(currentPlayer)
-                            }
+                            battleStartButtonController.updateStyle(currentPlayer)
                         }
                     }
                 }

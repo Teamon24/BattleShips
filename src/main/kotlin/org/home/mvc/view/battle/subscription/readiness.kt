@@ -62,7 +62,5 @@ private inline fun BattleView.handle(
         setReadinessStyle(fleets(player), fleetsReadiness(player))
     }
 
-    battleStartButtonController {
-        battleStartButton.updateStyle(player, ready)
-    }
+    battleStartButtonController.updateStyle(player, ready)
 }
