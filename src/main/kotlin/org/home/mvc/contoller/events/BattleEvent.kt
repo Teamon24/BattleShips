@@ -6,7 +6,7 @@ import org.home.mvc.contoller.server.action.BattleEndAction
 import org.home.mvc.contoller.server.action.TurnAction
 import org.home.utils.DSLContainer
 import org.home.utils.RomansDigits
-import org.home.utils.dslContainer
+import org.home.utils.dslElements
 import tornadofx.Component
 import tornadofx.FXEvent
 import tornadofx.Scope
@@ -14,7 +14,7 @@ import tornadofx.Scope
 inline infix fun Component.eventbus(event: BattleEvent) = fire(event)
 
 inline fun Component.eventbus(addEvents: DSLContainer<BattleEvent>.() -> Unit) {
-    dslContainer(addEvents).forEach(this::fire)
+    dslElements(addEvents).forEach(this::fire)
 }
 
 sealed class BattleEvent: FXEvent() {

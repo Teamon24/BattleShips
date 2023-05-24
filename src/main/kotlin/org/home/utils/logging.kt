@@ -314,9 +314,9 @@ fun MultiServer<*, *>.logServerStart() {
 }
 
 fun BattleViewModel.logProps() {
-    log { "height          : ${getHeight()}" }
-    log { "width           : ${getWidth()}" }
-    log { "playersNumber   : ${getPlayersNumber()}" }
+    log { "height          : ${getHeight().value}" }
+    log { "width           : ${getWidth().value}" }
+    log { "playersNumber   : ${getPlayersNumber().value}" }
     log { "players         : ${getPlayers()}" }
     log { "enemies         : ${getEnemies()}" }
     log { "readyPlayers    : ${getReadyPlayers()}" }

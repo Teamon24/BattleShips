@@ -46,10 +46,10 @@ object SocketUtils {
     }
 
     inline infix fun Collection<Socket>.send(addMessages: DSLContainer<Message>.() -> Unit) {
-        send(dslContainer(addMessages))
+        send(dslElements(addMessages))
     }
 
     inline fun Socket.send(addMessages: DSLContainer<Message>.() -> Unit) {
-        send(dslContainer(addMessages))
+        send(dslElements(addMessages))
     }
 }

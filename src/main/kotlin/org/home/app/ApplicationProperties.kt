@@ -42,7 +42,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
 
             logging {
                 ln("\"${appPropsFileName}.properties\"")
-                props.entries.logEach { "${it.key} = ${it.value}" }
+                props.entries.sortedBy { it.key as String }.logEach { "${it.key} = ${it.value}" }
             }
         } catch (e: Exception) {
             e.printStackTrace()

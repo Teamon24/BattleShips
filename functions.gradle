@@ -1,9 +1,0 @@
-def deleteProperties() {
-    def dir = new File(rootProject.ext.resourcesFolder)
-    for(File file: dir.listFiles())
-        if (file.name.matches(rootProject.ext.playerPropPrefix + "-[\\d]+.properties")) file.delete()
-}
-
-ext {
-    deleteProperties = this.&deleteProperties
-}
