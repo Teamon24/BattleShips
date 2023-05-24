@@ -1,16 +1,17 @@
 package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.isAny
+import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.then
 import javafx.scene.Node
 import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
 import org.home.app.ApplicationProperties.Companion.enemySelectionFadeTime
 import org.home.app.di.gameScope
 import org.home.app.di.noScope
-import org.home.mvc.contoller.BattleController
 import org.home.mvc.GameComponent
+import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.server.action.Action
@@ -18,6 +19,8 @@ import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.mvc.view.openAlertWindow
 import org.home.style.AppStyles
+import org.home.style.AppStyles.Companion.defeatedPlayerColor
+import org.home.style.AppStyles.Companion.noColor
 import org.home.style.TimelineFadeTransitions.fadeIn
 import org.home.style.TimelineFadeTransitions.fadeOut
 import org.home.style.TimelineFadeTransitions.fadeOver
@@ -26,6 +29,7 @@ import org.home.utils.StyleUtils.rightPadding
 import org.home.utils.log
 import tornadofx.onLeftClick
 import tornadofx.selectedItem
+import tornadofx.style
 
 typealias PlayersAndFleets = LinkedHashMap<String, FleetGrid>
 typealias PlayersAndFleetsReadiness = LinkedHashMap<String, ShipsTypesPane>
@@ -48,9 +52,9 @@ class EnemiesViewController : GameComponent() {
 
     init {
         initByFirstIfPresent()
-        enemiesListViewController.onSelect { currentPlayer, old, new ->
+        enemiesListViewController.onChange { _, old, new ->
             when {
-                new == old -> return@onSelect
+                new == old -> return@onChange
                 old == null && new != null    -> fadeOutFirst(new)
                 notNulls(old, new)            -> fadeOverNext(new!!)
                 old != null && new == null    -> fadeInLast()
@@ -123,7 +127,15 @@ class EnemiesViewController : GameComponent() {
 
     private fun fadeOverLabel(selected: String) {
         selectedEnemyLabel.also {
-            fadeOver(fadeTime, it) { _ -> it.text = selected }
+            fadeOver(fadeTime, it) { _ ->
+                it.text = selected
+                it.style(append = true) {
+                    backgroundColor += modelView
+                        .hasDefeated(selected)
+                        .then(defeatedPlayerColor)
+                        .or(noColor)
+                }
+            }
         }
     }
 

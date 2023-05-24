@@ -10,6 +10,7 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.NodeUtils.disableIf
@@ -44,16 +45,18 @@ internal fun BattleView.playerWasDefeated() {
                 defeated(defeated, fleetGrid, fleetReadiness)
             }
 
-            openMessageWindow {
-                val args = defeated.isCurrent then listOf("Вы", "и") or listOf(defeated, "")
-                "${args[0]} проиграл${args[1]}"
-            }
-
             defeated.isCurrent {
                 battleViewExitButtonController {
                     root.children.removeIf { it.getIndices() == indices }
-                    battleViewExitButtonController { root.setDefeated(currentView()) }
+                    battleViewExitButtonController {
+                        cell(row, col) { root.setDefeated(currentView()) }
+                    }
                 }
+            }
+
+            openMessageWindow {
+                val args = defeated.isCurrent then listOf("Вы", "и") or listOf(defeated, "")
+                "${args[0]} проиграл${args[1]}"
             }
 
             hasAWinner {

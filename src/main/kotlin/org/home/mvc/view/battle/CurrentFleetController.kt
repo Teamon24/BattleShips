@@ -1,5 +1,6 @@
 package org.home.mvc.view.battle
 
+import javafx.event.EventTarget
 import javafx.scene.Node
 import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
@@ -11,6 +12,7 @@ import org.home.mvc.view.fleet.FleetGridController
 import org.home.style.AppStyles.Companion.currentPlayerLabel
 import org.home.utils.NodeUtils.enable
 import org.home.utils.StyleUtils.leftPadding
+import tornadofx.add
 import tornadofx.addClass
 
 class CurrentFleetController: GameController() {
@@ -28,10 +30,9 @@ class CurrentFleetController: GameController() {
         .apply { addShips(modelView.shipsOf(currentPlayer)) }
         .toBorderPane()
 
+    fun EventTarget.fleetGridPane(): BorderPane = fleetGridPane.also { add(it) }
+    fun EventTarget.fleetReadinessPane(): BorderPane = fleetReadinessPane.also { add(it) }
 
-
-    fun fleetGrid() = fleetGridPane
-    fun fleetReadinessPane() = fleetReadinessPane
     fun playerLabel() = Label(currentPlayer).addClass(currentPlayerLabel)
 
     private fun <T: Node> T.toBorderPane(): BorderPane {

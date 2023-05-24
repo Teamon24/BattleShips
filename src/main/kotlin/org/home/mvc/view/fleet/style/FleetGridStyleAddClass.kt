@@ -85,7 +85,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
         defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane
     ) {
         modelView {
-            playerLabel(defeated).toggle(currentPlayerLabel, defeatedPlayerLabel)
+            playerLabel(defeated)?.toggle(currentPlayerLabel, defeatedPlayerLabel)
         }
 
         fleetReadiness
@@ -103,7 +103,6 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
                     }
                 }
             }
-
     }
 
     private fun BattleView.toggleReady(
@@ -120,7 +119,7 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
         val nonDeckClasses = isReady.getRule(emptyCell, fleetCell)
 
         modelView {
-            playerLabel(player).toggle(playerUsualOrReady)
+            playerLabel(player)?.toggle(playerUsualOrReady)
         }
 
         fleetReadiness

@@ -96,6 +96,7 @@ abstract class BattleViewModel: GameViewModel() {
 
     fun getShipsNumber(type: Int) = getShipsTypes()[type]!!
     fun lastShipType() = getShipsTypes().maxOfOrNull { entry -> entry.key } ?: 0
+    fun hasDefeated(player: String) = player in getDefeatedPlayers()
 
 }
 

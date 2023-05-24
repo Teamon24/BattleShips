@@ -29,7 +29,7 @@ class EnemiesListViewController: GameComponent() {
         view.cellFactory =  cellFactory()
     }
 
-    fun onSelect(body: (String, String?, String?) -> Unit) {
+    fun onChange(body: (String, String?, String?) -> Unit) {
         view.selectionModel.selectedItemProperty().addListener { _, old, new ->
             log { "${EnemiesViewController::class.name} - old/new [$old/$new]" }
             body(currentPlayer, old, new)

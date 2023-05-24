@@ -65,6 +65,8 @@ class AppStyles : Stylesheet() {
         val defeatedEmptyCellColor = defeatedColor.opacity(0.7)
         const val defeatedPlayerOpacity = 0.5
         val defeatedPlayerColor = defeatedColor.opacity(defeatedPlayerOpacity)
+        val playerColor = selectedColor.opacity(defeatedPlayerOpacity)
+        val noColor = selectedColor.opacity(0.0)
 
         private const val fontName = "JetBrainsMono-Light.ttf"
 
@@ -183,7 +185,7 @@ class AppStyles : Stylesheet() {
         fleetLabel + center + jetBrainFont + cellSize
 
         defeatedPlayerLabel + text(WHITE) + margin(5.px) + background(defeatedPlayerColor)
-        currentPlayerLabel  + text(WHITE) + margin(5.px) + background(selectedColor.opacity(defeatedPlayerOpacity))
+        currentPlayerLabel  + text(WHITE) + margin(5.px) + background(playerColor)
         readyPlayerLabel    + text(WHITE) + margin(5.px) + background(readyColor.opacity(defeatedPlayerOpacity))
 
         shipTypeLabel {

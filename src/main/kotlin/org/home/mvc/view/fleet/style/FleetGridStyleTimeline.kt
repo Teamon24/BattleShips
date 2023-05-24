@@ -40,7 +40,7 @@ object FleetGridStyleTimeline : FleetGridStyleComponent() {
 
     override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
         keyValues {
-            modelView.playerLabel(defeated).apply {
+            modelView.playerLabel(defeated)?.apply {
                 background(defeatedPlayerColor)
             }
 

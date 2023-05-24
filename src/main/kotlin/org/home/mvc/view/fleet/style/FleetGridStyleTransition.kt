@@ -58,7 +58,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
         fleetReadiness: ShipsTypesPane
     ) {
 
-        modelView.playerLabel(defeated).apply {
+        modelView.playerLabel(defeated)?.apply {
             fillBackground(backgroundColor, defeatedPlayerColor, time)
         }
 
