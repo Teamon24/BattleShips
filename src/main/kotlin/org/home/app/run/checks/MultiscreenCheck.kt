@@ -6,15 +6,8 @@ import javafx.scene.layout.GridPane
 import javafx.stage.Screen
 import tornadofx.App
 import tornadofx.View
-import tornadofx.launch
 import java.awt.HeadlessException
 import java.awt.MouseInfo
-
-
-
-fun main() {
-    launch<MultiscreenCheck>()
-}
 
 class MultiscreenCheck: App(MyView::class)
 

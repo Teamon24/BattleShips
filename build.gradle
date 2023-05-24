@@ -14,12 +14,13 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.10'
     id 'org.jetbrains.kotlin.jvm' version '1.8.10'
 }
+apply from: "$rootDir/functions.gradle"
 
 group = 'home'
 version = '1.0-SNAPSHOT'
 
 repositories { mavenCentral() }
-application { mainClassName = 'org.home.app.run.Application_devKt' }
+application { mainClassName = 'org.home.app.run.ApplicationKt' }
 test { useJUnitPlatform() }
 
 def koin_version = "3.2.0-beta-1"
@@ -71,20 +72,19 @@ ext {
     close = false
     resourcesFolder = "${projectDir.path}${sl}src${sl}main${sl}resources${sl}"
     playerPropPrefix = "player"
+    run = "run"
     application = "application"
     application_dev = "application-dev"
     application_debug = "application-debug"
 }
 
 def sl = rootProject.ext.sl
-def application_dev = rootProject.ext.application_dev
 
 String java = "${System.getProperty("java.home")}${sl}bin${sl}java"
 
 def jarFullpath = "${project.path}\\build\\libs\\${project.name}-${project.version}.jar"
 
 def javaCp = [java, "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
-def javaJar = [java, "-jar", jarFullpath, mainClassName]
 
 def playersNumber = 4
 def propsList = createProperties(playersNumber)
@@ -94,18 +94,17 @@ task createProperties {
     createProperties(playersNumber)
 }
 
+task player0 { doLast { run(javaCp, mainClassName, 'app', playerProp(0)) } }
+task player1 { doLast { run(javaCp, mainClassName, 'app', playerProp(1)) } }
+task player2 { doLast { run(javaCp, mainClassName, 'app', playerProp(2)) } }
+task player3 { doLast { run(javaCp, mainClassName, 'app', playerProp(3)) } }
 
-task player0 { doLast { run(concat(javaCp, mainClassName), playerProp(0)) } }
-task player1 { doLast { run(concat(javaCp, mainClassName), playerProp(1)) } }
-task player2 { doLast { run(concat(javaCp, mainClassName), playerProp(2)) } }
-task player3 { doLast { run(concat(javaCp, mainClassName), playerProp(3)) } }
+task debug_player0 { doLast { run(javaCp, mainClassName, 'app:battle-on-run', playerProp(0)) } }
+task debug_player1 { doLast { run(javaCp, mainClassName, 'app:battle-on-run', playerProp(1)) } }
+task debug_player2 { doLast { run(javaCp, mainClassName, 'app:battle-on-run', playerProp(2)) } }
+task debug_player3 { doLast { run(javaCp, mainClassName, 'app:battle-on-run', playerProp(3)) } }
 
-task debug_player0 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(0)) } }
-task debug_player1 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(1)) } }
-task debug_player2 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(2)) } }
-task debug_player3 { doLast { run(concat(javaCp, 'org.home.app.run.Debug_view_on_startKt'), playerProp(3)) } }
-
-task multiscreenCheck { doLast { run(concat(javaCp, 'org.home.app.run.checks.Multiscreen_checkKt')) } }
+task multiscreenCheck { doLast { run(javaCp, mainClassName, 'multiscreen-check') } }
 
 tasks.player0.dependsOn(build)
 tasks.player0.dependsOn(createProperties)
@@ -115,8 +114,8 @@ tasks.debug_player0.dependsOn(createProperties)
 
 tasks.multiscreenCheck.dependsOn(build)
 
-def run(List<String> command, Object... args) {
-    exec { commandLine concat(command, toString(args)) }
+def run(List<String> command, String...args) {
+    exec { commandLine concat(command, args) }
 }
 
 def pidsFile = createFile("$projectDir${sl}pids.txt")
@@ -172,15 +171,16 @@ static def concat(List<String> args1, List<String> args2) {
     return all
 }
 
-static def concat(String arg, List<String> args) {
+static def concat(List<String> args, String arg) {
     def all = new ArrayList<String>(args)
     all.add(arg)
     return all
 }
 
-static def concat(List<String> args, String arg) {
-    def all = new ArrayList<String>(args)
-    all.add(arg)
+static def concat(List<String> command, String... args) {
+    def all = new ArrayList<String>()
+    all.addAll(command)
+    all.addAll(Arrays.asList(args))
     return all
 }
 
@@ -249,12 +249,6 @@ static def extractPropName(String line) {
 
 def static getLine(List<String> lines, Predicate<String> predicate) {
     lines.stream().filter(predicate).findFirst().get()
-}
-
-def deleteProperties() {
-    def dir = new File(rootProject.ext.resourcesFolder)
-    for(File file: dir.listFiles())
-        if (file.name.matches(rootProject.ext.playerPropPrefix + "-[\\d]+.properties")) file.delete()
 }
 
 private String playerProp(Integer i) {
