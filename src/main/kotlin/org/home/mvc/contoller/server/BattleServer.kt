@@ -2,6 +2,7 @@ package org.home.mvc.contoller.server
 
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
@@ -83,6 +84,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
     override fun send(messages: Collection<Message>) = sockets.send(messages)
 
     override fun startBattle() {
+        log { "${this.name} is starting battle" }
         val turnPlayer = playerTurnComponent.startTurn()
         send {
             +BattleStartAction

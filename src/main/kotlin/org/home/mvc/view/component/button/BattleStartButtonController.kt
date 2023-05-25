@@ -1,6 +1,7 @@
 package org.home.mvc.view.component.button
 
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
@@ -23,6 +24,7 @@ import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.AppStyles.Companion.readyColor
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
+import org.home.utils.log
 import tornadofx.action
 import tornadofx.add
 import tornadofx.hide
@@ -31,8 +33,9 @@ import tornadofx.style
 class BattleStartButton(text: String = "") : Button(text)
 
 class BattleStartButtonController : GameController() {
-    private val battleController by noScope<BattleController<Action>>()
+    private val battleController           by noScope<BattleController<Action>>()
     private val battleStartButtonComponent by gameScope<BattleStartButtonComponent>()
+
     private lateinit var button: BattleStartButton
 
     fun EventTarget.create(): BattleStartButton {
@@ -67,7 +70,12 @@ class BattleStartButtonController : GameController() {
 
 abstract class BattleStartButtonComponent: GameComponent() {
     abstract fun BattleStartButton.updateStyle(player: String)
-    abstract fun BattleStartButton.text()
+    abstract val buttonText: String
+
+    fun BattleStartButton.setButtonText() {
+        log { "${this@BattleStartButtonComponent.name} button text = $buttonText" }
+        text = buttonText
+    }
 
     fun BattleStartButton.updateStyle() {
         isDisable = true
@@ -107,30 +115,23 @@ abstract class BattleStartButtonComponent: GameComponent() {
             }
         }
     }
-
-    fun BattleStartButton.setButtonText() { text() }
 }
 
 class BattleStartButtonComponentForServer : BattleStartButtonComponent() {
+    override val buttonText = battleStartButtonTextForServer
     override fun BattleStartButton.updateStyle(player: String) {
+        log { "${bean.name}#updateStyle allAreReady = ${modelView.allAreReady}" }
         isDisable = !modelView.allAreReady
-    }
-
-    override fun BattleStartButton.text() {
-        this.text = battleStartButtonTextForServer
     }
 }
 
 class BattleStartButtonComponentForClient : BattleStartButtonComponent() {
+    override val buttonText = battleStartButtonTextForClient
     override fun BattleStartButton.updateStyle(player: String) {
         if (currentPlayer != player) return
         when (modelView.hasReady(currentPlayer)) {
             true -> fillTransition()
             else -> reverseFillTransition()
         }
-    }
-
-    override fun BattleStartButton.text() {
-        this.text = battleStartButtonTextForClient
     }
 }

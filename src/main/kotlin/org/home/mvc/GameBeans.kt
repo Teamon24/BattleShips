@@ -22,7 +22,9 @@ import java.awt.Dimension
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
-open class GameBean: Component(), ScopedInstance
+open class GameBean: Component(), ScopedInstance {
+    protected val GameComponent.bean get() = this
+}
 
 abstract class GameViewModel: ViewModel() {
     protected val applicationProperties by noScope<ApplicationProperties>()
@@ -32,6 +34,7 @@ abstract class GameComponent: GameBean() {
     protected val modelView by gameScope<BattleViewModel>()
     val applicationProperties by noScope<ApplicationProperties>()
     protected open val currentPlayer = modelView.getCurrentPlayer()
+
 }
 
 open class GameController : GameComponent()

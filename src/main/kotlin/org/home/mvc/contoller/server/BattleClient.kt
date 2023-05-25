@@ -3,7 +3,6 @@ package org.home.mvc.contoller.server
 import home.ExceptionUtils.throwsOn
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.plus
 import home.extensions.AtomicBooleansExtensions.atomic
 import home.extensions.AtomicBooleansExtensions.invoke
@@ -11,10 +10,8 @@ import home.extensions.BooleansExtensions.no
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.thus
 import home.extensions.BooleansExtensions.yes
-import javafx.application.Platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.home.app.di.gameScope
 import org.home.mvc.GameController
 import org.home.mvc.contoller.AwaitConditions
@@ -47,7 +44,6 @@ import org.home.mvc.contoller.server.action.event
 import org.home.mvc.model.areDestroyed
 import org.home.mvc.model.isDestroyed
 import org.home.mvc.model.removeAndGetBy
-import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.Ping
 import org.home.utils.DSLContainer

@@ -102,7 +102,7 @@ fun gameScoped(): Module {
             scoped { BattleStartButtonController() }
             scoped { BattleViewExitButtonController() }
 
-            scoped {
+            factory {
                 get<ApplicationProperties>().isServer
                     .then { BattleStartButtonComponentForServer() }
                     .or   { BattleStartButtonComponentForClient() }

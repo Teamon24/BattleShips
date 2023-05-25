@@ -59,13 +59,10 @@ class EnemiesViewController : GameComponent() {
                 notNulls(old, new)            -> fadeOverNext(new!!)
                 old != null && new == null    -> fadeInLast()
             }
-            log { "selected: $selectedItem" }
         }
     }
 
     val enemiesList = enemiesListViewController.view
-
-    private val selectedItem get() = enemiesList.selectedItem
 
     val selectedEnemyLabel = Label()
     val selectedFleetPane = BorderPane()
@@ -168,17 +165,17 @@ class EnemiesViewController : GameComponent() {
             .addFleetCellClass(AppStyles.enemyCell)
             .onEachFleetCells {
                 it.onLeftClick {
-                    val enemyToHit = selectedItem
-                    if (enemyToHit == null) {
+                    val enemy = enemiesList.selectedItem
+                    if (enemy == null) {
                         openAlertWindow { "Выберите игрока для выстрела" }
                         return@onLeftClick
                     }
 
-                    val hitCoord = it.coord
-                    log { "shooting $hitCoord" }
+                    val shot = it.coord
+                    log { "shooting $shot" }
 
-                    modelView.hasNo(enemyToHit, hitCoord).so {
-                        battleController.shot(enemyToHit, hitCoord)
+                    modelView.hasNo(enemy, shot).so {
+                        battleController.shot(enemy, shot)
                     }
                 }
             }
