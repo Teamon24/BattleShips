@@ -10,7 +10,6 @@ import org.home.mvc.contoller.events.PlayerLeaved
 import org.home.mvc.contoller.events.PlayerWasDefeated
 import org.home.mvc.contoller.events.PlayerWasDisconnected
 import org.home.mvc.view.battle.BattleView
-import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.NodeUtils.disableIf
@@ -48,9 +47,7 @@ internal fun BattleView.playerWasDefeated() {
             defeated.isCurrent {
                 battleViewExitButtonController {
                     root.children.removeIf { it.getIndices() == indices }
-                    battleViewExitButtonController {
-                        cell(row, col) { root.setDefeated(currentView()) }
-                    }
+                    setToCell(currentView().setDefeated(root))
                 }
             }
 
@@ -68,12 +65,12 @@ internal fun BattleView.playerWasDefeated() {
 
 
 private inline fun <reified T: HasAPlayer> BattleView.subscribeToRemove(
-    crossinline function: (HasAPlayer) -> String
+    crossinline message: (HasAPlayer) -> String
 ) {
     subscribe<T> {
         logEvent(it, modelView)
         removePlayer(it.player)
-        openMessageWindow { function(it) }
+        openMessageWindow { message(it) }
     }
 }
 

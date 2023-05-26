@@ -43,7 +43,7 @@ sealed class Action: Message {
             is BattleStartAction,
             is BattleContinuationAction -> prefix
             is BattleEndAction -> "$prefix(winner=$player)"
-            is NewServerAction -> "$prefix(${player}, turn=${turnList})"
+            is NewServerAction -> "$prefix(${player}, turn=${turnList}, ready=${readyPlayers})"
             is NewServerConnectionAction -> run { "$prefix(${toStringPart()})" }
             is ShipAdditionAction -> "$prefix[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
             is ShipDeletionAction -> "$prefix[$player: $op${RomansDigits.arabicToRoman(shipType)}]"
