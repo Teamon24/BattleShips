@@ -1,7 +1,10 @@
 package org.home.mvc.model
 
+import home.extensions.AnysExtensions.addTo
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.removeFrom
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import home.extensions.BooleansExtensions.yes
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
@@ -21,12 +24,11 @@ import org.home.utils.extensions.ObservablePropertiesExtensions.setProperty
 import org.home.utils.extensions.onMapChange
 import org.home.utils.log
 import org.home.utils.logOnChange
-import java.util.concurrent.ConcurrentHashMap
 
 typealias PlayersAndShips = SimpleMapProperty<String, Ships>
 typealias ShipsTypes = SimpleMapProperty<Int, Int>
-typealias FleetsReadiness = ConcurrentHashMap<String, MutableMap<Int, SimpleIntegerProperty>>
 typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
+typealias FleetsReadiness = SimpleMapProperty<String, FleetReadiness>
 
 class BattleViewModelImpl : BattleViewModel() {
     private val _currentPlayer = applicationProperties.currentPlayer
@@ -43,7 +45,7 @@ class BattleViewModelImpl : BattleViewModel() {
     private val playersNumber = bind { playersNumberProp }.logOnChange("playersNumber")
     private val shipsTypes = mapProperty<Int, Int>().updateFleetReadiness().putInitials()
 
-    private val fleetsReadiness = FleetsReadiness()
+    private val fleetsReadiness = mapProperty<String, FleetReadiness>().logOnChange("fleetsReadiness")
 
     private val players = listProperty<String>().logOnChange("players")
     private val enemies = listProperty<String>().logOnChange("enemies")
@@ -82,7 +84,7 @@ class BattleViewModelImpl : BattleViewModel() {
     //-------------------------------------------------------------------------------------------------
     //Fleets readiness
     override fun fleetReadiness(player: String) = fleetsReadiness[player]!!
-    override fun getFleetsReadiness() = fleetsReadiness
+    override fun getFleetsReadiness(): FleetsReadiness = fleetsReadiness
 
     override fun updateFleetReadiness(event: FleetEditEvent) {
         event {
@@ -161,12 +163,11 @@ class BattleViewModelImpl : BattleViewModel() {
             val player = change.key
             when {
                 change.wasAdded() -> {
-                    player.also {
-                        players.add(it)
-                        it.isNotCurrent { enemies.add(it) }
-                        setNotReady(it)
-                        fleetsReadiness[it] = initFleetsReadiness(shipsTypes)
-                        log { "added \"$it\"" }
+                    player {
+                        addTo(players)
+                        isNotCurrent { addTo(enemies) }
+                        setNotReady()
+                        fleetsReadiness[this] = initFleetsReadiness(shipsTypes)
                     }
                 }
 
@@ -174,13 +175,13 @@ class BattleViewModelImpl : BattleViewModel() {
                     player {
                         removeFrom(players)
                         isNotCurrent { removeFrom(enemies) }
-                        removeFrom(readyPlayers)
+                        setReady()
                         removeFrom(fleetsReadiness)
                         removeFrom(defeatedPlayers)
-                        log { "removed \"${this@player}\"" }
                     }
                 }
             }
+            log { "${change.wasAdded().then("added").or("removed")} \"$player\"" }
         }
     }
 

@@ -3,11 +3,10 @@ package org.home.mvc.contoller.server
 import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
-import home.extensions.BooleansExtensions.invoke
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
-import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.isNotEmpty
+import home.extensions.MapExtensions.exclude
 import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.contoller.AwaitConditions
@@ -61,7 +60,6 @@ import org.home.mvc.contoller.server.action.SinkingAction
 import org.home.mvc.contoller.server.action.TurnAction
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.model.thoseAreReady
-import org.home.mvc.view.battle.subscription.NewServerInfo
 import org.home.net.server.Message
 import org.home.net.server.MultiServer
 import org.home.utils.DSLContainer
@@ -71,9 +69,9 @@ import org.home.utils.log
 class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Action> {
 
     private val battleEndingComponent: BattleEndingComponent by gameScope()
-    private val awaitConditions: AwaitConditions by gameScope()
-    private val shotProcessingComponent by noScope<ShotProcessingComponent>()
-    private val playerTurnComponent by noScope<PlayerTurnComponent>()
+    private val awaitConditions: AwaitConditions             by gameScope()
+    private val shotProcessingComponent                      by noScope<ShotProcessingComponent>()
+    private val playerTurnComponent                          by noScope<PlayerTurnComponent>()
 
     override val currentPlayer = super.currentPlayer
 
@@ -114,13 +112,13 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                 playerTurnComponent {
                     remove(currentPlayer)
                     currentPlayer.hasATurn { nextTurn() }
-                    send(NewServerAction(turnPlayer!!, turnList, getReadyPlayers().toMutableSet()))
+                    send(NewServerAction(turnPlayer!!, turnList, getReadyPlayers()))
                 }
                 waitNewServerAndThenSend()
             }
 
             if (battleIsNotStarted() && hasEnemies()) {
-                send(NewServerAction(exclude(currentPlayer).first(), readyPlayers = getReadyPlayers().toMutableSet()))
+                send(NewServerAction(exclude(currentPlayer).first(), readyPlayers = getReadyPlayers()))
                 waitNewServerAndThenSend()
             }
         }

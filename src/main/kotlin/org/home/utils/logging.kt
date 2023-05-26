@@ -10,9 +10,11 @@ import home.extensions.AnysExtensions.refNumber
 import home.extensions.BooleansExtensions.otherwise
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleSetProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.ListChangeListener
+import javafx.collections.MapChangeListener
 import javafx.collections.SetChangeListener
 import javafx.event.Event
 import org.home.mvc.model.BattleViewModel
@@ -269,6 +271,11 @@ fun <T> SimpleListProperty<T>.logOnChange(name: String) = apply {
 fun <T> SimpleSetProperty<T>.logOnChange(name: String) = apply {
     addListener(SetChangeListener { log { "$name - ${it.set}" } })
 }
+
+fun <K, V> SimpleMapProperty<K, V>.logOnChange(name: String) = apply {
+    addListener(MapChangeListener { log { "$name - ${it.map}" } })
+}
+
 
 fun Socket.omitIfLocalhost(): String {
     return toString()

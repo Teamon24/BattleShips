@@ -17,7 +17,6 @@ import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.openMessageWindow
 import org.home.utils.IpUtils.freePort
-import org.home.utils.NodeUtils.enable
 import org.home.utils.logEvent
 import tornadofx.View
 import java.io.Serializable
@@ -73,10 +72,7 @@ internal fun BattleView.battleIsStarted() {
 
         modelView.getReadyPlayers().clear()
         battleStartButtonController.hide()
-
         currentFleetController.updateCurrentPlayerFleetGrid()
-
-        //НАЙТИ КАК УДАЛИТЬ EventHandler'ы у FleetGreed
         openMessageWindow { "Бой начался" }
     }
 }

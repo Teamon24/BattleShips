@@ -2,6 +2,7 @@ package org.home.mvc.contoller.serverTransfer
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
+import home.extensions.CollectionsExtensions.isEmpty
 import home.extensions.BooleansExtensions.so
 import org.home.mvc.GameController
 import org.home.mvc.contoller.events.BattleIsContinued
@@ -62,7 +63,7 @@ sealed class NewServerViewController: GameController() {
             connectedPlayers.remove(it.player)
             root { label("Подключился: ${it.player}") }
             log { "connectedPlayers: $connectedPlayers" }
-            connectedPlayers.isEmpty().so {
+            connectedPlayers.isEmpty {
                 battleController.continueBattle()
             }
         }

@@ -52,21 +52,20 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun remove(player: String)
     abstract fun setNewServer(newServerInfo: NewServerInfo)
 
-    fun newServer(init: NewServerInfo.() -> Unit) {
-        setNewServer(NewServerInfo().apply(init))
-    }
-
+    fun newServer(init: NewServerInfo.() -> Unit) { setNewServer(NewServerInfo().apply(init)) }
     fun battleIsStarted(onTrue: () -> Unit) = battleIsStarted().so(onTrue)
     fun exclude(player: String) = getPlayers().exclude(player)
-    fun noPropertyFleetReadiness(player: String) = fleetReadiness(player).mapValues { it.value.value }
-    fun noPropertyFleetReadiness() = getFleetsReadiness().mapValues { it.value.mapValues { it.value.value } }
+    fun noPropertyFleetReadiness(player: String) = propless(fleetReadiness(player))
+    fun noPropertyFleetReadiness() = getFleetsReadiness().mapValues { propless(it.value) }
     fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
     fun setReady(player: String)  { getReadyPlayers().add(player) }
-    fun setAllReady(readyPlayers: Collection<String>)  { getReadyPlayers().addAll(readyPlayers) }
     fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
+    fun String.setReady() { getReadyPlayers().add(this) }
+    fun String.setNotReady() { getReadyPlayers().remove(this) }
+    fun setAllReady(readyPlayers: Collection<String>)  { getReadyPlayers().addAll(readyPlayers) }
 
     inline fun hasEnemies() = getEnemies().hasElements
     inline val String?.isCurrent get() = getCurrentPlayer() == this
@@ -79,11 +78,10 @@ abstract class BattleViewModel: GameViewModel() {
     fun hasOnePlayerLeft() = getPlayers().size == 1 && battleIsEnded()
     fun hasAWinner() = getPlayers().size - getDefeatedPlayers().size == 1
     inline fun hasAWinner(onTrue: () -> Unit) = hasAWinner().so(onTrue)
-
     fun lastShipWasAdded(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(0).so(onTrue)
     fun lastShipWasDeleted(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(1).so(onTrue)
     private fun String.lastShipWasEdited(i: Int): Boolean {
-        val restShipsNumbers = getFleetsReadiness()[getCurrentPlayer()]!!
+        val restShipsNumbers = getFleetsReadiness()[this]!!
             .values
             .map { it.value }
 
@@ -95,9 +93,11 @@ abstract class BattleViewModel: GameViewModel() {
     }
 
     fun getShipsNumber(type: Int) = getShipsTypes()[type]!!
+
     fun lastShipType() = getShipsTypes().maxOfOrNull { entry -> entry.key } ?: 0
     fun hasDefeated(player: String) = player in getDefeatedPlayers()
 
+    private fun propless(mutableMap: MutableMap<Int, SimpleIntegerProperty>) = mutableMap.mapValues { it.value.value }
 }
 
 inline operator fun BattleViewModel.invoke(crossinline b: BattleViewModel.() -> Unit) = this.b()

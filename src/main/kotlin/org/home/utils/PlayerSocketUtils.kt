@@ -4,6 +4,7 @@ import org.home.mvc.contoller.server.action.Action
 import org.home.net.server.MessagesDSL.Messages.Companion.withInfo
 import org.home.utils.SocketUtils.send
 import home.extensions.CollectionsExtensions.asMutableList
+import home.extensions.ArrayExtensions.isEmpty
 import org.home.mvc.contoller.server.PlayerSocket
 
 
@@ -21,10 +22,7 @@ object PlayerSocketUtils {
         first: MutableMap<String, MutableList<Action>>,
         vararg others: Map<String, List<Action>>,
     ): MutableMap<String, MutableList<Action>> {
-        if (others.isEmpty()) {
-            return first
-        }
-
+        others.isEmpty { return first }
         return others.fold(first, ::mergeTwo)
     }
 

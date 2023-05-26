@@ -1,6 +1,6 @@
 package org.home.mvc.view.battle.subscription
 
-import home.extensions.CollectionsExtensions.excludeAll
+import home.extensions.MapExtensions.excludeAll
 import org.home.app.ApplicationProperties
 import org.home.mvc.GameComponent
 import org.home.mvc.contoller.events.TurnReceived
