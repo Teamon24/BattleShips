@@ -40,10 +40,12 @@ class ObservableValueMap<K, V> : HashMap<K, V>() {
     }
 }
 
-fun <K, V> ObservableMap<K, V>.onMapChange(change: (MapChangeListener.Change<out K, out V>) -> Unit) {
+inline fun <K, V> ObservableMap<K, V>.onMapChange(
+    crossinline change: (MapChangeListener.Change<out K, out V>) -> Unit
+) {
     addListener(MapChangeListener { change(it) })
 }
 
-fun <E> ObservableList<E>.onLisChange(change: (ListChangeListener.Change<out E>) -> Unit) {
+inline fun <E> ObservableList<E>.onLisChange(crossinline change: (ListChangeListener.Change<out E>) -> Unit) {
     addListener(ListChangeListener { change(it) })
 }

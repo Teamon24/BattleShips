@@ -24,6 +24,7 @@ import kotlin.system.exitProcess
 
 open class GameBean: Component(), ScopedInstance {
     protected val GameComponent.bean get() = this
+    val applicationProperties by noScope<ApplicationProperties>()
 }
 
 abstract class GameViewModel: ViewModel() {
@@ -32,9 +33,7 @@ abstract class GameViewModel: ViewModel() {
 
 abstract class GameComponent: GameBean() {
     protected val modelView by gameScope<BattleViewModel>()
-    val applicationProperties by noScope<ApplicationProperties>()
     protected open val currentPlayer = modelView.getCurrentPlayer()
-
 }
 
 open class GameController : GameComponent()

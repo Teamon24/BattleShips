@@ -13,16 +13,16 @@ class ShipsTypesPaneController: GameController() {
 
     fun EventTarget.shipTypesPaneControl(): ShipsTypesPane {
         return ShipsTypesPane().apply {
-                component.addShipTypeButton(this)
-                component.removeShipTypeButton(this)
-                addLabels(modelView.getShipsTypes())
-            }.also {
-                add(it)
-            }
+            component.addShipTypeButton(this)
+            component.removeShipTypeButton(this)
+            addLabels(modelView.getShipsTypes())
+        }.also {
+            add(it)
+        }
     }
 
     fun shipTypesPane(player: String): ShipsTypesPane {
-        val shipsTypes = modelView.fleetReadiness(player)
+        val shipsTypes = modelView.getFleetReadiness(player)
         return ShipsTypesPane().apply { addLabels(shipsTypes) }
     }
 

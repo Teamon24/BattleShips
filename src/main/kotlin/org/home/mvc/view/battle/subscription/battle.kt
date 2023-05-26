@@ -114,15 +114,16 @@ internal fun BattleView.serverTransferReceived() {
                 ip = applicationProperties.ip
                 port = freePort()
                 player = newServerPlayer
-                turnList = event.turnList
-                readyPlayers = getReadyPlayers().toMutableSet()
+                player = newServerPlayer
+                turnList = event.action.turnList
+                readyPlayers = event.action.readyPlayers
             }
 
             getPlayersNumber().value -= 1
             newServerPlayer.isCurrent {
                 battleController {
                     applicationProperties.isServer = true
-                    send(NewServerConnectionAction(getNewServer()))
+                    send(NewServerConnectionAction(getNewServerInfo()))
                     disconnect()
                 }
             }

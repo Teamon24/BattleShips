@@ -10,12 +10,10 @@ import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.AppView
 import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.component.GridPaneExtensions.cell
 
-class BattleViewExitButtonController: GameController() {
+class BattleViewExitButtonController(val row: Int = 2, val col: Int = 0) : GameController() {
     private lateinit var button: Button
-
-    val row = 2
-    val col = 0
     val indices = row to col
     private val viewSwitchButtonController by gameScope<ViewSwitchButtonController>()
     private val battleController by noScope<BattleController<Action>>()
@@ -36,8 +34,12 @@ class BattleViewExitButtonController: GameController() {
         }
     }
 
-    fun EventTarget.setDefeated(battleView: BattleView): Button {
-        viewSwitchButtonController { button = defeatedLeaveButton(battleView) }
+    fun BattleView.setDefeated(eventTarget: EventTarget): Button {
+        viewSwitchButtonController { button = eventTarget.defeatedLeaveButton(this@setDefeated) }
         return button
+    }
+
+    fun setToCell(defeated: Button) {
+        cell(row, col) { defeated }
     }
 }

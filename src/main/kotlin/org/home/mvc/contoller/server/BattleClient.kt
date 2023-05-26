@@ -91,6 +91,7 @@ class BattleClient : GameController(), BattleController<Action> {
 
     @Throws(UnknownHostException::class, IOException::class)
     override fun connect(ip: String, port: Int) {
+        log { "connecting to $ip:$port" }
         serverSocket = Socket(ip, port)
         output = serverSocket.getOutputStream()
         input = serverSocket.getInputStream()
@@ -172,17 +173,17 @@ class BattleClient : GameController(), BattleController<Action> {
         val ships = modelView.shipsOf(currentPlayer)
         val hitShip = ships.removeAndGetBy(shotAction.shot)
 
-            send {
-                hitShip.isDestroyed thus {
-                    +SinkingAction(shotAction).also { +ShipWasSunk(it) }
-                } otherwise {
-                    +HitAction(shotAction).also { +ShipWasHit(it) }
-                }
-
-                ships.areDestroyed {
-                    +DefeatAction(shotAction.player, currentPlayer).also { +PlayerWasDefeated(it) }
-                }
+        send {
+            hitShip.isDestroyed thus {
+                +SinkingAction(shotAction).also { +ShipWasSunk(it) }
+            } otherwise {
+                +HitAction(shotAction).also { +ShipWasHit(it) }
             }
+
+            ships.areDestroyed {
+                +DefeatAction(shotAction.player, currentPlayer).also { +PlayerWasDefeated(it) }
+            }
+        }
     }
 
     override fun endBattle() {

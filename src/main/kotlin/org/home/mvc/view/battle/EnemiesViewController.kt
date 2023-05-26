@@ -4,6 +4,7 @@ import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
+import home.extensions.MapExtensions.excludeAll
 import javafx.scene.Node
 import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
@@ -25,6 +26,7 @@ import org.home.style.TimelineFadeTransitions.fadeIn
 import org.home.style.TimelineFadeTransitions.fadeOut
 import org.home.style.TimelineFadeTransitions.fadeOver
 import org.home.utils.NodeUtils.disable
+import org.home.utils.NodeUtils.enable
 import org.home.utils.StyleUtils.rightPadding
 import org.home.utils.log
 import tornadofx.onLeftClick
@@ -192,5 +194,15 @@ class EnemiesViewController : GameComponent() {
                 }
             }
         }
+    }
+
+    fun enableAllExcept(exceptions: List<String>) {
+        fleetGridsPanes.excludeAll(exceptions).enable()
+        fleetsReadinessPanes.excludeAll(exceptions).enable()
+    }
+
+    fun disableAll() {
+        fleetGridsPanes.disable()
+        fleetsReadinessPanes.disable()
     }
 }

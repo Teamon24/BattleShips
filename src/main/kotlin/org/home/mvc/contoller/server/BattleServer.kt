@@ -7,6 +7,7 @@ import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.isNotEmpty
 import home.extensions.MapExtensions.exclude
+import javafx.beans.property.SimpleSetProperty
 import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.contoller.AwaitConditions
@@ -112,13 +113,18 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                 playerTurnComponent {
                     remove(currentPlayer)
                     currentPlayer.hasATurn { nextTurn() }
-                    send(NewServerAction(turnPlayer!!, turnList, getReadyPlayers()))
+                    send(NewServerAction(turnPlayer!!, turnList, readyPlayersExcluding(currentPlayer)))
                 }
                 waitNewServerAndThenSend()
             }
 
             if (battleIsNotStarted() && hasEnemies()) {
-                send(NewServerAction(exclude(currentPlayer).first(), readyPlayers = getReadyPlayers()))
+                send(
+                    NewServerAction(
+                        player = exclude(currentPlayer).first(),
+                        readyPlayers = readyPlayersExcluding(currentPlayer)
+                    )
+                )
                 waitNewServerAndThenSend()
             }
         }
@@ -126,11 +132,16 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
         disconnect()
     }
 
+    fun BattleViewModel.readyPlayersExcluding(player: String): SimpleSetProperty<String> {
+        remove(player)
+        return getReadyPlayers()
+    }
+
     private fun waitNewServerAndThenSend() {
         awaitConditions.newServerFound.await()
         Thread.sleep(1000)
         modelView {
-            excluding(getNewServer().player).send(NewServerConnectionAction(getNewServer()))
+            excluding(getNewServerInfo().player).send(NewServerConnectionAction(getNewServerInfo()))
         }
     }
 
@@ -171,9 +182,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
             is ReadyAction -> processReadiness(action, ::PlayerIsReadyReceived)
             is FleetsReadinessAction -> {
                 eventbus(FleetsReadinessReceived(action))
-                action.states.keys.forEach { player ->
-                    excluding(player).send(action)
-                }
+                action.states.keys.forEach { player -> excluding(player).send(action) }
             }
 
             is ShipAdditionAction -> processFleetEdit(action, ::ShipWasAdded)
@@ -186,11 +195,11 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
 
             is PlayerToRemoveAction -> sendRemovePlayer(action)
 
-            is NewServerConnectionAction -> awaitConditions.newServerFound.notifyUI() {
-                action {
-                    setNewServer(newServer)
+            is NewServerConnectionAction -> awaitConditions
+                .newServerFound
+                .notifyUI() {
+                    action { setNewServer(newServer) }
                 }
-            }
 
             else -> throw ActionTypeAbsentException(action.javaClass.name, javaClass.name, "process")
         }
