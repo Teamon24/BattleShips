@@ -1,6 +1,10 @@
 package org.home.mvc.model
 
+import home.extensions.AnysExtensions.addTo
 import home.extensions.AnysExtensions.invoke
+import home.extensions.AnysExtensions.removeFrom
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import home.extensions.BooleansExtensions.yes
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
@@ -17,6 +21,7 @@ import org.home.utils.extensions.ObservablePropertiesExtensions.copy
 import org.home.utils.extensions.ObservablePropertiesExtensions.listProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.mapProperty
 import org.home.utils.extensions.ObservablePropertiesExtensions.setProperty
+import org.home.utils.extensions.onMapChange
 import org.home.utils.log
 import org.home.utils.logOnChange
 
@@ -26,50 +31,45 @@ typealias FleetReadiness = MutableMap<Int, SimpleIntegerProperty>
 typealias FleetsReadiness = SimpleMapProperty<String, FleetReadiness>
 
 class BattleViewModelImpl : BattleViewModel() {
-    private val currentPlayer             = applicationProperties.currentPlayer
-    private val size                      = applicationProperties.size
-    private var maxShipType               = applicationProperties.maxShipType
-    private val widthProp                 = SimpleIntegerProperty(size)
-    private val heightProp                = SimpleIntegerProperty(size)
-    private val playersNumberProp         = SimpleIntegerProperty(applicationProperties.playersNumber)
-    private val width                     = bind { widthProp }.logOnChange("width")
-    private val height                    = bind { heightProp }.logOnChange("height")
-    private val playersNumber             = bind { playersNumberProp }.logOnChange("playersNumber")
+    private val _currentPlayer = applicationProperties.currentPlayer
+    private val size = applicationProperties.size
 
-    private val playersAndShips           = mapProperty<String, Ships>()
-    private val shipsTypes                = mapProperty<Int, Int>()
-    private val fleetsReadiness           = mapProperty<String, FleetReadiness>()
-    private val players                   = listProperty<String>()
-    private val enemies                   = listProperty<String>()
-    private val defeatedPlayers           = listProperty<String>()
-    private val readyPlayers              = setProperty<String>()
-    private val statistics                = mutableListOf<HasAShot>()
-    private var battleIsEnded             = false
-    private var battleIsStarted           = false
+    private var maxShipType = applicationProperties.maxShipType
+
+    private val widthProp = SimpleIntegerProperty(size)
+    private val heightProp = SimpleIntegerProperty(size)
+
+    private val playersNumberProp = SimpleIntegerProperty(applicationProperties.playersNumber)
+    private val width = bind { widthProp }.logOnChange("width")
+    private val height = bind { heightProp }.logOnChange("height")
+    private val playersNumber = bind { playersNumberProp }.logOnChange("playersNumber")
+    private val shipsTypes = mapProperty<Int, Int>().updateFleetReadiness().putInitials()
+
+    private val fleetsReadiness = mapProperty<String, FleetReadiness>().logOnChange("fleetsReadiness")
+
+    private val players = listProperty<String>().logOnChange("players")
+    private val enemies = listProperty<String>().logOnChange("enemies")
+    private val defeatedPlayers = listProperty<String>().logOnChange("defeated")
+    private val readyPlayers = setProperty<String>().logOnChange("ready players")
+
+    private var battleIsEnded = false
+    private var battleIsStarted = false
     private var newServer: NewServerInfo? = null
-    override val turn                     = SimpleStringProperty()
 
-    init {
-        fleetsReadiness.logOnChange("fleetsReadiness")
-        shipsTypes.updateFleetReadiness().putInitials()
-        players.logOnChange("players")
-        enemies.logOnChange("enemies")
-        defeatedPlayers.logOnChange("defeated")
-        readyPlayers.logOnChange("ready players")
-        playersAndShips.addOnChange().putInitials()
-    }
 
     override fun add(player: String) { playersAndShips[player] = mutableListOf() }
-    override fun remove(player: String) { playersAndShips.remove(player) }
+
+    override fun remove(player: String) {
+        playersAndShips.remove(player)
+    }
 
     override fun getWidth(): SimpleIntegerProperty = width
     override fun getHeight(): SimpleIntegerProperty = height
     override fun getPlayersNumber(): SimpleIntegerProperty = playersNumber
-    override fun getPlayersAndShipsNumber() = playersAndShips
 
-    override fun getNewServerInfo() = newServer!!
-    override fun newServerInfo(newServerInfo: NewServerInfo) {
-        newServer = newServerInfo
+    override fun getNewServer() = newServer!!
+    override fun setNewServer(value: NewServerInfo) {
+        newServer = value
     }
 
     override fun equalizeSizes() { getHeight().value = getWidth().value }
@@ -79,14 +79,17 @@ class BattleViewModelImpl : BattleViewModel() {
     override fun battleIsEnded() = battleIsEnded
     override fun battleIsStarted() = battleIsStarted
     override fun battleIsNotStarted() = !battleIsStarted
+    override val turn = SimpleStringProperty()
 
     //-------------------------------------------------------------------------------------------------
     //Fleets readiness
+    override fun fleetReadiness(player: String) = fleetsReadiness[player]!!
     override fun getFleetsReadiness(): FleetsReadiness = fleetsReadiness
-    override fun setFleetReadiness(player: String, readiness: FleetReadiness) { fleetsReadiness[player] = readiness }
-    override fun getFleetReadiness(player: String) = fleetsReadiness[player]!!
+
     override fun updateFleetReadiness(event: FleetEditEvent) {
-        event { fleetsReadiness[player]!![shipType]!!.propOp() }
+        event {
+            fleetsReadiness[player]!![shipType]!!.propOp()
+        }
     }
 
     override fun putFleetSettings(settings: FleetSettingsAction) {
@@ -96,9 +99,11 @@ class BattleViewModelImpl : BattleViewModel() {
         shipsTypes.putAll(settings.shipsTypes)
     }
 
+    override fun hasNoServerTransfer() = newServer == null
+
     //-------------------------------------------------------------------------------------------------
     //players
-    override fun getCurrentPlayer() = currentPlayer
+    override fun getCurrentPlayer() = _currentPlayer
     override fun getPlayers(): SimpleListProperty<String> = players
     override fun getEnemies(): SimpleListProperty<String> = enemies
     override fun getDefeatedPlayers(): SimpleListProperty<String> = defeatedPlayers
@@ -127,8 +132,9 @@ class BattleViewModelImpl : BattleViewModel() {
     override fun String.hasDeck(deck: Coord) = playersAndShips[this]!!.flatten().contains(deck)
     override fun shipsOf(player: String): Ships = playersAndShips[player]!!
 
-    override fun getShipBy(hasAShot: HasAShot) = mutableListOf<Coord>().also { rightNext(hasAShot.shot, it) }
+    override fun getShipBy(hasAShot: HasAShot) = mutableListOf<Coord>().also { getRightNextTo(hasAShot.shot, it) }
     override fun getShipsTypes() = shipsTypes
+
 
     override fun copyShipsTypes(): ShipsTypes {
         val copy = shipsTypes.copy()
@@ -140,46 +146,94 @@ class BattleViewModelImpl : BattleViewModel() {
         return copy
     }
 
+    private val statistics = mutableListOf<HasAShot>()
+
+    private fun initFleetsReadiness(shipsTypes: Map<Int, Int>): FleetReadiness {
+        return shipsTypes
+            .mapValues { SimpleIntegerProperty(it.value) }
+            .toMutableMap()
+    }
+
+    private val playersAndShips = mapProperty<String, Ships>()
+        .notifyOnChange()
+        .putInitials()
+
+    private fun PlayersAndShips.notifyOnChange() = apply {
+        onMapChange { change ->
+            val player = change.key
+            when {
+                change.wasAdded() -> {
+                    player {
+                        addTo(players)
+                        isNotCurrent { addTo(enemies) }
+                        setNotReady()
+                        fleetsReadiness[this] = initFleetsReadiness(shipsTypes)
+                    }
+                }
+
+                change.wasRemoved() -> {
+                    player {
+                        removeFrom(players)
+                        isNotCurrent { removeFrom(enemies) }
+                        setReady()
+                        removeFrom(fleetsReadiness)
+                        removeFrom(defeatedPlayers)
+                    }
+                }
+            }
+            log { "${change.wasAdded().then("added").or("removed")} \"$player\"" }
+        }
+    }
+
     private fun SimpleMapProperty<Int, Int>.putInitials() = apply {
         0.until(maxShipType).forEach {
             put(it + 1, maxShipType - it)
         }
     }
 
+    private fun ShipsTypes.updateFleetReadiness() = apply {
+        onMapChange {
+            fleetsReadiness {
+                keys.forEach { player ->
+                    put(player, initFleetsReadiness(this@apply))
+                }
+            }
+        }
+    }
+
     @JvmName("putInitialsToPlayersAndShips")
     private fun PlayersAndShips.putInitials(): PlayersAndShips {
         applicationProperties.ships?.let { ships ->
-            set(currentPlayer, ships)
+            set(_currentPlayer, ships)
             log { "init ships from app props - $ships" }
             fleetsReadiness {
                 val initialFleetReadiness = ships.fleetReadiness()
                 if (initialFleetReadiness == shipsTypes) {
-                    setReady(currentPlayer)
+                    setReady(_currentPlayer)
                 }
-                put(currentPlayer, initialFleetReadiness.toFleetsReadiness())
+                put(_currentPlayer, initFleetsReadiness(initialFleetReadiness))
                 ships.forEach { ship ->
-                    updateFleetReadiness(ShipWasAdded(currentPlayer, ship.size))
+                    updateFleetReadiness(ShipWasAdded(_currentPlayer, ship.size))
                 }
             }
         } ?: run {
-            add(currentPlayer)
+            set(_currentPlayer, mutableListOf())
         }
 
         return this
     }
 
-    override fun hasNoServerTransfer() = newServer == null
 
-    private fun rightNext(
+    private fun getRightNextTo(
         coord: Coord,
         container: MutableList<Coord>
     ) {
-        var tempCont = getHits().rightNextTo(coord)
+        var tempCont = getHits().getRightNextTo(coord)
         if (container.containsAll(tempCont)) return
         container.addAll(tempCont)
 
         tempCont.forEach {
-            rightNext(it, container)
+            getRightNextTo(it, container)
         }
     }
 }

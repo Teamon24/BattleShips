@@ -4,8 +4,12 @@ import home.extensions.AnysExtensions.invoke
 import javafx.geometry.Pos
 import org.home.app.ApplicationProperties.Companion.appViewAnimationGridHeight
 import org.home.app.ApplicationProperties.Companion.appViewAnimationGridWidth
+import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
+import org.home.app.ApplicationProperties.Companion.joinButtonText
 import org.home.mvc.Animations.appViewAnimationGrid
 import org.home.mvc.GameView
+import org.home.mvc.view.battle.BattleCreationView
+import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
 import org.home.mvc.view.component.PannableScrollPane.Companion.pannableScrollPane
@@ -33,8 +37,16 @@ class AppView : GameView("Sea Battle") {
                     cell(0, 0) {
                         centerGrid {
                             viewSwitchButtonController {
-                                cell(0, 0) { serverNewGameButton(currentView()) }
-                                cell(1, 0) { clientNewGameButton(currentView()) }
+                                cell(0, 0) {
+                                    newGameButton<BattleCreationView>(currentView(), createNewGameButtonText) {
+                                        setServerNewGame(true)
+                                    }
+                                }
+                                cell(1, 0) {
+                                    newGameButton<BattleJoinView>(currentView(), joinButtonText) {
+                                        setServerNewGame(false)
+                                    }
+                                }
                             }
                             cell(2, 0) { exitButton() }
                         }.apply {

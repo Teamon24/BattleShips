@@ -2,9 +2,9 @@ package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import javafx.geometry.Pos
-import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
 import org.home.app.di.gameScope
@@ -12,10 +12,10 @@ import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
 import org.home.mvc.contoller.ShipsTypesPane
-import org.home.mvc.contoller.server.AddressComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.battle.subscription.SubscriptionComponent
+import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
@@ -34,7 +34,6 @@ import tornadofx.gridpane
 import tornadofx.label
 
 class BattleView : GameView("Battle View") {
-    internal val addressComponent               by gameScope<AddressComponent>()
     internal val battleController               by noScope<BattleController<Action>>()
     internal val readinessStyleComponent        by gameScope<FleetGridStyleComponent>(CLASS)
     internal val shotStyleComponent             by gameScope<FleetGridStyleComponent>(TRANSITION)
@@ -48,8 +47,8 @@ class BattleView : GameView("Battle View") {
     private lateinit var currentFleetGridPane: BorderPane
     private lateinit var currentFleetReadinessPane: BorderPane
 
-    private val enemiesFleetGridsPanes      = enemiesViewController.fleetGridsPanes
-    private val enemiesFleetsReadinessPanes = enemiesViewController.fleetsReadinessPanes
+    internal val enemiesFleetGridsPanes      = enemiesViewController.fleetGridsPanes
+    internal val enemiesFleetsReadinessPanes = enemiesViewController.fleetsReadinessPanes
 
     private val selectedLabel                = enemiesViewController.selectedEnemyLabel
     private val selectedFleetPane            = enemiesViewController.selectedFleetPane
@@ -105,37 +104,42 @@ class BattleView : GameView("Battle View") {
                 }
             }
 
-            cell(1, 0) {
-                gridpane {
-                    currentFleetController {
-                        cell(0, 0) { fleetGridPane().also { currentFleetGridPane = it } }
-                        cell(0, 1) { fleetReadinessPane().also { currentFleetReadinessPane = it } }
+            row(1) {
+                col(0) {
+                    gridpane {
+                        currentFleetController {
+                            cell(0, 0) { fleetGridPane().also { currentFleetGridPane = it } }
+                            cell(0, 1) { fleetReadinessPane().also { currentFleetReadinessPane = it } }
+                        }
                     }
                 }
-            }
-            enemiesViewController {
-                cell(1, 1) { enemiesList.also { add(it) } };
-            }
-            cell(1, 2) {
-                gridpane {
-                    cell(0, 0) { selectedFleetReadinessPane.also { add(it) } }
-                    cell(0, 1) { selectedFleetPane.also { add(it) } }
+                col(1) {
+                    readyPlayersReceived()
+                    enemiesViewController.enemiesList.also { add(it) }
+                }
+                col(2) {
+                    gridpane {
+                        cell(0, 0) { selectedFleetReadinessPane.also { add(it) } }
+                        cell(0, 1) { selectedFleetPane.also { add(it) } }
+                    }
                 }
             }
         }
     }
 
-    fun BattleViewModel.playerLabel(player: String): Label? =
+    fun BattleViewModel.playerLabel(player: String) =
         player
             .isCurrent
             .then(currentPlayerLabel)
-            .or { selectedLabel.text.isDefeated.then(selectedLabel) }
+            .or { hasDefeated(selectedLabel.text).then(selectedLabel) }
 
-    fun fleets(): Map<String, FleetGrid> =
-        enemiesFleetGridsPanes + (currentPlayer to currentFleetGridPane.center as FleetGrid)
+    fun fleets(): Map<String, FleetGrid> {
+        return enemiesFleetGridsPanes + (currentPlayer to currentFleetGridPane.center as FleetGrid)
+    }
 
-    fun fleetsReadiness(): Map<String, ShipsTypesPane> =
-        enemiesFleetsReadinessPanes + (currentPlayer to currentFleetReadinessPane.center as ShipsTypesPane)
+    fun fleetsReadiness(): Map<String, ShipsTypesPane> {
+        return enemiesFleetsReadinessPanes + (currentPlayer to currentFleetReadinessPane.center as ShipsTypesPane)
+    }
 
     fun fleets(player: String): FleetGrid {
         return modelView

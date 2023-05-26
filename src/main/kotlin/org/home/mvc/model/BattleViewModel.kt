@@ -1,15 +1,9 @@
 package org.home.mvc.model
 
-import home.extensions.AnysExtensions.addTo
-import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.removeFrom
-import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
-import home.extensions.BooleansExtensions.then
 import home.extensions.CollectionsExtensions.exclude
 import home.extensions.CollectionsExtensions.hasElements
-import home.extensions.CollectionsExtensions.isNotEmpty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleSetProperty
@@ -19,17 +13,13 @@ import org.home.mvc.contoller.events.FleetEditEvent
 import org.home.mvc.contoller.server.action.FleetSettingsAction
 import org.home.mvc.contoller.server.action.HasAShot
 import org.home.mvc.view.battle.subscription.NewServerInfo
-import org.home.utils.extensions.onMapChange
-import org.home.utils.log
 
 abstract class BattleViewModel: GameViewModel() {
     abstract fun getWidth(): SimpleIntegerProperty
     abstract fun getHeight(): SimpleIntegerProperty
     abstract fun getPlayersNumber(): SimpleIntegerProperty
-    abstract fun getPlayersAndShipsNumber(): PlayersAndShips
-    abstract fun getNewServerInfo(): NewServerInfo
+    abstract fun getNewServer(): NewServerInfo
     abstract fun getFleetsReadiness(): FleetsReadiness
-    abstract fun setFleetReadiness(player: String, readiness: FleetReadiness)
     abstract fun getShipsTypes(): ShipsTypes
     abstract fun getPlayers(): SimpleListProperty<String>
     abstract fun getEnemies(): SimpleListProperty<String>
@@ -51,7 +41,7 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun equalizeSizes()
     abstract fun copyShipsTypes(): ShipsTypes
     abstract val turn: SimpleStringProperty
-    abstract fun getFleetReadiness(player: String): MutableMap<Int, SimpleIntegerProperty>
+    abstract fun fleetReadiness(player: String): MutableMap<Int, SimpleIntegerProperty>
     abstract fun getHits(): Collection<Coord>
     abstract fun hasNo(target: String, hitCoord: Coord): Boolean
     abstract fun getCurrentPlayer(): String
@@ -60,104 +50,40 @@ abstract class BattleViewModel: GameViewModel() {
     abstract fun hasNoServerTransfer(): Boolean
     abstract fun add(player: String)
     abstract fun remove(player: String)
+    abstract fun setNewServer(newServerInfo: NewServerInfo)
 
-    protected abstract fun newServerInfo(newServerInfo: NewServerInfo)
     fun newServer(init: NewServerInfo.() -> Unit) { setNewServer(NewServerInfo().apply(init)) }
-    fun setNewServer(newServerInfo: NewServerInfo) {
-        newServerInfo {
-            newServerInfo(this)
-            readyPlayers.isNotEmpty {
-                getReadyPlayers().clear()
-                getReadyPlayers().addAll(readyPlayers)
-            }
-        }
-    }
+    fun battleIsStarted(onTrue: () -> Unit) = battleIsStarted().so(onTrue)
+    fun exclude(player: String) = getPlayers().exclude(player)
+    fun noPropertyFleetReadiness(player: String) = propless(fleetReadiness(player))
+    fun noPropertyFleetReadiness() = getFleetsReadiness().mapValues { propless(it.value) }
+    fun registersAHit(shot: Coord) = getCurrentPlayer().ships().gotHitBy(shot)
 
-    fun battleIsStarted(onTrue: () -> Unit)      = battleIsStarted().so(onTrue)
-    fun exclude(player: String)                  = getPlayers().exclude(player)
-    fun noPropertyFleetReadiness(player: String) = propless(getFleetReadiness(player))
-    fun noPropertyFleetReadiness()               = getFleetsReadiness().mapValues { propless(it.value) }
-    fun registersAHit(shot: Coord)               = getCurrentPlayer().ships().gotHitBy(shot)
-
-
+    fun hasReady(player: String): Boolean  = player in getReadyPlayers()
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
-    fun hasReady(player: String): Boolean                   = player in getReadyPlayers()
+    @JvmName("noReceiverSetReady") fun setReady(player: String)  { getReadyPlayers().add(player) }
+    @JvmName("noReceiverSetNotReady") fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
+    fun String.setReady() { getReadyPlayers().add(this) }
+    fun String.setNotReady() { getReadyPlayers().remove(this) }
+    fun setAllReady(readyPlayers: Collection<String>)  { getReadyPlayers().addAll(readyPlayers) }
 
-    @JvmName("noReceiverSetReady")
-    fun setReady(player: String)                      { getReadyPlayers().add(player) }
-    @JvmName("noReceiverSetNotReady")
-    fun setNotReady(player: String)                   { getReadyPlayers().remove(player) }
-    fun setAllReady(readyPlayers: Collection<String>) { getReadyPlayers().addAll(readyPlayers) }
-
-    fun String.setReady()                             { getReadyPlayers().add(this) }
-    fun String.setNotReady()                          { getReadyPlayers().remove(this) }
-
-
-
-    inline fun hasEnemies()                             = getEnemies().hasElements
-    inline val String?.isCurrent get()                  = getCurrentPlayer() == this
-    inline val String?.isNotCurrent get()               = getCurrentPlayer() != this
-    inline fun String?.isCurrent(onTrue: () -> Unit)    = isCurrent.apply               {so(onTrue) }
+    inline fun hasEnemies() = getEnemies().hasElements
+    inline val String?.isCurrent get() = getCurrentPlayer() == this
+    inline val String?.isNotCurrent get() = getCurrentPlayer() != this
+    inline fun String?.isCurrent(onTrue: () -> Unit) = isCurrent.so(onTrue)
     inline fun String?.isNotCurrent(onTrue: () -> Unit) = isCurrent.otherwise(onTrue)
-    inline fun hasCurrent(player: String?)              = player.isCurrent
+    inline fun hasCurrent(player: String?) = player.isCurrent
 
-
-    fun getWinner()                                            = getPlayers().first { it !in getDefeatedPlayers() }
-    fun hasOnePlayerLeft()                                     = getPlayers().size == 1 && battleIsEnded()
-    fun hasAWinner()                                           = getPlayers().size - getDefeatedPlayers().size == 1
-    inline fun hasAWinner(onTrue: () -> Unit)                  = hasAWinner().so(onTrue)
-
-    fun lastShipWasAdded(player: String, onTrue: () -> Unit)   = player.lastShipWasEdited(0).so(onTrue)
+    fun getWinner(): String = getPlayers().first { it !in getDefeatedPlayers() }
+    fun hasOnePlayerLeft() = getPlayers().size == 1 && battleIsEnded()
+    fun hasAWinner() = getPlayers().size - getDefeatedPlayers().size == 1
+    inline fun hasAWinner(onTrue: () -> Unit) = hasAWinner().so(onTrue)
+    fun lastShipWasAdded(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(0).so(onTrue)
     fun lastShipWasDeleted(player: String, onTrue: () -> Unit) = player.lastShipWasEdited(1).so(onTrue)
-    fun getShipsNumber(type: Int)                              = getShipsTypes()[type]!!
-    fun lastShipType() = getShipsTypes().maxOfOrNull { entry -> entry.key } ?: 0
-
-    fun hasDefeated(player: String) = player in getDefeatedPlayers()
-    val String.isDefeated get()     = this in getDefeatedPlayers()
-
-    private fun propless(mutableMap: MutableMap<Int, SimpleIntegerProperty>) = mutableMap.mapValues { it.value.value }
-
-    protected fun PlayersAndShips.addOnChange() = apply {
-        onMapChange { change ->
-            val player = change.key
-            when {
-                change.wasAdded() -> {
-                    player {
-                        addTo(getPlayers())
-                        isNotCurrent { addTo(getEnemies()) }
-                        setNotReady()
-                        setFleetReadiness(this, getShipsTypes().toFleetsReadiness())
-                    }
-                }
-
-                change.wasRemoved() -> {
-                    player {
-                        removeFrom(getPlayers())
-                        isNotCurrent { removeFrom(getEnemies()) }
-                        removeFrom(getReadyPlayers())
-                        removeFrom(getFleetsReadiness())
-                        removeFrom(getDefeatedPlayers())
-                    }
-                }
-            }
-
-            log { "${change.wasAdded().then("added").or("removed")} \"$player\"" }
-        }
-    }
-
-    fun ShipsTypes.updateFleetReadiness() = apply {
-        onMapChange {
-            getFleetsReadiness().apply {
-                keys.forEach { player -> put(player, toFleetsReadiness()) }
-            }
-        }
-    }
-
-    fun Map<Int, Int>.toFleetsReadiness(): FleetReadiness =
-        mapValues { SimpleIntegerProperty(it.value) }.toMutableMap()
-
     private fun String.lastShipWasEdited(i: Int): Boolean {
-        val restShipsNumbers = getFleetsReadiness()[this]!!.values.map { it.value }
+        val restShipsNumbers = getFleetsReadiness()[this]!!
+            .values
+            .map { it.value }
 
         return restShipsNumbers.run {
             val otherTypesAdded = count { it == 0 } == size - i
@@ -165,6 +91,13 @@ abstract class BattleViewModel: GameViewModel() {
             otherTypesAdded && restTypeEdited
         }
     }
+
+    fun getShipsNumber(type: Int) = getShipsTypes()[type]!!
+
+    fun lastShipType() = getShipsTypes().maxOfOrNull { entry -> entry.key } ?: 0
+    fun hasDefeated(player: String) = player in getDefeatedPlayers()
+
+    private fun propless(mutableMap: MutableMap<Int, SimpleIntegerProperty>) = mutableMap.mapValues { it.value.value }
 }
 
 inline operator fun BattleViewModel.invoke(crossinline b: BattleViewModel.() -> Unit) = this.b()

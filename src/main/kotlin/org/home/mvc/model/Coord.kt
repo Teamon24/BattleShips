@@ -8,7 +8,7 @@ fun Coord.aintHit(ships: Ships) = !this.hits(ships)
 fun Coord.hits(ships: Ships) = ships.any { ship -> ship.contains(this) }
 fun Coord.toShip(): Ship = mutableListOf(this)
 
-fun Collection<Coord>.rightNextTo(coord: Coord) = filter { it.isRightNextTo(coord) }.toMutableList()
+fun Collection<Coord>.getRightNextTo(coord: Coord) = filter { it.isRightNextTo(coord) }.toMutableList()
 
 fun xDistance(it: Coord, pair: Coord) = abs(it.first - pair.first)
 

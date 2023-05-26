@@ -5,9 +5,12 @@ import org.home.app.di.GameScope.NewGameScope
 import org.home.mvc.model.BattleViewModelImpl
 import org.home.utils.componentName
 import org.home.utils.log
+import org.home.utils.logInject
 import org.koin.java.KoinJavaComponent.getKoin
 import tornadofx.Component
 import tornadofx.ScopedInstance
+import tornadofx.View
+import kotlin.reflect.KClass
 
 typealias KScope = org.koin.core.scope.Scope
 typealias FxScope = tornadofx.Scope
@@ -16,30 +19,30 @@ sealed class Scopes<ScopeType> {
     protected var _gameScope: ScopeType? = null
 
     open fun getGameScope() = _gameScope ?: run {
-        _gameScope = createScope()
+        _gameScope = getScope()
         _gameScope!!
     }
 
-    protected abstract fun createScope(): ScopeType
-    abstract fun newGame()
+    abstract fun getScope(): ScopeType
+    abstract fun createNew()
 }
 
 object KoinScopes: Scopes<KScope>() {
-    override fun createScope() = getKoin().createScope<NewGameScope>()
+    override fun getScope() = getKoin().createScope<NewGameScope>()
 
-    override fun newGame() {
+    override fun createNew() {
         _gameScope?.close()
-        _gameScope = createScope()
+        _gameScope = getScope()
         log { "$name created NEW - ${getGameScope().name}" }
     }
 }
 
 
 object FxScopes: Scopes<FxScope>() {
-    override fun createScope() = FxScope()
+    override fun getScope() = FxScope()
 
-    override fun newGame() {
-        _gameScope = createScope()
+    override fun createNew() {
+        _gameScope = getScope()
         BattleViewModelImpl().inScope(getGameScope())
         log { "$name created NEW - ${getGameScope().name}" }
     }

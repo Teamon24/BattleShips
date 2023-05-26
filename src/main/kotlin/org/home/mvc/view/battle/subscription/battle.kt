@@ -16,6 +16,7 @@ import org.home.mvc.model.invoke
 import org.home.mvc.view.NewServerView
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.openMessageWindow
+import org.home.utils.IpUtils.freePort
 import org.home.utils.logEvent
 import tornadofx.View
 import java.io.Serializable
@@ -110,19 +111,19 @@ internal fun BattleView.serverTransferReceived() {
         val newServerPlayer = event.player
         modelView {
             newServer {
-                ip = addressComponent.publicIp
-                port = addressComponent.freePort.toInt()
+                ip = applicationProperties.ip
+                port = freePort()
                 player = newServerPlayer
-                turnList = event.action.turnList
-                readyPlayers = event.action.readyPlayers
+                turnList = event.turnList
+                readyPlayers = getReadyPlayers().toMutableSet()
             }
 
             getPlayersNumber().value -= 1
             newServerPlayer.isCurrent {
                 battleController {
-                    send(NewServerConnectionAction(getNewServerInfo()))
+                    applicationProperties.isServer = true
+                    send(NewServerConnectionAction(getNewServer()))
                     disconnect()
-                    switchToServer()
                 }
             }
         }

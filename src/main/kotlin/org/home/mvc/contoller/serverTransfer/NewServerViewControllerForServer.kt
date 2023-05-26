@@ -9,7 +9,7 @@ class NewServerViewControllerForServer: NewServerViewController() {
     override fun NewServerView.subscriptions() { }
 
     override fun NewServerView.initialize() {
-        modelView.getNewServerInfo().apply {
+        modelView.getNewServer().apply {
             turnList.isNotEmpty {
                 playerTurnComponent.turnList = turnList
                 playerTurnComponent.turnPlayer = player
@@ -18,7 +18,7 @@ class NewServerViewControllerForServer: NewServerViewController() {
 
         modelView {
             withRoot { label("Вы новый сервер") }
-            val newServer = getNewServerInfo()
+            val newServer = getNewServer()
             battleController.connect(newServer.ip, newServer.port)
         }
     }

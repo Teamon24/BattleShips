@@ -47,7 +47,7 @@ class NewServerViewControllerForClient: NewServerViewController() {
             battleController.disconnect()
             it.action.newServer {
                 battleController.connect(ip, port)
-                modelView.setNewServer(it.action.newServer)
+                modelView.getReadyPlayers().addAll(readyPlayers)
             }
         }
     }

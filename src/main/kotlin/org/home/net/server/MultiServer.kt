@@ -24,10 +24,11 @@ abstract class MultiServer<M : Message, S : Socket>: GameController() {
         fun get() = sockets
     }
 
-    internal val processor         by noScope<MessageProcessor<M, S>>()
-    internal val receiver          by noScope<MessageReceiver<M, S>>()
-    internal val connector         by noScope<ConnectionsListener<M, S>>()
+    internal val processor by noScope<MessageProcessor<M, S>>()
+    internal val receiver by noScope<MessageReceiver<M, S>>()
+    internal val connector by noScope<ConnectionsListener<M, S>>()
     private val multiServerSockets by noScope<MultiServerSockets<S>>()
+
 
     val threads = listOf(connector, receiver, processor)
 
@@ -45,7 +46,6 @@ abstract class MultiServer<M : Message, S : Socket>: GameController() {
     abstract fun onDisconnect(socket: S)
 
     fun start(port: Int) {
-        log { "creating socket on $port" }
         serverSocket = ServerSocket(port)
         connector.start()
         receiver.start()

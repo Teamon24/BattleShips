@@ -35,8 +35,8 @@ sealed class NewServerViewController: GameController() {
                     beforeTransfer {
                         subscriptionComponent {
                             modelView {
-                                battleIsStarted { onPlayerTurn(getNewServerInfo().player) }
-                                setAllReady(getNewServerInfo().readyPlayers)
+                                battleIsStarted { onPlayerTurn(getNewServer().player) }
+                                setAllReady(getNewServer().readyPlayers)
                             }
 
                             battleStartButtonController.updateStyle(currentPlayer)

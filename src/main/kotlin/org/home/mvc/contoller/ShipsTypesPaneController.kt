@@ -22,7 +22,7 @@ class ShipsTypesPaneController: GameController() {
     }
 
     fun shipTypesPane(player: String): ShipsTypesPane {
-        val shipsTypes = modelView.getFleetReadiness(player)
+        val shipsTypes = modelView.fleetReadiness(player)
         return ShipsTypesPane().apply { addLabels(shipsTypes) }
     }
 

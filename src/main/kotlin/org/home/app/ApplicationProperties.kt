@@ -2,7 +2,6 @@ package org.home.app
 
 import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
-import home.extensions.AnysExtensions.isNull
 import home.extensions.BooleansExtensions.so
 import org.apache.commons.lang3.StringUtils
 import org.home.mvc.model.Ships
@@ -12,16 +11,16 @@ import org.home.mvc.view.component.ViewSwitch.ViewSwitchType
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import org.home.utils.logEach
 import org.home.utils.logging
-import org.koin.core.component.KoinComponent
 import java.util.*
 
-class ApplicationProperties(private val appPropsFileName: String = "application"): KoinComponent {
+class ApplicationProperties(private val appPropsFileName: String = "application") {
 
     private val Any?.asString get() = this as String?
-    private val Any?.asShips get() = this as Ships?
     private val Any?.asInt get() = asString?.toInt()
     private val Any?.asBool get() = asString?.toBoolean()
-    private val props = Properties().apply { put(gameTypeProperty, "") }
+    private val props = Properties().apply {
+        put(gameTypeProperty, "")
+    }
 
     init {
         try {
@@ -33,10 +32,11 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
                 ?.let { prop ->
                     Json.parse(prop as String)
                         .asArray()
-                        .map { ships -> ships.asCollection().ship { it.asCoord() } } }
+                        .map { ships ->
+                            ships.asCollection().ship { it.asCoord() } } }
                 ?.let { ships ->
-                    props["ships"]       = ships
-                    props["size"]        = (ships.maxOf { it.size } + 2).toString()
+                    props["ships"] = ships
+                    props["size"] = (ships.maxOf { it.size } + 2).toString()
                     props["maxShipType"] = (ships.maxOf { it.size }).toString()
                 }
 
@@ -50,23 +50,23 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     }
 
     private fun JsonValue.asCoord() = asArray().run { (get(0).asInt() to get(1).asInt()) }
+
     private fun JsonValue.asCollection(): MutableCollection<JsonValue> = asArray().toMutableList()
+    val player: Int? get() = props["player"].asInt
 
-    val ip              : String?     get () = props["ip"].asString
-    val port            : String?     get () = props[portProperty].asString
-    val player          : Int?        get () = props["player"].asInt
-    val players         : Int?        get () = props["players"].asInt
-    val size            : Int         get () = props["size"].asInt!!
-    val maxShipType     : Int         get () = props["maxShipType"].asInt!!
-    val playersNumber   : Int         get () = props["playersNumber"].asInt!!
-    val isToNotifyAll   : Boolean     get () = props[isToNotifyAllProperty].asBool!!
-    val ships           : Ships?      get () = props["ships"].asShips?.copy()
-    val currentPlayer   : String      get () = props[currentPlayerProperty].asString!!
-    var isServer        : Boolean            = false
-    var isDebug         : Boolean            = ip != null
+    val players: Int? get() = props["players"].asInt!!
+    val size: Int get() = props["size"].asInt!!
 
-    fun isServer(onTrue : () -> Unit) = isServer.apply { so(onTrue) }
+    val maxShipType: Int get() = props["maxShipType"].asInt!!
+    val playersNumber: Int get() = props["playersNumber"].asInt!!
+    val port: Int get() = props[portProperty].asInt!!
+    val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty].asBool!!
+    val ip: String get() = props["ip"] as String
 
+    val ships: Ships? get() = (props["ships"] as Ships?)?.copy()
+    val currentPlayer: String get() = props[currentPlayerProperty] as String
+    var isServer: Boolean = false
+    fun isServer(onTrue: () -> Unit) = isServer.so(onTrue)
 
     val viewSwitchType: ViewSwitchType =
         ViewSwitchType
@@ -117,6 +117,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         val leaveBattleFieldButtonTransitionTime: Long
         val enemyFleetFillTransitionTime: Long
 
+
         init {
             fillingTransitionTime.also {
                 enemySelectionFadeTime = it * 4
@@ -125,6 +126,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
                 enemyFleetFillTransitionTime = it * 5
             }
         }
+
 
         //app view animation
         const val appViewAnimationGridWidth = 20
