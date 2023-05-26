@@ -3,9 +3,9 @@ package org.home.mvc.view.battle
 import home.extensions.AnysExtensions.invoke
 import org.home.app.ApplicationProperties.Companion.battleFieldCreationMenuTitle
 import org.home.app.di.gameScope
-import org.home.mvc.view.AppView
 import org.home.mvc.GameView
 import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.view.AppView
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
 import org.home.mvc.view.component.GridPaneExtensions.col
@@ -25,7 +25,7 @@ class BattleCreationView : GameView("Настройки боя") {
     }
 
     init {
-
+        applicationProperties.isServer = true
         currentView().title = modelView.getCurrentPlayer().uppercase()
         with(root) {
             centerGrid {

@@ -91,6 +91,7 @@ class BattleClient : GameController(), BattleController<Action> {
 
     @Throws(UnknownHostException::class, IOException::class)
     override fun connect(ip: String, port: Int) {
+        log { "connecting to $ip:$port" }
         serverSocket = Socket(ip, port)
         output = serverSocket.getOutputStream()
         input = serverSocket.getInputStream()

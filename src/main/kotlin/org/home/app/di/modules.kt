@@ -9,6 +9,8 @@ import org.home.mvc.contoller.ShipsTypesController
 import org.home.mvc.contoller.ShipsTypesPaneComponent
 import org.home.mvc.contoller.ShipsTypesPaneController
 import org.home.mvc.contoller.ShotNotifierStrategies
+import org.home.mvc.contoller.server.AddressComponentImpl
+import org.home.mvc.contoller.server.AddressComponentImplDebug
 import org.home.mvc.contoller.server.BattleClient
 import org.home.mvc.contoller.server.BattleEndingComponent
 import org.home.mvc.contoller.server.BattleServer
@@ -101,6 +103,11 @@ fun gameScoped(): Module {
             scoped { BattleEndingComponent() }
             scoped { BattleStartButtonController() }
             scoped { BattleViewExitButtonController() }
+            scoped {
+                get<ApplicationProperties>().isDebug
+                    .then { AddressComponentImplDebug() }
+                    .or { AddressComponentImpl() }
+            }
 
             factory {
                 get<ApplicationProperties>().isServer

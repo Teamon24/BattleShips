@@ -11,8 +11,10 @@ object GameScope {
     }
 
     fun createNew() {
-        FxScopes.createNew()
-        KoinScopes.createNew()
+        FxScopes.newGame()
+        KoinScopes.newGame()
     }
+
+    fun get(): KScope = KoinScopes.getGameScope()
 }
 

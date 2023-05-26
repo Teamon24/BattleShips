@@ -18,6 +18,7 @@ import org.home.app.ApplicationProperties.Companion.squareSize
 import org.home.app.ApplicationProperties.Companion.widthFieldLabel
 import org.home.app.di.gameScope
 import org.home.mvc.GameComponent
+import org.home.mvc.contoller.server.AddressComponent
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.marginGrid
@@ -31,10 +32,8 @@ import tornadofx.textfield
 
 class SettingsPaneController: GameComponent() {
     private val settingsFieldsController by gameScope<SettingsFieldsController>()
-
-    private val ip = applicationProperties.ip
-    private val freePort = applicationProperties.port
-    private val ipAddress = SimpleStringProperty("$ip:$freePort")
+    private val addressComponent by gameScope<AddressComponent>()
+    private val ipAddress by lazy { SimpleStringProperty(addressComponent.getAddress()) }
 
     fun EventTarget.settingsPane(): GridPane {
         return marginGrid {

@@ -35,6 +35,7 @@ import kotlin.concurrent.thread
 
 const val N = 40
 const val COM_SIGN = "-"
+const val DEFAULT_TITLE_SYMBOL = "="
 const val LEFT_ARROW  = "<<<"
 const val RIGHT_ARROW = ">>>"
 const val UI_EVENT_SIGN = "+"
@@ -69,15 +70,19 @@ inline fun logging(block: LogBuilder.() -> Unit) {
     println(builder)
 }
 
-
 inline fun <T> Collection<T>.logEach(block: (T) -> Any) {
     forEach {
         threadPrintln(block(it))
     }
 }
 
-
 inline fun log(disabled: Boolean = false, block: () -> Any?) {
+    if (!disabled) {
+        threadPrintln(block())
+    }
+}
+
+inline fun Unit.log(disabled: Boolean = false, block: () -> Any?) {
     if (!disabled) {
         threadPrintln(block())
     }
@@ -113,9 +118,11 @@ inline fun BattleViewModel.log(disabled: Boolean = false, block: BattleViewModel
     if (!disabled) {
         val result = block()
         result.isAny(Unit)
-            .otherwise { threadPrintln("::: MODEL[${refNumber}] ::: $result") }
+            .otherwise { threadPrintln("${modelTitleContent()} $result") }
     }
 }
+
+fun BattleViewModel.modelTitleContent() = "::: MODEL[${refNumber}] :::"
 
 @JvmName("logEvent")
 fun View.logEvent(fxEvent: FXEvent, modelView: BattleViewModel, body: () -> Any = {}) {
@@ -132,16 +139,18 @@ fun View.logEvent(fxEvent: FXEvent, modelView: BattleViewModel, body: () -> Any 
     }
 }
 
+const val defaultTitleSymbolsNumber = 15
+
 inline fun logTitle(titleContent: String = "",
                     disabled: Boolean = false,
+                    titleSymbolsNumber: Int = defaultTitleSymbolsNumber,
+                    titleSymbol: String = DEFAULT_TITLE_SYMBOL,
                     block: () -> Any = {},
-                    titleSymbolsNumber: Int = 15
 ) {
     if (!disabled) {
-        val titleSign = "="
-        val titleSide = titleSign.repeat(titleSymbolsNumber)
+        val titleSide = titleSymbol.repeat(titleSymbolsNumber)
         val any = block()
-        val title = titleContent.ifBlank { titleSign.repeat(any.toString().length) }
+        val title = titleContent.ifBlank { titleSymbol.repeat(any.toString().length) }
         val ttl = listOf(titleSide, title, titleSide)
         threadPrintln(ttl.joinToString(" "))
     }
@@ -150,9 +159,10 @@ inline fun logTitle(titleContent: String = "",
 inline fun logEmptyTitle(emptyTitleLength: Int,
                          disabled: Boolean = false,
                          block: () -> Any = {},
-                         titleSymbolsNumber: Int = 15
+                         titleSymbol: String = DEFAULT_TITLE_SYMBOL,
+                         titleSymbolsNumber: Int = defaultTitleSymbolsNumber
 ) {
-    logTitle("=".repeat(emptyTitleLength), disabled, block, titleSymbolsNumber)
+    logTitle(titleSymbol.repeat(emptyTitleLength), disabled, titleSymbolsNumber, titleSymbol, block)
 }
 
 
@@ -290,7 +300,6 @@ fun Socket.omitIfLocalhost(): String {
         .replace("socket", "")
         .replace("null ", "")
         .uppercase()
-
 }
 
 fun ServerSocket.omitIfLocalhost(): String {
@@ -308,34 +317,43 @@ fun ServerSocket.omitIfLocalhost(): String {
 }
 
 fun MultiServer<*, *>.logServerStart() {
-    val i = 24
-    serverSocket().omitIfLocalhost().also {
-        logEmptyTitle(it.length, titleSymbolsNumber = i)
-        logTitle(it, titleSymbolsNumber = i)
-        logEmptyTitle(it.length, titleSymbolsNumber = i)
-        connector { logStart(it, i) }
-        receiver { logStart(it, i) }
-        processor { logStart(it, i) }
-        logEmptyTitle(it.length, titleSymbolsNumber = i)
+    logFrame(serverSocket().omitIfLocalhost(), 24) { title, i ->
+        connector { logStart(title, i) }
+        receiver { logStart(title, i) }
+        processor { logStart(title, i) }
+    }
+}
+
+fun logFrame(title: String, i: Int, symbol: String = DEFAULT_TITLE_SYMBOL, block: (String, Int) -> Unit) {
+    title.also {
+        logEmptyTitle(it.length, titleSymbolsNumber = i, titleSymbol = symbol)
+        logTitle(it, titleSymbolsNumber = i, titleSymbol = symbol)
+        logEmptyTitle(it.length, titleSymbolsNumber = i, titleSymbol = symbol)
+        block(it, i)
+        logEmptyTitle(it.length, titleSymbolsNumber = i, titleSymbol = symbol)
     }
 }
 
 fun BattleViewModel.logProps() {
-    log { "height          : ${getHeight().value}" }
-    log { "width           : ${getWidth().value}" }
-    log { "playersNumber   : ${getPlayersNumber().value}" }
-    log { "players         : ${getPlayers()}" }
-    log { "enemies         : ${getEnemies()}" }
-    log { "readyPlayers    : ${getReadyPlayers()}" }
-    log { "fleetsReadiness : ${noPropertyFleetReadiness()}" }
-    log { "playersNumber   : ${getPlayersNumber()}" }
-    log { "battleIsStarted : ${battleIsStarted()}" }
-    log { "battleIsEnded   : ${battleIsEnded()}" }
+    val titleContent = modelTitleContent()
+    titleContent {
+        logFrame(this, 10, symbol = "-") { _, _ ->
+            Unit.log { "height          : ${getHeight().value}" }
+            Unit.log { "width           : ${getWidth().value}" }
+            Unit.log { "playersNumber   : ${getPlayersNumber().value}" }
+            Unit.log { "players         : ${getPlayers().toMutableList()}" }
+            Unit.log { "enemies         : ${getEnemies().toMutableList()}" }
+            Unit.log { "ready           : ${getReadyPlayers().toMutableSet()}" }
+            Unit.log { "fleetsReadiness : ${noPropertyFleetReadiness()}" }
+            Unit.log { "battleIsStarted : ${battleIsStarted()}" }
+            Unit.log { "battleIsEnded   : ${battleIsEnded()}" }
+        }
+    }
 }
 
-private fun MultiServerThread<out Message, out Socket>.logStart(toString: String, i: Int) {
+private fun MultiServerThread<out Message, out Socket>.logStart(title: String, i: Int) {
     val s = "STARTED"
-    logTitle("${name}${" ".repeat(toString.length - name.length - s.length)}$s", titleSymbolsNumber = i)
+    logTitle("${name}${" ".repeat(title.length - name.length - s.length)}$s", titleSymbolsNumber = i)
 }
 
 private fun coord(it: Event) = (it.source as FleetCell).coord

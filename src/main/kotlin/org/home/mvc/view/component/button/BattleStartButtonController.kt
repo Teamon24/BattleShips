@@ -26,6 +26,7 @@ import org.home.style.AppStyles.Companion.readyColor
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
 import org.home.utils.log
+import org.home.utils.logProps
 import tornadofx.action
 import tornadofx.add
 import tornadofx.hide
@@ -124,6 +125,7 @@ abstract class BattleStartButtonComponent: GameComponent() {
 class BattleStartButtonComponentForServer : BattleStartButtonComponent() {
     override val buttonText = battleStartButtonTextForServer
     override fun BattleStartButton.updateStyle(player: String) {
+        modelView.logProps()
         log { "${bean.name}#updateStyle allAreReady = ${modelView.allAreReady}" }
         isDisable = !modelView.allAreReady
     }

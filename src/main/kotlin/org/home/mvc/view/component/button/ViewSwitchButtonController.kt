@@ -1,20 +1,24 @@
 package org.home.mvc.view.component.button
 
 import home.extensions.AnysExtensions.invoke
-import javafx.beans.property.SimpleStringProperty
+import home.extensions.BooleansExtensions.or
+import home.extensions.BooleansExtensions.then
 import javafx.event.EventTarget
 import javafx.scene.control.Button
 import org.home.app.ApplicationProperties.Companion.backButtonText
 import org.home.app.ApplicationProperties.Companion.buttonHoverTransitionTime
 import org.home.app.ApplicationProperties.Companion.connectionButtonText
 import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
+import org.home.app.ApplicationProperties.Companion.joinButtonText
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.di.GameScope
+import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.ViewSwitchController
 import org.home.mvc.contoller.BattleController
+import org.home.mvc.contoller.server.AddressComponent
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.AppView
 import org.home.mvc.view.battle.BattleCreationView
@@ -35,16 +39,21 @@ import tornadofx.action
 import tornadofx.style
 
 object ViewSwitchButtonController: ViewSwitchController() {
-    private val ip = applicationProperties.ip
-    private val freePort = applicationProperties.port
-    internal val ipAddress = SimpleStringProperty("$ip:$freePort")
-
+    private val addressComponent by gameScope<AddressComponent>()
+    internal val address by lazy { addressComponent.getAddress() }
     private val battleController by noScope<BattleController<Action>>()
 
-    fun setServerNewGame(isServer: Boolean) {
-        applicationProperties.isServer = isServer
-        GameScope.createNew()
+    fun getIpPort(): Pair<String, Int> {
+        val ip = address.split(":")[0]
+        val port = address.split(":")[1]
+        return (applicationProperties.isServer then "" or ip) to port.toInt()
     }
+
+    fun EventTarget.serverNewGameButton(appView: AppView): BattleButton =
+        newGameButton<BattleCreationView>(appView, createNewGameButtonText) { GameScope.createNew() }
+
+    fun EventTarget.clientNewGameButton(appView: AppView): BattleButton =
+        newGameButton<BattleJoinView>(appView, joinButtonText) { GameScope.createNew() }
 
 
     inline fun <reified T : View> setTransit(
@@ -75,7 +84,7 @@ object ViewSwitchButtonController: ViewSwitchController() {
             }
         }
 
-    inline fun <reified T : GameView> EventTarget.newGameButton(
+    private inline fun <reified T : GameView> EventTarget.newGameButton(
         from: View,
         text: String,
         crossinline onActionStart: () -> Unit
@@ -93,8 +102,8 @@ object ViewSwitchButtonController: ViewSwitchController() {
         battleButtonLogic(
             createNewGameButtonText,
             battleCreationView,
-            "" to freePort,
-            "Не удалось создать хост ${ipAddress.value}"
+            getIpPort(),
+            "Не удалось создать хост $address"
         )
 
     fun EventTarget.connectBattleButton(battleJoinView: BattleJoinView) =
@@ -102,7 +111,7 @@ object ViewSwitchButtonController: ViewSwitchController() {
             connectionButtonText,
             battleJoinView,
             getIpPort(),
-            "Не удалось подключиться к хосту ${ipAddress.value}"
+            "Не удалось подключиться к хосту $address"
         )
 
     fun EventTarget.leaveButton(battleView: BattleView) =
@@ -142,8 +151,5 @@ object ViewSwitchButtonController: ViewSwitchController() {
             }
         }
 
-    fun getIpPort(): Pair<String, Int> {
-        val split = ipAddress.value.split(":")
-        return split[0] to split[1].toInt()
-    }
+
 }

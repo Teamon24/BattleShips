@@ -27,7 +27,7 @@ class NewServerView(override val root: Parent = VBox()) : GameView() {
     internal val connectedPlayers =
         Collections
             .synchronizedList(modelView.getPlayers().toMutableList())
-            .apply { remove(modelView.getNewServer().player) }
+            .apply { remove(modelView.getNewServerInfo().player) }
 
 
     override fun onClose() {
