@@ -61,8 +61,8 @@ abstract class BattleViewModel: GameViewModel() {
 
     fun hasReady(player: String): Boolean  = player in getReadyPlayers()
     inline fun hasReady(player: String, onTrue: () -> Unit) = hasReady(player).so(onTrue)
-    fun setReady(player: String)  { getReadyPlayers().add(player) }
-    fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
+    @JvmName("noReceiverSetReady") fun setReady(player: String)  { getReadyPlayers().add(player) }
+    @JvmName("noReceiverSetNotReady") fun setNotReady(player: String)  { getReadyPlayers().remove(player) }
     fun String.setReady() { getReadyPlayers().add(this) }
     fun String.setNotReady() { getReadyPlayers().remove(this) }
     fun setAllReady(readyPlayers: Collection<String>)  { getReadyPlayers().addAll(readyPlayers) }
