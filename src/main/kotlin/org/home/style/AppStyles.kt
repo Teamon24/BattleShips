@@ -85,7 +85,7 @@ class AppStyles : Stylesheet() {
         val small = mixin { fontSize = 15.px }
 
         val fleetCellSize = 40.px
-        val marginValue = 10.px
+        val marginValue = 5.px
 
         const val fleetBorderWidth = 0.5
 

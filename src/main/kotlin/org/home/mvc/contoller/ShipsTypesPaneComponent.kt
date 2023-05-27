@@ -1,7 +1,7 @@
 package org.home.mvc.contoller
 
+import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.name
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
@@ -11,7 +11,6 @@ import org.home.mvc.GameComponent
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.removeColumn
 import org.home.mvc.view.component.button.BattleButton
-import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.ShipTypeLabel
 import org.home.mvc.view.fleet.ShipsNumberLabel
 import org.home.style.AppStyles.Companion.fleetCell
@@ -30,8 +29,7 @@ class ShipsTypesPaneComponent: GameComponent() {
             it.action {
                 runLater {
                     val column = modelView.lastShipType() + 1
-                    shipTypeLabel(gridPane, column)
-                    shipsNumberLabel(gridPane, column, 1)
+                    gridPane.addLabels(column, 1)
 
                     val shipsTypes = modelView.getShipsTypes()
 
@@ -71,39 +69,37 @@ class ShipsTypesPaneComponent: GameComponent() {
         }
     }
 
-    fun shipTypeLabel(gridPane: GridPane, column: Int) =
-        ShipTypeLabel(column)
-            .addClass(selectedCell)
-            .also { gridPane.add(it, column, 0) }
+    fun GridPane.addLabels(shipType: Int, shipsNumber: Int) {
+        minWidth = Region.USE_PREF_SIZE
+        ShipTypeLabel(shipType).also { add(it, shipType, 0) }.addClass(selectedCell)
+        ShipsNumberLabel(shipsNumber).also { add(it, shipType, 1) }
+    }
 
-    fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: Int) =
-        ShipsNumberLabel(shipsNumber).also {
-            gridPane.add(it, shipType, 1)
-            gridPane.minWidth = Region.USE_PREF_SIZE
-        }
+    fun ShipsPane.addLabels(shipType: Int, shipsNumber: SimpleIntegerProperty) {
+        minWidth = Region.USE_PREF_SIZE
+        val shipTypeLabel = ShipTypeLabel(shipType)
+        val shipsNumberLabel = shipsNumberLabel(shipType, shipsNumber)
 
-    fun shipsNumberLabel(gridPane: GridPane, shipType: Int, shipsNumber: SimpleIntegerProperty): ShipsNumberLabel {
+        shipTypeLabel.also { add(it, shipType, 0) }.addClass(selectedCell)
+        shipsNumberLabel.also { add(it, shipType, 1) }
+
+        labels[shipTypeLabel] = shipsNumberLabel
+    }
+
+    private fun shipsNumberLabel(shipType: Int, shipsNumber: SimpleIntegerProperty): ShipsNumberLabel {
         val shipsNumberLabel = ShipsNumberLabel(shipsNumber.value)
-
-        gridPane.add(shipsNumberLabel, shipType, 1)
-        gridPane.minWidth = Region.USE_PREF_SIZE
-
         shipsNumberLabel.textProperty().bindBidirectional(shipsNumber, NumberStringConverter())
         shipsNumberLabel.updateClass(shipType)
-
-        shipsNumberLabel {
-            textProperty().onChange { updateClass(shipType) }
-        }
-
+        shipsNumberLabel { textProperty().onChange { updateClass(shipType) } }
         return shipsNumberLabel
     }
 
-    private fun FleetCellLabel.updateClass(shipType: Int) {
+    private fun ShipsNumberLabel.updateClass(shipType: Int) {
         val value = text.toInt()
         when {
             value == 0 -> addClass(fullShipNumberLabel)
             0 < value && value <= modelView.getShipsNumber(shipType) -> toggle(fullShipNumberLabel, fleetCell)
-            else -> throw RuntimeException("${FleetCellLabel::class.name} text can't accept value \"$text\"")
+            else -> throw RuntimeException("${this.className} text can't accept value \"$text\"")
         }
     }
 

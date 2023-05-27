@@ -1,5 +1,6 @@
 package org.home.mvc.contoller
 
+import home.extensions.AnysExtensions.invoke
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.event.EventTarget
@@ -38,19 +39,15 @@ class ShipsTypesPaneController: ShipsPaneController() {
             .apply { modelView { player.isNotCurrent { flip() } } }
     }
 
-    private fun ShipsPane.addLabels(shipsTypes: SimpleMapProperty<Int, Int>) {
+    private fun GridPane.addLabels(shipsTypes: SimpleMapProperty<Int, Int>) {
         for (shipType in shipsTypes) {
-            component.shipTypeLabel(this, shipType.key)
-            component.shipsNumberLabel(this, shipType.key, shipType.value)
+            component { addLabels(shipType.key, shipType.value) }
         }
     }
 
     private fun ShipsPane.addLabels(shipsTypes: Map<Int, SimpleIntegerProperty>) {
         for (shipType in shipsTypes) {
-            labels.put(
-                component.shipTypeLabel(this, shipType.key),
-                component.shipsNumberLabel(this, shipType.key, shipType.value)
-            )
+            component { addLabels(shipType.key, shipType.value) }
         }
     }
 }
