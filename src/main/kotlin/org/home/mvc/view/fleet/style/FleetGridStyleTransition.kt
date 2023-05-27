@@ -1,14 +1,13 @@
 package org.home.mvc.view.fleet.style
 
-import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
+import javafx.scene.paint.Color
 import org.home.app.ApplicationProperties.Companion.enemyFleetFillTransitionTime
 import org.home.app.ApplicationProperties.Companion.fillingTransitionTime
-import org.home.mvc.contoller.FleetReadinessPane
 import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
@@ -16,13 +15,12 @@ import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
-import org.home.mvc.view.fleet.style.FleetGridStyleCssChange.notReady
-import org.home.mvc.view.fleet.style.FleetGridStyleTransition.ready
 import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedPlayerColor
 import org.home.style.AppStyles.Companion.hitCellColor
+import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.AppStyles.Companion.missCellColor
 import org.home.style.AppStyles.Companion.readyColor
 import org.home.style.AppStyles.Companion.readyTitleColor
@@ -96,9 +94,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
                 }
             }
 
-        shipsPane
-            .forEachTypeLabel { it.fillBackground(it.backgroundColor, titleColor, fillingTransitionTime) }
-            .forEachNumberLabel { _, _ -> TODO("${this.className}#forEachNumberLabel") }
+        shipsPane.fill(titleColor)
     }
 
     override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
@@ -109,12 +105,24 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
                     player.decks()
                         .contains(it.coord)
                         .thus { it.fillBackground(to = selectedColor, time = fillingTransitionTime) }
-                        .otherwise { it.fillBackground(to = AppStyles.initialAppColor, time = fillingTransitionTime) }
+                        .otherwise { it.fillBackground(to = initialAppColor, time = fillingTransitionTime) }
                 }
             }
 
-        shipsPane
-            .forEachTypeLabel { it.fillBackground(it.backgroundColor, selectedColor, fillingTransitionTime) }
-            .forEachNumberLabel { _, _ -> TODO("${this.className}#forEachNumberLabel") }
+        shipsPane.fill(selectedColor)
+    }
+
+    private fun ShipsPane.fill(color: Color) {
+        forEachTypeLabel { it.fillBackground(it.backgroundColor, color, fillingTransitionTime) }
+            .forEachNumberLabel { type, number ->
+                number!! {
+                    val constructed = text == "0"
+                    constructed.thus {
+                        fillBackground(backgroundColor, color, fillingTransitionTime)
+                    }.otherwise {
+                        fillBackground(backgroundColor, initialAppColor, fillingTransitionTime)
+                    }
+                }
+            }
     }
 }

@@ -14,11 +14,11 @@ import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
-import org.home.style.AppStyles
 import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
+import org.home.style.AppStyles.Companion.readyColor
 import org.home.style.AppStyles.Companion.readyTitleColor
 import org.home.style.AppStyles.Companion.selectedColor
 import org.home.style.AppStyles.Companion.shipBorderCellColor
@@ -60,8 +60,8 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
                 modelView {
                     player.decks()
                         .contains(it.coord)
-                        .thus { it.background(AppStyles.readyColor.opacity(0.9)) }
-                        .otherwise { it.background(AppStyles.readyColor.opacity(0.1)) }
+                        .thus { it.background(readyColor.opacity(0.9)) }
+                        .otherwise { it.background(readyColor.opacity(0.1)) }
                 }
             }
 

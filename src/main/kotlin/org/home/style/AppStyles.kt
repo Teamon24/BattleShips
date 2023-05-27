@@ -55,6 +55,7 @@ class AppStyles : Stylesheet() {
         val readyCellColor: Color = readyColor.brighter()
         val readyTitleColor: Color = readyColor.darker()
         val hoveredReadyTitleColor = "D39D00FF".color
+        val hoveredSelectedCellColor = "7300E1FF".color
 
         val incorrectCellColor: Color = RED
         val shipBorderColor = RED
@@ -204,8 +205,8 @@ class AppStyles : Stylesheet() {
         emptyCell               + border   + hover(selectedColor)
         incorrectEmptyCell      + border   + hover(incorrectCellColor)
 
-        selectedCell            + noBorder + background(selectedColor)      + text(WHITE)
-        readyCell               + noBorder + background(readyCellColor)     + hover(hoveredReadyTitleColor)
+        selectedCell            + noBorder + background(selectedColor)  + hover(hoveredSelectedCellColor) + text(WHITE)
+        readyCell               + noBorder + background(readyCellColor) + hover(hoveredReadyTitleColor)   + text(WHITE)
         defeatedEmptyCell       + border   + background(defeatedEmptyCellColor)
         incorrectCell           + noBorder + background(incorrectCellColor)
 
