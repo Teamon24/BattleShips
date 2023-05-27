@@ -3,8 +3,7 @@ package org.home.mvc.view.fleet.style
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
 import org.home.mvc.GameBean
-import org.home.mvc.GameComponent
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.mvc.view.battle.BattleView
@@ -51,10 +50,11 @@ abstract class FleetGridStyleComponent: GameBean() {
 
     fun FleetGrid.forEachCell(collection: Collection<Coord>, op: FleetCell.() -> FleetCell) =
         collection.forEach { cell(it).op() }
-    abstract fun BattleView.ready(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane)
-    abstract fun BattleView.notReady(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane)
 
-    abstract fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane)
+    abstract fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane)
+    abstract fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane)
+
+    abstract fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane)
 
     fun Boolean.getRule(rule: CssRule, other: CssRule): Pair<CssRule, CssRule> {
         return Pair(

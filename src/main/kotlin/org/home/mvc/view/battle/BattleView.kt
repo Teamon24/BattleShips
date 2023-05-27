@@ -2,7 +2,6 @@ package org.home.mvc.view.battle
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
-import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
 import javafx.geometry.Pos
 import javafx.scene.control.Label
@@ -12,11 +11,11 @@ import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.FleetReadinessPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.battle.subscription.SubscriptionComponent
-import org.home.mvc.view.battle.subscription.readyPlayersReceived
 import org.home.mvc.view.battle.subscription.subscribe
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
@@ -134,8 +133,8 @@ class BattleView : GameView("Battle View") {
     fun fleets(): Map<String, FleetGrid> =
         enemiesFleetGridsPanes + (currentPlayer to currentFleetGridPane.center as FleetGrid)
 
-    fun fleetsReadiness(): Map<String, ShipsTypesPane> =
-        enemiesFleetsReadinessPanes + (currentPlayer to currentFleetReadinessPane.center as ShipsTypesPane)
+    fun fleetsReadiness(): Map<String, ShipsPane> =
+        enemiesFleetsReadinessPanes + (currentPlayer to currentFleetReadinessPane.center as ShipsPane)
 
     fun fleets(player: String): FleetGrid {
         return modelView
@@ -144,10 +143,10 @@ class BattleView : GameView("Battle View") {
             .or { enemiesFleetGridsPanes[player]!! }
     }
 
-    fun fleetsReadiness(player: String? = null): ShipsTypesPane {
+    fun fleetsReadiness(player: String? = null): ShipsPane {
         return modelView
             .hasCurrent(player)
-            .then { currentFleetReadinessPane.center as ShipsTypesPane }
+            .then { currentFleetReadinessPane.center as ShipsPane }
             .or { enemiesFleetsReadinessPanes[player]!! }
     }
 

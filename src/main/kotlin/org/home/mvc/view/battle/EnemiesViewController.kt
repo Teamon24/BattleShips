@@ -13,8 +13,8 @@ import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameComponent
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.ShipsTypesPane
-import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.contoller.ShipsPane
+import org.home.mvc.contoller.ShipsPaneController
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
@@ -34,7 +34,7 @@ import tornadofx.selectedItem
 import tornadofx.style
 
 typealias PlayersAndFleets = LinkedHashMap<String, FleetGrid>
-typealias PlayersAndFleetsReadiness = LinkedHashMap<String, ShipsTypesPane>
+typealias PlayersAndFleetsReadiness = LinkedHashMap<String, ShipsPane>
 
 class EnemiesViewController : GameComponent() {
     companion object {
@@ -45,7 +45,7 @@ class EnemiesViewController : GameComponent() {
     internal val fleetsReadinessPanes = PlayersAndFleetsReadiness()
 
     private val fleetGridController by gameScope<FleetGridController>()
-    private val shipsTypesPaneController by gameScope<ShipsTypesPaneController>()
+    private val shipsPaneController by gameScope<ShipsPaneController>()
     private val battleController by noScope<BattleController<Action>>()
 
     private val enemiesListViewController by gameScope<EnemiesListViewController>()
@@ -155,11 +155,7 @@ class EnemiesViewController : GameComponent() {
     private fun <T: Node> BorderPane.assign(center: T) { this.center = center }
 
     private fun enemyFleetReadinessPane(player: String) =
-        shipsTypesPaneController.shipTypesPane(player)
-            .transposed()
-            .flip()
-            .apply { rightPadding(10) }
-
+        shipsPaneController.shipsReadinessPane(player).apply { rightPadding(10) }
 
     private fun enemyFleetGrid() =
         fleetGridController

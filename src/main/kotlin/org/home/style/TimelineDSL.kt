@@ -9,26 +9,24 @@ import javafx.scene.paint.Color
 import org.home.app.ApplicationProperties.Companion.enemyFleetFillTransitionTime
 import org.home.style.FillTransitions.backgroundFill
 import org.home.style.FillTransitions.textFill
-import org.home.style.TimelineUtils.play
 import org.home.utils.ColorStepper
 import org.home.utils.StyleUtils.backgroundColor
 import tornadofx.millis
-import tornadofx.runLater
 
 object TimelineDSL {
 
-    class KeyValues(
-        val values: MutableList<MutableList<KeyValue>> = mutableListOf()
-    ) {
-        val t = 10;
+    private const val defaulSteps = 10
+
+    class KeyValues(val steps: Int = defaulSteps, val values: MutableList<MutableList<KeyValue>> = mutableListOf()) {
         fun Region.background(color: Color) {
-            val colorInc = ColorStepper(t)
-                .set(backgroundColor to color)
-                .getColorInc(backgroundColor to color)
+            val initialColor = backgroundColor
+            val colorTransition = initialColor to color
+
+            val colorInc = ColorStepper(steps).addStep(colorTransition).getColorInc(colorTransition)
 
             val temp = mutableListOf<KeyValue>()
-            var tempColor = backgroundColor
-            for (i in 1..t) {
+            var tempColor = initialColor
+            for (i in 1..steps) {
                 temp.add(backgroundFill(tempColor))
                 tempColor = colorInc(tempColor)
             }
@@ -37,13 +35,14 @@ object TimelineDSL {
         }
 
         fun Labeled.text(color: Color) {
-            val colorInc = ColorStepper(t)
-                .set(backgroundColor to color)
-                .getColorInc(backgroundColor to color)
+            val initial = backgroundColor
+            val colorTransition = initial to color
+
+            val colorInc = ColorStepper(steps).addStep(colorTransition).getColorInc(colorTransition)
 
             val temp = mutableListOf<KeyValue>()
-            var tempColor = backgroundColor
-            for (i in 1..t) {
+            var tempColor = initial
+            for (i in 1..steps) {
                 temp.add(textFill(tempColor))
                 tempColor = colorInc(tempColor)
             }
@@ -52,8 +51,12 @@ object TimelineDSL {
         }
     }
 
-    fun keyValues(addKeyValues: KeyValues.() -> Unit) {
-        val keyValuesList = KeyValues()
+    fun play(addKeyValues: KeyValues.() -> Unit) {
+        timeline(addKeyValues = addKeyValues).apply { play() }
+    }
+
+    private fun timeline(steps: Int = defaulSteps, addKeyValues: KeyValues.() -> Unit): Timeline {
+        val keyValuesList = KeyValues(steps)
         keyValuesList.addKeyValues()
         val map = hashMapOf<Int, MutableList<KeyValue>>()
         val size = keyValuesList.values.first().size
@@ -71,11 +74,8 @@ object TimelineDSL {
         val frames = map.entries.map { (i, keyValues) ->
             KeyFrame((i * timeStep).millis, *keyValues.toTypedArray())
         }
-        Timeline().apply {
-            runLater {
-                play(frames)
-            }
+        return Timeline().apply {
+            keyFrames.addAll(frames)
         }
     }
-//    frames.map { it.time to it.values.filter { it.endValue is Background }.map { ((it.endValue as Background).fills[0].fill as Color) } }
 }

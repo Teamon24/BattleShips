@@ -23,8 +23,7 @@ import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 open class GameBean: Component(), ScopedInstance {
-    protected val GameComponent.bean get() = this
-    val applicationProperties by noScope<ApplicationProperties>()
+    protected val bean get() = this
 }
 
 abstract class GameViewModel: ViewModel() {
@@ -34,6 +33,7 @@ abstract class GameViewModel: ViewModel() {
 abstract class GameComponent: GameBean() {
     protected val modelView by gameScope<BattleViewModel>()
     protected open val currentPlayer = modelView.getCurrentPlayer()
+    val applicationProperties by noScope<ApplicationProperties>()
 }
 
 open class GameController : GameComponent()
@@ -47,7 +47,7 @@ abstract class GameView(title: String = ""): View(title = title) {
     internal val applicationProperties by noScope<ApplicationProperties>()
     internal open val currentPlayer = modelView.getCurrentPlayer()
 
-    internal val viewSwitchButtonController by noScope<ViewSwitchButtonController>()
+    internal val viewSwitchButtonController by gameScope<ViewSwitchButtonController>()
     internal val viewSwitch = viewSwitchButtonController.viewSwitch
 
     internal inline fun <reified T: GameView> T.currentView(): T = this

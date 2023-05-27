@@ -96,7 +96,6 @@ class AppStyles : Stylesheet() {
         val shipsTypesInfoPane by cssclass()
         val centerGrid by cssclass()
 
-        val shipTypeLabel by cssclass()
         val fleetLabel by cssclass()
         val errorLabel by cssclass()
         val currentPlayerLabel by cssclass()
@@ -188,10 +187,6 @@ class AppStyles : Stylesheet() {
         currentPlayerLabel  + text(WHITE) + margin(5.px) + background(playerColor)
         readyPlayerLabel    + text(WHITE) + margin(5.px) + background(readyColor.opacity(defeatedPlayerOpacity))
 
-        shipTypeLabel {
-            backgroundRadius += box(25.px, 25.px, 5.px, 5.px)
-        }
-
         //---- panes style -----------------------------------------------------------------
         shipsTypesInfoPane + background(rgb(58, 132, 192, 0.35)) + margin(10.px)
 
@@ -225,9 +220,9 @@ class AppStyles : Stylesheet() {
         readyShipTypeLabel      + noBorder + background(readyTitleColor)    + text(WHITE)
         defeatedShipTypeLabel   + noBorder + background(defeatedColor)      + text(WHITE)
 
-        fullShipNumberLabel     + noBorder + background(selectedColor)      + text(WHITE) + radius(fleetCellSize/2)
-        readyShipNumberLabel    + noBorder + background(readyTitleColor)    + text(WHITE) + radius(fleetCellSize/2)
-        defeatedShipNumberLabel + noBorder + background(defeatedColor)      + text(WHITE) + radius(fleetCellSize/2)
+        fullShipNumberLabel     + noBorder + background(selectedColor.opacity(0.7))      + text(WHITE)
+        readyShipNumberLabel    + noBorder + background(readyTitleColor.opacity(0.7))    + text(WHITE)
+        defeatedShipNumberLabel + noBorder + background(defeatedColor.opacity(0.7))      + text(WHITE)
 
         animationCell           + noBorder
 

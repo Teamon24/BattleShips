@@ -2,15 +2,12 @@ package org.home.mvc.view.component
 
 import home.extensions.AnysExtensions.invoke
 import org.home.app.di.FxScopes
-import org.home.app.di.GameScope
 import org.home.app.di.ViewInjector
 import org.home.mvc.GameBean
-import org.home.mvc.view.component.Next
 import org.home.mvc.view.component.TransitType.BACKWARD
 import org.home.mvc.view.component.TransitType.FORWARD
 import org.home.utils.logTransit
 import tornadofx.View
-import tornadofx.find
 import kotlin.reflect.KClass
 
 typealias Next = View
@@ -20,7 +17,7 @@ typealias TransitLogic = Prev.(Next, TransitType) -> Unit
 
 abstract class ViewSwitch: GameBean() {
 
-    enum class ViewSwitchType {
+    enum class Type {
         REPLACEMENT, OPEN
     }
 

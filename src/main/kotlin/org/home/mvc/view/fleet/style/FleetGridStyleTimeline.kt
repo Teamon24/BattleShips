@@ -2,7 +2,7 @@ package org.home.mvc.view.fleet.style
 
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.so
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
@@ -13,7 +13,7 @@ import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedPlayerColor
 import org.home.style.AppStyles.Companion.sunkCellColor
-import org.home.style.TimelineDSL.keyValues
+import org.home.style.TimelineDSL.play
 
 object FleetGridStyleTimeline : FleetGridStyleComponent() {
     override val type get() = TIMELINE
@@ -30,19 +30,12 @@ object FleetGridStyleTimeline : FleetGridStyleComponent() {
     override fun FleetCell.removeBorderColor()      : FleetCell       { TODO("Not yet implemented") }
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) { TODO("Not yet implemented") }
 
-    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
-        TODO("Not yet implemented")
-    }
+    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) { TODO("Not yet implemented") }
+    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) { TODO("Not yet implemented") }
 
-    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
-        TODO("Not yet implemented")
-    }
-
-    override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
-        keyValues {
-            modelView.playerLabel(defeated)?.apply {
-                background(defeatedPlayerColor)
-            }
+    override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
+        play {
+            modelView.playerLabel(defeated)?.apply { background(defeatedPlayerColor) }
 
             fleetGrid
                 .onEachTitleCells {
@@ -55,9 +48,9 @@ object FleetGridStyleTimeline : FleetGridStyleComponent() {
                     }
                 }
 
-            fleetReadiness
+            shipsPane
                 .forEachTypeLabel { it.background(defeatedColor) }
-                .forEachNumberLabel { it.background(defeatedColor) }
+                .forEachNumberLabel { label -> label.background(defeatedColor) }
         }
     }
 }

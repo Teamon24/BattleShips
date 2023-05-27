@@ -6,7 +6,7 @@ import javafx.scene.control.Label
 import javafx.scene.layout.BorderPane
 import org.home.app.di.gameScope
 import org.home.mvc.GameController
-import org.home.mvc.contoller.ShipsTypesPaneController
+import org.home.mvc.contoller.ShipsPaneController
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.FleetGridController
 import org.home.style.AppStyles.Companion.currentPlayerLabel
@@ -17,11 +17,9 @@ import tornadofx.addClass
 
 class CurrentFleetController: GameController() {
     private val fleetGridController by gameScope<FleetGridController>()
-    private val shipsTypesPaneController by gameScope<ShipsTypesPaneController>()
-
-    private val fleetReadinessPane =  shipsTypesPaneController
-        .shipTypesPane(currentPlayer)
-        .transposed()
+    private val shipsPaneController by gameScope<ShipsPaneController>()
+    private val fleetReadinessPane =  shipsPaneController
+        .shipsReadinessPane(currentPlayer)
         .apply { leftPadding(10) }
         .toBorderPane()
 

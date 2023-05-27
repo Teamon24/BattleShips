@@ -1,12 +1,13 @@
 package org.home.mvc.view.fleet.style
 
+import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
 import javafx.scene.paint.Color
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
@@ -14,11 +15,12 @@ import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.CSS
 import org.home.style.AppStyles
-import org.home.style.AppStyles.Companion.selectedColor
-import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedColor
+import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
+import org.home.style.AppStyles.Companion.readyTitleColor
+import org.home.style.AppStyles.Companion.selectedColor
 import org.home.style.AppStyles.Companion.shipBorderCellColor
 import org.home.style.AppStyles.Companion.titleCellColor
 import org.home.utils.ColorUtils.opacity
@@ -45,18 +47,15 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
     override fun FleetCell.removeIncorrectColor() = background(incorrectCellColor)
     override fun FleetCell.removeBorderColor() = background(initialAppColor)
 
-    private fun <T: FleetCellLabel> T.background(color: Color) = apply {
+    fun <T: FleetCellLabel> T.background(color: Color) = apply {
         style(append = true) { backgroundColor += color }
     }
 
     private fun FleetCell.text(color: Color) = style { textFill = color }
 
-    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
-        val titleColor = AppStyles.readyColor.darker()
+    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
         fleetGrid
-            .onEachTitleCells {
-                it.background(titleColor)
-            }
+            .onEachTitleCells { it.background(readyTitleColor) }
             .onEachFleetCells {
                 modelView {
                     player.decks()
@@ -66,11 +65,12 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
                 }
             }
 
-        fleetReadiness
-            .forEachTypeLabel { it.background }
+        shipsPane
+            .forEachTypeLabel { it.background(readyTitleColor) }
+            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
     }
 
-    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) {
+    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
         fleetGrid
             .onEachTitleCells {
                 it.background(titleCellColor)
@@ -84,15 +84,12 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
                 }
             }
 
-        fleetReadiness
+        shipsPane
             .forEachTypeLabel { it.background(selectedColor) }
+            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
     }
 
-    override fun BattleView.defeated(
-        defeated: String,
-        fleetGrid: FleetGrid,
-        fleetReadiness: ShipsTypesPane
-    ) {
+    override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
         fleetGrid
             .onEachTitleCells {
                 it.background(defeatedColor)
@@ -102,9 +99,8 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
                     .so { it.background(defeatedEmptyCellColor) }
             }
 
-        fleetReadiness
-            .forEachTypeLabel {
-                it.background(defeatedColor)
-            }
+        shipsPane
+            .forEachTypeLabel { it.background(defeatedColor) }
+            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
     }
 }

@@ -1,12 +1,10 @@
 package org.home.app.run
 
 import home.extensions.AnysExtensions.invoke
-import home.extensions.BooleansExtensions.invoke
 import home.extensions.CollectionsExtensions.isNotEmpty
 import org.home.app.DebugApp
 import org.home.app.MainApp
-import org.home.app.di.gameScoped
-import org.home.app.di.netControllers
+import org.home.app.di.gameModule
 import org.home.app.run.checks.AnimationCheck
 import org.home.app.run.checks.MultiscreenCheck
 import org.home.utils.DSLContainer
@@ -21,8 +19,8 @@ fun main(vararg args: String) {
     args {
         logTitle(get(0).uppercase(), titleSymbolsNumber = 40)
         when(get(0)) {
-            "app"               -> run<MainApp>            { +netControllers(get(1)); +gameScoped() }
-            "app:battle-on-run" -> run<DebugApp>           { +netControllers(get(1)); +gameScoped() }
+            "app"               -> run<MainApp>            { +gameModule(get(1)); }
+            "app:battle-on-run" -> run<DebugApp>           { +gameModule(get(1)); }
             "check:animation"   -> run<AnimationCheck>()
             "check:multiscreen" -> run<MultiscreenCheck>()
         }

@@ -1,32 +1,39 @@
 package org.home.mvc.view.fleet.style
 
+import home.extensions.AnysExtensions.className
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.thus
-import org.home.app.ApplicationProperties
 import org.home.app.ApplicationProperties.Companion.enemyFleetFillTransitionTime
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.app.ApplicationProperties.Companion.fillingTransitionTime
+import org.home.mvc.contoller.FleetReadinessPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
 import org.home.mvc.view.fleet.FleetCellLabel
 import org.home.mvc.view.fleet.FleetGrid
 import org.home.mvc.view.fleet.style.FleetGridStyleComponent.FleetGreedStyleUpdate.TRANSITION
+import org.home.mvc.view.fleet.style.FleetGridStyleCssChange.notReady
+import org.home.mvc.view.fleet.style.FleetGridStyleTransition.ready
 import org.home.style.AppStyles
-import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedColor
+import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedPlayerColor
 import org.home.style.AppStyles.Companion.hitCellColor
 import org.home.style.AppStyles.Companion.missCellColor
+import org.home.style.AppStyles.Companion.readyColor
+import org.home.style.AppStyles.Companion.readyTitleColor
+import org.home.style.AppStyles.Companion.selectedColor
 import org.home.style.AppStyles.Companion.sunkCellColor
+import org.home.style.TransitionDSL.filling
+import org.home.style.TransitionDSL.transition
 import org.home.utils.ColorUtils.opacity
 import org.home.utils.StyleUtils.backgroundColor
 import org.home.utils.StyleUtils.fillBackground
 import org.home.utils.StyleUtils.textColor
-import org.home.style.TransitionDSL.filling
-import org.home.style.TransitionDSL.transition
 import tornadofx.style
 
 object FleetGridStyleTransition: FleetGridStyleComponent() {
@@ -50,13 +57,7 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
 
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) { TODO("Not yet implemented" ) }
 
-
-
-    override fun BattleView.defeated(
-        defeated: String,
-        fleetGrid: FleetGrid,
-        fleetReadiness: ShipsTypesPane
-    ) {
+    override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
 
         modelView.playerLabel(defeated)?.apply {
             fillBackground(backgroundColor, defeatedPlayerColor, time)
@@ -75,67 +76,45 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
             .onEachFleetCells {
                 it.coord
                     .notIn(modelView.getShotsAt(defeated))
-                    .so {
-                        it.fillBackground(to = defeatedEmptyCellColor, time = time)
-                    }
+                    .so { it.fillBackground(to = defeatedEmptyCellColor, time = time) }
             }
 
-        fleetReadiness
+        shipsPane
             .forEachTypeLabel { it.fillBackground(to = defeatedColor, time = time) }
-            .forEachNumberLabel { it.fillBackground(to = defeatedColor, time = time) }
+            .forEachNumberLabel { label -> label.fillBackground(to = defeatedColor, time = time) }
     }
 
-    override fun BattleView.ready(
-        player: String,
-        fleetGrid: FleetGrid,
-        fleetReadiness: ShipsTypesPane
-    ) {
-        val titleColor = AppStyles.readyColor.darker()
+    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
+        val titleColor = readyTitleColor
         fleetGrid
-            .onEachTitleCells { it.fillBackground(to = titleColor, time = ApplicationProperties.fillingTransitionTime) }
+            .onEachTitleCells { it.fillBackground(to = titleColor, time = fillingTransitionTime) }
             .onEachFleetCells {
                 modelView {
                     player.decks()
                         .contains(it.coord)
-                        .thus { it.fillBackground(
-                            to = AppStyles.readyColor.opacity(0.9),
-                            time = ApplicationProperties.fillingTransitionTime
-                        ) }
+                        .thus { it.fillBackground(to = readyColor.opacity(0.9), time = fillingTransitionTime) }
                 }
             }
 
-        fleetReadiness.forEachTypeLabel {
-            it.fillBackground(it.backgroundColor, titleColor, ApplicationProperties.fillingTransitionTime)
-        }
+        shipsPane
+            .forEachTypeLabel { it.fillBackground(it.backgroundColor, titleColor, fillingTransitionTime) }
+            .forEachNumberLabel { _, _ -> TODO("${this.className}#forEachNumberLabel") }
     }
 
-    override fun BattleView.notReady(
-        player: String,
-        fleetGrid: FleetGrid,
-        fleetReadiness: ShipsTypesPane
-    ) {
+    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
         fleetGrid
-            .onEachTitleCells { it.fillBackground(
-                to = AppStyles.titleCellColor,
-                time = ApplicationProperties.fillingTransitionTime
-            ) }
+            .onEachTitleCells { it.fillBackground(to = AppStyles.titleCellColor, time = fillingTransitionTime) }
             .onEachFleetCells {
                 modelView {
                     player.decks()
                         .contains(it.coord)
-                        .thus { it.fillBackground(
-                            to = AppStyles.selectedColor,
-                            time = ApplicationProperties.fillingTransitionTime
-                        ) }
-                        .otherwise { it.fillBackground(
-                            to = AppStyles.initialAppColor,
-                            time = ApplicationProperties.fillingTransitionTime
-                        ) }
+                        .thus { it.fillBackground(to = selectedColor, time = fillingTransitionTime) }
+                        .otherwise { it.fillBackground(to = AppStyles.initialAppColor, time = fillingTransitionTime) }
                 }
             }
 
-        fleetReadiness.forEachTypeLabel {
-            it.fillBackground(it.backgroundColor, AppStyles.selectedColor, ApplicationProperties.fillingTransitionTime)
-        }
+        shipsPane
+            .forEachTypeLabel { it.fillBackground(it.backgroundColor, selectedColor, fillingTransitionTime) }
+            .forEachNumberLabel { _, _ -> TODO("${this.className}#forEachNumberLabel") }
     }
 }

@@ -2,6 +2,7 @@ package org.home.utils
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.so
+import home.extensions.BooleansExtensions.thus
 import home.extensions.CollectionsExtensions.exclude
 import javafx.css.Styleable
 import javafx.scene.control.Labeled
@@ -11,9 +12,7 @@ import javafx.scene.layout.Region
 import javafx.scene.paint.Color
 import javafx.scene.paint.Color.BLACK
 import javafx.scene.paint.Color.WHITE
-import org.home.app.ApplicationProperties
 import org.home.app.ApplicationProperties.Companion.fillingTransitionTime
-import org.home.style.AppStyles
 import org.home.style.Transition
 import org.home.style.TransitionDSL.filling
 import org.home.style.TransitionDSL.transition
@@ -57,7 +56,7 @@ object StyleUtils {
     fun <T: Styleable> T.toggle(rulesPair: Pair<CssRule, CssRule>) = rulesPair { toggle(first, second) }
 
     fun <T: Styleable> T.toggle(clazz: CssRule, another: CssRule) {
-        hasClass(clazz) {
+        hasClass(clazz) thus {
             removeClass(clazz)
             addClass(another)
         }

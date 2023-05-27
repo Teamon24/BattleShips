@@ -5,7 +5,7 @@ import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
 import home.extensions.BooleansExtensions.then
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Coord
 import org.home.mvc.view.battle.BattleView
 import org.home.mvc.view.fleet.FleetCell
@@ -75,22 +75,20 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
         }
     }
 
-    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) =
-        toggleReady(player, fleetGrid, fleetReadiness, true)
+    override fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) =
+        toggleReady(player, fleetGrid, shipsPane, true)
 
-    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane) =
-        toggleReady(player, fleetGrid, fleetReadiness, false)
+    override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) =
+        toggleReady(player, fleetGrid, shipsPane, false)
 
-    override fun BattleView.defeated(
-        defeated: String, fleetGrid: FleetGrid, fleetReadiness: ShipsTypesPane
-    ) {
+    override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
         modelView {
             playerLabel(defeated)?.toggle(currentPlayerLabel, defeatedPlayerLabel)
         }
 
-        fleetReadiness
+        shipsPane
             .forEachTypeLabel { it.toggle(selectedCell, defeatedShipTypeLabel) }
-            .forEachNumberLabel { it.toggle(fullShipNumberLabel, defeatedShipNumberLabel) }
+            .forEachNumberLabel { label -> label.toggle(fullShipNumberLabel, defeatedShipNumberLabel) }
 
         fleetGrid
             .onEachTitleCells { it.toggle(titleCell, defeatedTitleCell) }
@@ -108,23 +106,32 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
     private fun BattleView.toggleReady(
         player: String,
         fleetGrid: FleetGrid,
-        fleetReadiness: ShipsTypesPane,
+        shipsPane: ShipsPane,
         isReady: Boolean
     ) {
-        val playerUsualOrReady = isReady.getRule(currentPlayerLabel, readyPlayerLabel)
-        val shipNumberUsualOrReady = isReady.getRule(fullShipNumberLabel, readyShipNumberLabel)
+        val shipNumberUsualOrReady = { constructed: Boolean ->
+            isReady.getRule(
+                constructed.then(fullShipNumberLabel).or(fleetCell),
+                readyShipNumberLabel
+            )
+        }
+        val playerUsualOrReady   = isReady.getRule(currentPlayerLabel, readyPlayerLabel)
         val shipTypeUsualOrReady = isReady.getRule(selectedCell, readyShipTypeLabel)
-        val usualOrReady = isReady.getRule(titleCell, readyTitleCell)
-        val selectedOrReady = isReady.getRule(selectedCell, readyCell)
-        val nonDeckClasses = isReady.getRule(emptyCell, fleetCell)
+        val usualOrReady         = isReady.getRule(titleCell, readyTitleCell)
+        val selectedOrReady      = isReady.getRule(selectedCell, readyCell)
+        val nonDeckClasses       = isReady.getRule(emptyCell, fleetCell)
+
 
         modelView {
             playerLabel(player)?.toggle(playerUsualOrReady)
         }
 
-        fleetReadiness
+        shipsPane
             .forEachTypeLabel { it.toggle(shipTypeUsualOrReady) }
-            .forEachNumberLabel { it.toggle(shipNumberUsualOrReady) }
+            .forEachNumberLabel { type, number ->
+                val constructed = number!!.text == "0"
+                number.toggle(shipNumberUsualOrReady(constructed))
+            }
 
         fleetGrid
             .onEachTitleCells { it.toggle(usualOrReady) }

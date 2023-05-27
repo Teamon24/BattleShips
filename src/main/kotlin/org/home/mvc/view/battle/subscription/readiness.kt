@@ -1,7 +1,7 @@
 package org.home.mvc.view.battle.subscription
 
 import home.extensions.AnysExtensions.invoke
-import org.home.mvc.contoller.ShipsTypesPane
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.contoller.events.PlayerIsNotReadyReceived
 import org.home.mvc.contoller.events.PlayerIsReadyReceived
 import org.home.mvc.contoller.events.ReadyPlayersReceived
@@ -55,7 +55,7 @@ private inline fun BattleView.handle(
     player: String,
     ready: Boolean,
     setReadiness: (String) -> Unit,
-    setReadinessStyle: FleetGridStyleComponent.(FleetGrid, ShipsTypesPane) -> Unit,
+    setReadinessStyle: FleetGridStyleComponent.(FleetGrid, ShipsPane) -> Unit,
 ) {
     setReadiness(player)
     readinessStyleComponent {

@@ -99,7 +99,7 @@ abstract class Transition(protected val region: Region) {
     fun add(colorTransition: ColorTransition, cssProp: InlineCss.(Color) -> Unit) {
         colorTransitionInfo.add(colorTransition)
         cssProps.add(cssProp)
-        colorStepper.set(colorTransition)
+        colorStepper.addStep(colorTransition)
         colorIncrementors.add(colorStepper.getColorInc(colorTransition))
         colorDecrementors.add(colorStepper.getColorDecr(colorTransition))
     }

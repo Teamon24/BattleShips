@@ -76,7 +76,7 @@ class ColorStepper(val steps: Int = transitionSteps) {
         }
     }
 
-    fun set(colorTransition: ColorTransition): ColorStepper {
+    fun addStep(colorTransition: ColorTransition): ColorStepper {
         this.colorTransition = colorTransition
 
         this[RED     to colorTransition] = step(RED)

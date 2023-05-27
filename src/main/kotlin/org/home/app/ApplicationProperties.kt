@@ -4,10 +4,11 @@ import com.eclipsesource.json.Json
 import com.eclipsesource.json.JsonValue
 import home.extensions.BooleansExtensions.so
 import org.apache.commons.lang3.StringUtils
+import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.model.Ships
 import org.home.mvc.model.copy
 import org.home.mvc.model.ship
-import org.home.mvc.view.component.ViewSwitch.ViewSwitchType
+import org.home.mvc.view.component.ViewSwitch
 import org.home.utils.extensions.StringBuildersExtensions.ln
 import org.home.utils.logEach
 import org.home.utils.logging
@@ -68,11 +69,14 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     var isServer: Boolean = false
     fun isServer(onTrue: () -> Unit) = isServer.so(onTrue)
 
-    val viewSwitchType: ViewSwitchType =
-        ViewSwitchType
-            .values()
+    val viewSwitchType: ViewSwitch.Type = enumByProperty("viewSwitch")
+    val shipsPane: ShipsPane.Type = enumByProperty("shipsPane")
+
+    private inline fun <reified E: Enum<E>> enumByProperty(s: String) =
+        E::class.java
+            .enumConstants
             .first {
-                StringUtils.equalsIgnoreCase(it.name, props["viewSwitch"].asString?.trim())
+                StringUtils.equalsIgnoreCase(it.name, props[s].asString?.trim())
             }
 
     @Suppress("UNCHECKED_CAST")
