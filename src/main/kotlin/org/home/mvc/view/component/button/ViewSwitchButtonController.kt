@@ -11,6 +11,7 @@ import org.home.app.ApplicationProperties.Companion.createNewGameButtonText
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldButtonTransitionTime
 import org.home.app.ApplicationProperties.Companion.leaveBattleFieldText
 import org.home.app.di.GameScope
+import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.ViewSwitchController
@@ -20,6 +21,7 @@ import org.home.mvc.view.AppView
 import org.home.mvc.view.battle.BattleCreationView
 import org.home.mvc.view.battle.BattleJoinView
 import org.home.mvc.view.battle.BattleView
+import org.home.mvc.view.component.AddressComponent
 import org.home.mvc.view.component.NextClass
 import org.home.mvc.view.component.Prev
 import org.home.mvc.view.component.ViewSwitch
@@ -35,10 +37,8 @@ import tornadofx.action
 import tornadofx.style
 
 object ViewSwitchButtonController: ViewSwitchController() {
-    private val ip = applicationProperties.ip
-    private val freePort = applicationProperties.port
-    internal val ipAddress = SimpleStringProperty("$ip:$freePort")
-
+    private val addressComponent by gameScope<AddressComponent>()
+    internal val ipAddress by lazy { SimpleStringProperty(addressComponent.address()) }
     private val battleController by noScope<BattleController<Action>>()
 
     fun setServerNewGame(isServer: Boolean) {
@@ -93,7 +93,7 @@ object ViewSwitchButtonController: ViewSwitchController() {
         battleButtonLogic(
             createNewGameButtonText,
             battleCreationView,
-            "" to freePort,
+            getIpPort(),
             "Не удалось создать хост ${ipAddress.value}"
         )
 

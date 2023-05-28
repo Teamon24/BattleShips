@@ -2,6 +2,7 @@ package org.home.mvc.view.battle.subscription
 
 import home.extensions.BooleansExtensions.otherwise
 import org.home.app.ApplicationProperties
+import org.home.app.ApplicationProperties.Companion.yourTurnMessage
 import org.home.mvc.GameComponent
 import org.home.mvc.contoller.events.TurnReceived
 import org.home.mvc.model.invoke
@@ -15,7 +16,7 @@ class SubscriptionComponent: GameComponent() {
         modelView {
             turn.value = player.apply {
                 isCurrent {
-                    openMessageWindow { ApplicationProperties.yourTurnMessage }
+                    openMessageWindow { yourTurnMessage }
                     enemiesViewController.enableAllExcept(getDefeatedPlayers())
                 } otherwise {
                     enemiesViewController.disableAll()

@@ -111,8 +111,8 @@ internal fun BattleView.serverTransferReceived() {
         val newServerPlayer = event.player
         modelView {
             newServer {
-                ip = applicationProperties.ip
-                port = freePort()
+                ip = addressComponent.publicIp()
+                port = addressComponent.freePort()
                 player = newServerPlayer
                 player = newServerPlayer
                 turnList = event.action.turnList

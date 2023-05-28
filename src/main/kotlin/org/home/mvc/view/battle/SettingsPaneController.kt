@@ -19,6 +19,7 @@ import org.home.app.ApplicationProperties.Companion.widthFieldLabel
 import org.home.app.di.gameScope
 import org.home.mvc.GameComponent
 import org.home.mvc.model.BattleViewModel
+import org.home.mvc.view.component.AddressComponent
 import org.home.mvc.view.component.GridPaneExtensions.col
 import org.home.mvc.view.component.GridPaneExtensions.marginGrid
 import org.home.mvc.view.component.GridPaneExtensions.row
@@ -31,17 +32,15 @@ import tornadofx.textfield
 
 class SettingsPaneController: GameComponent() {
     private val settingsFieldsController by gameScope<SettingsFieldsController>()
-
-    private val ip = applicationProperties.ip
-    private val freePort = applicationProperties.port
-    private val ipAddress = SimpleStringProperty("$ip:$freePort")
+    private val addressComponent by gameScope<AddressComponent>()
+    private val address by lazy { SimpleStringProperty(addressComponent.address()) }
 
     fun EventTarget.settingsPane(): GridPane {
         return marginGrid {
             row(0) {
                 col(0) { label(ipAddressFieldLabel) }
-                col(1) { textfield(ipAddress).apply { isEditable = false } }
-                col(2) { copyIpButton(ipAddress) }
+                col(1) { textfield(address).apply { isEditable = false } }
+                col(2) { copyIpButton(address) }
             }
 
             row(1) {
@@ -68,11 +67,11 @@ class SettingsPaneController: GameComponent() {
         }
     }
 
-    private fun EventTarget.copyIpButton(ipAddress: SimpleStringProperty): Button {
+    private fun EventTarget.copyIpButton(address: SimpleStringProperty): Button {
         return battleButton("", ImageView("/icons/clipboard.png")) {
             action {
                 ClipboardContent().apply {
-                    putString(ipAddress.value)
+                    putString(address.value)
                     Clipboard.getSystemClipboard().setContent(this)
                 }
             }

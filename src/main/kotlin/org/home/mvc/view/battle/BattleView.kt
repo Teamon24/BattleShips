@@ -17,6 +17,7 @@ import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
 import org.home.mvc.view.battle.subscription.SubscriptionComponent
 import org.home.mvc.view.battle.subscription.subscribe
+import org.home.mvc.view.component.AddressComponent
 import org.home.mvc.view.component.GridPaneExtensions.cell
 import org.home.mvc.view.component.GridPaneExtensions.centerGrid
 import org.home.mvc.view.component.GridPaneExtensions.col
@@ -35,6 +36,7 @@ import tornadofx.label
 
 class BattleView : GameView("Battle View") {
     internal val battleController               by noScope<BattleController<Action>>()
+    internal val addressComponent               by noScope<AddressComponent>()
     internal val readinessStyleComponent        by gameScope<FleetGridStyleComponent>(CLASS)
     internal val shotStyleComponent             by gameScope<FleetGridStyleComponent>(TRANSITION)
     internal val defeatedStyleComponent         by gameScope<FleetGridStyleComponent>(TRANSITION)

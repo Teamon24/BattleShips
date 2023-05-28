@@ -55,18 +55,19 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
     private fun JsonValue.asCollection(): MutableCollection<JsonValue> = asArray().toMutableList()
     val player: Int? get() = props["player"].asInt
 
-    val players: Int? get() = props["players"].asInt!!
+    val players: Int? get() = props["players"].asInt
     val size: Int get() = props["size"].asInt!!
 
     val maxShipType: Int get() = props["maxShipType"].asInt!!
     val playersNumber: Int get() = props["playersNumber"].asInt!!
     val port: Int get() = props[portProperty].asInt!!
     val isToNotifyAll: Boolean get() = props[isToNotifyAllProperty].asBool!!
-    val ip: String get() = props["ip"] as String
+    val ip: String? get() = props["ip"] as String?
 
     val ships: Ships? get() = (props["ships"] as Ships?)?.copy()
     val currentPlayer: String get() = props[currentPlayerProperty] as String
     var isServer: Boolean = false
+    var isDebug: Boolean = ip != null
     fun isServer(onTrue: () -> Unit) = isServer.so(onTrue)
 
     val viewSwitchType: ViewSwitch.Type = enumByProperty("viewSwitch")

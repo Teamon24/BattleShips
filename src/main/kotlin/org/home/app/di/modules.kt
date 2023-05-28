@@ -30,6 +30,8 @@ import org.home.mvc.view.battle.EnemiesViewController
 import org.home.mvc.view.battle.SettingsFieldsController
 import org.home.mvc.view.battle.SettingsPaneController
 import org.home.mvc.view.battle.subscription.SubscriptionComponent
+import org.home.mvc.view.component.AddressComponentImpl
+import org.home.mvc.view.component.AddressComponentImplDebug
 import org.home.mvc.view.component.ViewOpenWindow
 import org.home.mvc.view.component.ViewReplacement
 import org.home.mvc.view.component.ViewSwitch.Type.OPEN
@@ -111,6 +113,8 @@ fun gameModule(properties: String): Module {
             scoped { ShipsTypesController() }
             scoped { ShipsTypesPaneController() }
             scoped { FleetReadinessPaneController() }
+            scoped { appProps().isDebug.then(AddressComponentImplDebug()).or(AddressComponentImpl()) }
+
             factory { FleetReadinessLabelController() }
 
             scoped { ShipsTypesPaneComponent() }
