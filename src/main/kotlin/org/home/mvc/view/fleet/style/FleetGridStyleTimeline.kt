@@ -24,10 +24,7 @@ object FleetGridStyleTimeline : FleetGridStyleComponent() {
     override fun FleetCell.addHit()                 : FleetCell       { TODO("Not yet implemented") }
     override fun FleetCell.addSunk()                : FleetCell       { TODO("Not yet implemented") }
     override fun FleetCell.addIncorrectColor()      : FleetCell       { TODO("Not yet implemented") }
-    override fun FleetCell.addBorderColor()         : FleetCell       { TODO("Not yet implemented") }
-    override fun FleetCell.removeSelectionColor()   : FleetCell       { TODO("Not yet implemented") }
     override fun FleetCell.removeIncorrectColor()   : FleetCell       { TODO("Not yet implemented") }
-    override fun FleetCell.removeBorderColor()      : FleetCell       { TODO("Not yet implemented") }
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) { TODO("Not yet implemented") }
 
     override fun BattleView.ready(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) { TODO("Not yet implemented") }

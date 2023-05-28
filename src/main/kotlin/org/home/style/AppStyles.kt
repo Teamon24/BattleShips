@@ -227,12 +227,6 @@ class AppStyles : Stylesheet() {
 
         animationCell           + noBorder
 
-
-        (shipBorderCell + background(shipBorderCellColor)) {
-            borderColor += box(shipBorderCellBorderColor)
-            borderWidth += box(fleetBorderWidth.px)
-        }
-
         enemyCell {
             border()
             and(hover) {

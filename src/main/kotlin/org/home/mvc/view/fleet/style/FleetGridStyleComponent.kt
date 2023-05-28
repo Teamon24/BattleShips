@@ -27,13 +27,7 @@ abstract class FleetGridStyleComponent: GameBean() {
 
     abstract fun FleetCellLabel.addSelectionColor(): FleetCellLabel
     abstract fun FleetCell.addIncorrectColor(): FleetCell
-
-    abstract fun FleetCell.addBorderColor(): FleetCell
-    abstract fun FleetCell.removeSelectionColor(): FleetCell
     abstract fun FleetCell.removeIncorrectColor(): FleetCell
-
-    abstract fun FleetCell.removeBorderColor(): FleetCell
-
     abstract fun FleetGrid.addSelectionColor(ship: Collection<Coord>)
 
     fun FleetGrid.removeIncorrectColor(constructed: Ship) { forEachCell(constructed) { removeIncorrectColor() } }

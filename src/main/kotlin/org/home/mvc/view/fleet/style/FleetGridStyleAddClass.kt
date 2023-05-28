@@ -32,7 +32,6 @@ import org.home.style.AppStyles.Companion.readyShipNumberLabel
 import org.home.style.AppStyles.Companion.readyShipTypeLabel
 import org.home.style.AppStyles.Companion.readyTitleCell
 import org.home.style.AppStyles.Companion.selectedCell
-import org.home.style.AppStyles.Companion.shipBorderCell
 import org.home.style.AppStyles.Companion.sunkCell
 import org.home.style.AppStyles.Companion.titleCell
 import org.home.utils.StyleUtils.toggle
@@ -49,7 +48,6 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
             hitCell,
             readyCell,
             incorrectCell,
-            shipBorderCell,
             titleCell
         )
 
@@ -59,11 +57,8 @@ object FleetGridStyleAddClass: FleetGridStyleComponent() {
 
     override fun FleetCellLabel.addSelectionColor() = addClass(selectedCell)
     override fun FleetCell.addIncorrectColor() = addClass(incorrectCell)
-    override fun FleetCell.addBorderColor() = addClass(shipBorderCell)
 
-    override fun FleetCell.removeSelectionColor() = removeClass(selectedCell)
     override fun FleetCell.removeIncorrectColor() = removeClass(incorrectCell)
-    override fun FleetCell.removeBorderColor()    = removeClass(shipBorderCell)
 
     fun FleetCell.addIncorrectHover() = addClass(incorrectEmptyCell)
     fun FleetCell.removeIncorrectHover() = removeClass(incorrectEmptyCell)

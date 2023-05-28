@@ -37,19 +37,15 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
 
     override fun FleetCellLabel.addSelectionColor(): FleetCellLabel = background(selectedColor)
     override fun FleetCell.addIncorrectColor() = background(incorrectCellColor)
-    override fun FleetCell.addBorderColor() = background(shipBorderCellColor)
 
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) {
         forEachCell(ship) { background(selectedColor) }
     }
 
-    override fun FleetCell.removeSelectionColor() = background(initialAppColor)
     override fun FleetCell.removeIncorrectColor() = background(incorrectCellColor)
-    override fun FleetCell.removeBorderColor() = background(initialAppColor)
 
-    fun <T: FleetCellLabel> T.background(color: Color) = apply {
-        style(append = true) { backgroundColor += color }
-    }
+    fun <T: FleetCellLabel> T.background(color: Color) =
+        apply { style(append = true) { backgroundColor += color } }
 
     private fun FleetCell.text(color: Color) = style { textFill = color }
 

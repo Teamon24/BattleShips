@@ -93,7 +93,6 @@ class FleetGridHandlers: GameComponent() {
             log { "$eventType" }
             if (startWithinBorder() ||
                 mouseWentOutOfBound() ||
-                beingConstructed.crosses(ships) ||
                 withinBorder(currentCell, gridPane)
             ) {
                 return@leftClickHandler
@@ -109,13 +108,7 @@ class FleetGridHandlers: GameComponent() {
             if (beingConstructed.size >= 2 && beingConstructed.secondLast() == currentCell.coord) {
                 val last = beingConstructed.last()
                 beingConstructed.remove(last)
-
-                val lastCell = gridPane.cell(last)
-                if (ships.any { ship -> last in ship }) {
-                    lastCell.removeIncorrectColor()
-                } else {
-                    lastCell.removeAnyColor()
-                }
+                gridPane.cell(last).removeAnyColor()
             }
 
             beingConstructed.addIfAbsent(currentCell.coord)

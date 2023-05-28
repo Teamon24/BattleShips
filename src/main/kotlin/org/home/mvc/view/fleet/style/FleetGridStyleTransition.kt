@@ -20,6 +20,7 @@ import org.home.style.AppStyles.Companion.defeatedColor
 import org.home.style.AppStyles.Companion.defeatedEmptyCellColor
 import org.home.style.AppStyles.Companion.defeatedPlayerColor
 import org.home.style.AppStyles.Companion.hitCellColor
+import org.home.style.AppStyles.Companion.incorrectCellColor
 import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.AppStyles.Companion.missCellColor
 import org.home.style.AppStyles.Companion.readyColor
@@ -37,7 +38,7 @@ import tornadofx.style
 object FleetGridStyleTransition: FleetGridStyleComponent() {
     override val type = TRANSITION
 
-    override fun FleetCell.removeAnyColor(): FleetCell { TODO("Not yet implemented" ) }
+    override fun FleetCell.removeAnyColor() = apply { fillBackground(to = initialAppColor, time = time) }
 
     private val time = enemyFleetFillTransitionTime
 
@@ -47,11 +48,8 @@ object FleetGridStyleTransition: FleetGridStyleComponent() {
 
     override fun FleetCellLabel.addSelectionColor(): FleetCellLabel { TODO("Not yet implemented" ) }
 
-    override fun FleetCell.addIncorrectColor()    : FleetCell { TODO("Not yet implemented" ) }
-    override fun FleetCell.addBorderColor()       : FleetCell { TODO("Not yet implemented" ) }
-    override fun FleetCell.removeSelectionColor() : FleetCell { TODO("Not yet implemented" ) }
-    override fun FleetCell.removeIncorrectColor() : FleetCell { TODO("Not yet implemented" ) }
-    override fun FleetCell.removeBorderColor()    : FleetCell { TODO("Not yet implemented" ) }
+    override fun FleetCell.addIncorrectColor()    = apply { fillBackground(to = incorrectCellColor, time = time) }
+    override fun FleetCell.removeIncorrectColor() = apply { fillBackground(to = initialAppColor, time = time) }
 
     override fun FleetGrid.addSelectionColor(ship: Collection<Coord>) { TODO("Not yet implemented" ) }
 
