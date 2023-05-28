@@ -26,7 +26,7 @@ abstract class ShipsPane: GridPane() {
 }
 
 class FleetReadinessPane: ShipsPane() {
-    override fun forEachNumberLabel(block: (ShipTypeLabel, ShipsNumberLabel?) -> Unit) { TODO("should not be invoked") }
+    override fun forEachNumberLabel(block: (ShipTypeLabel, ShipsNumberLabel?) -> Unit) {}
 }
 
 class ShipsTypesPane: ShipsPane() {

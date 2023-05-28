@@ -8,6 +8,10 @@ typealias BeingConstructedShip = MutableList<Coord>
 inline val Ship.isDestroyed get() = isEmpty
 
 fun Ship.hasDecks(i: Int) = size == i
+fun Collection<Coord>.toShip(): Ship = mutableListOf<Coord>().apply { addAll(this@toShip) }
+
+fun Collection<Coord>.withinAnyBorder(ships: Ships) =
+    ships.any { ship -> this@withinAnyBorder.any { it in ship.withBorder() } }
 
 fun Ship.crosses(ships: Collection<Ship>) = ships.any { ship -> crosses(ship) }
 private fun Ship.crosses(another: Ship) = any { deck -> deck in another }

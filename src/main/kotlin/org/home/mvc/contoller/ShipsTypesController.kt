@@ -1,6 +1,7 @@
 package org.home.mvc.contoller
 
 
+import home.extensions.BooleansExtensions.so
 import home.extensions.CollectionsExtensions.ifAbsent
 import org.home.mvc.GameController
 import org.home.mvc.contoller.events.FleetEditEvent
@@ -10,6 +11,8 @@ import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.mvc.model.ShipsTypes
+import org.home.mvc.model.toShip
+import org.home.mvc.model.withinAnyBorder
 import org.home.utils.log
 
 class ShipsTypesController : GameController() {
@@ -18,6 +21,8 @@ class ShipsTypesController : GameController() {
     val mapOp: (FleetEditEvent, ShipsTypes, Int) -> Unit = { event, map, key -> map[key] = event.op(map[key]!!) }
 
     fun validates(newShip: Collection<Coord>): Boolean {
+        newShip.toShip().withinAnyBorder(modelView.shipsOf(currentPlayer)).so { return false }
+
         log { "ships - ${modelView.shipsOf(currentPlayer)}" }
         log { "fleetReadiness - $shipsTypes" }
         newShip.ifEmpty { return false }

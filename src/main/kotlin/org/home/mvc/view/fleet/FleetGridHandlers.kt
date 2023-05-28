@@ -25,15 +25,12 @@ import org.home.mvc.model.crosses
 import org.home.mvc.model.hasDecks
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addBorderColor
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addIncorrectColor
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addIncorrectHover
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.addSelectionColor
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeAnyColor
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeBorderColor
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeIncorrectColor
 import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeIncorrectHover
-import org.home.mvc.view.fleet.style.FleetGridStyleAddClass.removeSelectionColor
 import org.home.style.AppStyles.Companion.emptyCell
 import org.home.utils.log
 import org.home.utils.logCoordinate
@@ -172,13 +169,13 @@ class FleetGridHandlers: GameComponent() {
                 val toRemove = beingConstructed.filter { it !in flatten }
 
                 toRemove.forEach {
-                    gridPane.cell(it).removeSelectionColor()
+                    gridPane.cell(it).removeAnyColor()
                     gridPane.cell(it).addIncorrectColor()
                 }
 
-                    toRemove.forEach { gridPane.cell(it).removeIncorrectColor() }
-                    gridPane.removeIncorrectColor(beingConstructed)
-                    beingConstructed.clear()
+                toRemove.forEach { gridPane.cell(it).removeIncorrectColor() }
+                gridPane.removeIncorrectColor(beingConstructed)
+                beingConstructed.clear()
 
                 return@leftClickHandler
             }
@@ -248,12 +245,12 @@ class FleetGridHandlers: GameComponent() {
                         gridPane.columnCount - 1
                     )
 
-                    gridPane.removeSelectionColor(filter)
+                    gridPane.removeAnyColor(filter)
                     gridPane.addIncorrectColor(filter)
-                    gridPane.addBorderColor(border)
+                    gridPane.addIncorrectColor(border)
                     delay(incorrectCellRemovingTime)
                     gridPane.removeAnyColor(filter)
-                    gridPane.removeBorderColor(border)
+                    gridPane.removeAnyColor(border)
                     startWithinBorder(false)
                     beingConstructed.clear()
                 }
