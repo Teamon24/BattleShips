@@ -110,7 +110,7 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
         const val joinButtonText = "Присоединиться"
 
         //fleet grid values
-        const val incorrectCellRemovingTime = 100L
+        const val incorrectCellRemovingTime = 50L
 
         //transitions
         const val buttonHoverTransitionTime = 50L

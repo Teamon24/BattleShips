@@ -157,22 +157,6 @@ class FleetGridHandlers: GameComponent() {
             if (startWithinBorder()) { startWithinBorder(false) }
             if (mouseWentOutOfBound()) { return@leftClickHandler }
 
-            if (beingConstructed.crosses(ships)) {
-                val flatten = ships.flatten()
-                val toRemove = beingConstructed.filter { it !in flatten }
-
-                toRemove.forEach {
-                    gridPane.cell(it).removeAnyColor()
-                    gridPane.cell(it).addIncorrectColor()
-                }
-
-                toRemove.forEach { gridPane.cell(it).removeIncorrectColor() }
-                gridPane.removeIncorrectColor(beingConstructed)
-                beingConstructed.clear()
-
-                return@leftClickHandler
-            }
-
             if (shipsTypesController.validates(beingConstructed)) {
                 shipsTypesController.add(beingConstructed.copy())
                 gridPane.removeIncorrectColor(beingConstructed)

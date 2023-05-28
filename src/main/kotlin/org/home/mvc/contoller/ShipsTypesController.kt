@@ -11,6 +11,7 @@ import org.home.mvc.contoller.events.eventbus
 import org.home.mvc.model.Coord
 import org.home.mvc.model.Ship
 import org.home.mvc.model.ShipsTypes
+import org.home.mvc.model.crosses
 import org.home.mvc.model.toShip
 import org.home.mvc.model.withinAnyBorder
 import org.home.utils.log
@@ -21,19 +22,22 @@ class ShipsTypesController : GameController() {
     val mapOp: (FleetEditEvent, ShipsTypes, Int) -> Unit = { event, map, key -> map[key] = event.op(map[key]!!) }
 
     fun validates(newShip: Collection<Coord>): Boolean {
-        newShip.toShip().withinAnyBorder(modelView.shipsOf(currentPlayer)).so { return false }
-
-        log { "ships - ${modelView.shipsOf(currentPlayer)}" }
+        val ships = modelView.shipsOf(currentPlayer)
+        ships.also {
+            newShip.toShip().withinAnyBorder(it).so { return false }
+            newShip.toShip().crosses(it).so { return false }
+            log { "ships - $it" }
+        }
         log { "fleetReadiness - $shipsTypes" }
-        newShip.ifEmpty { return false }
 
+        newShip.ifEmpty { return false }
         val newShipSize = newShip.size
         if (newShipSize > shipMaxLength()) return false
 
         val shipsNumber = shipsTypes[newShipSize]
         if (shipsNumber == 0) return false
 
-        log { "ship is valid: $newShip" }
+        log { "is valid: $newShip" }
         return true
     }
 
