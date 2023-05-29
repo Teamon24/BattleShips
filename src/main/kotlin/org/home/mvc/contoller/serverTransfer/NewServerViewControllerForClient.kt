@@ -46,6 +46,7 @@ class NewServerViewControllerForClient: NewServerViewController() {
             logEvent(it, modelView)
             battleController.disconnect()
             it.action.newServer {
+                Thread.sleep(2000) //imitation of reconnection
                 battleController.connect(ip, port)
                 modelView.setNewServer(it.action.newServer)
             }

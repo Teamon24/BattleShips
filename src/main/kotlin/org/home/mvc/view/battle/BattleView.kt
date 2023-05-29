@@ -11,7 +11,6 @@ import org.home.app.di.gameScope
 import org.home.app.di.noScope
 import org.home.mvc.GameView
 import org.home.mvc.contoller.BattleController
-import org.home.mvc.contoller.FleetReadinessPane
 import org.home.mvc.contoller.ShipsPane
 import org.home.mvc.contoller.server.action.Action
 import org.home.mvc.model.BattleViewModel
@@ -36,7 +35,7 @@ import tornadofx.label
 
 class BattleView : GameView("Battle View") {
     internal val battleController               by noScope<BattleController<Action>>()
-    internal val addressComponent               by noScope<AddressComponent>()
+    internal val addressComponent               by gameScope<AddressComponent>()
     internal val readinessStyleComponent        by gameScope<FleetGridStyleComponent>(CLASS)
     internal val shotStyleComponent             by gameScope<FleetGridStyleComponent>(TRANSITION)
     internal val defeatedStyleComponent         by gameScope<FleetGridStyleComponent>(TRANSITION)
