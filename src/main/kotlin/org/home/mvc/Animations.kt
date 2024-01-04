@@ -6,8 +6,6 @@ import javafx.scene.layout.GridPane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import javafx.util.Duration
-import org.home.app.ApplicationProperties.Companion.appViewAnimationCellSize
-import org.home.app.ApplicationProperties.Companion.appViewAnimationTime
 import org.home.mvc.view.component.GridPaneExtensions
 import org.home.mvc.view.component.GridPaneExtensions.getCell
 import org.home.mvc.view.component.GridPaneExtensions.getIndices
@@ -20,7 +18,7 @@ import tornadofx.addClass
 import tornadofx.animateFill
 import java.util.*
 import kotlin.math.PI
-import kotlin.math.sqrt
+import kotlin.math.cos
 
 object Animations {
     private inline fun IntRange.doubleFor(body: (Int, Int) -> Unit) {
@@ -34,12 +32,11 @@ object Animations {
     private fun random(incl: Double, excl: Double) = Random().nextDouble(incl, excl)
     private const val twoPi = 2 * PI
 
-    fun EventTarget.appViewAnimationGrid(rows: Int, cols: Int): GridPane {
+    fun EventTarget.appViewAnimationGrid(rows: Int, cols: Int, cellSize: Double, animationTime: Double): GridPane {
         return object : GridPane() {
             init {
                 alignment = Pos.CENTER
                 addClass(AppStyles.animationGridMargin)
-                val cellSize = appViewAnimationCellSize
                 (1..cols).forEach { col ->
                     (1..rows).forEach { row ->
                         GridPaneExtensions.cell(col, row) {
@@ -50,7 +47,7 @@ object Animations {
                         }
                     }
                 }
-                randomCellFill(this, appViewAnimationTime)
+                randomCellFill(this, animationTime)
             }
         }.also {
             add(it)
@@ -102,11 +99,11 @@ object Animations {
             play = true
         ) {
             cycleCount = 50
-            val d1 = time * twoPi / period
+            val d1 = time * twoPi / 2
             val shiftI = i.toDouble() + rows / 2
             val shiftJ = j.toDouble() + cols / 2
-            val millis = d1 * sqrt(shiftI * shiftI + shiftJ * shiftJ)
-            playFrom(Duration.millis(millis + random(time/10, time/9)))
+            val millis = cos(d1 * (shiftI * shiftI + shiftJ * shiftJ))
+            playFrom(Duration.millis(millis))
         }
     }
 }

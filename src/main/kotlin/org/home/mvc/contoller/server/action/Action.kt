@@ -1,7 +1,7 @@
 package org.home.mvc.contoller.server.action
 
 import home.extensions.AnysExtensions.name
-import home.extensions.delete
+import home.extensions.StringsExtensions.delete
 import org.home.mvc.contoller.events.BattleIsEnded
 import org.home.mvc.contoller.events.BattleIsStarted
 import org.home.mvc.contoller.events.ConnectedPlayerReceived

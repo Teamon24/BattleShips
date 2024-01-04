@@ -2,8 +2,7 @@
 .gradle
 /build
 /out
-/gradle
 pids.txt
 /src/main/resources/player-*.properties
-/src/main/resources/application-dev.properties
+/src/main/resources/current-player-dev.properties
 /.run

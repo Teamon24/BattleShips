@@ -2,7 +2,7 @@ package org.home.app.run
 
 import home.extensions.AnysExtensions.invoke
 import home.extensions.CollectionsExtensions.isNotEmpty
-import org.home.app.DebugApp
+import org.home.app.BattleOnRunApp
 import org.home.app.MainApp
 import org.home.app.di.gameModule
 import org.home.app.run.checks.AnimationCheck
@@ -20,7 +20,7 @@ fun main(vararg args: String) {
         logTitle(get(0).uppercase(), titleSymbolsNumber = 40)
         when(get(0)) {
             "app"               -> run<MainApp>            { +gameModule(get(1)); }
-            "app:battle-on-run" -> run<DebugApp>           { +gameModule(get(1)); }
+            "app:battle-on-run" -> run<BattleOnRunApp>     { +gameModule(get(1)); }
             "check:animation"   -> run<AnimationCheck>()
             "check:multiscreen" -> run<MultiscreenCheck>()
         }
@@ -29,7 +29,11 @@ fun main(vararg args: String) {
 
 inline fun <reified T: App> run(crossinline addModules: DSLContainer<Module>.() -> Unit = {}) {
     startKoin {
-        dslElements(addModules) { isNotEmpty { modules(this) } }
+        dslElements(addModules).let { modules ->
+            modules.isNotEmpty {
+                modules(modules)
+            }
+        }
     }
     launch<T>()
 }

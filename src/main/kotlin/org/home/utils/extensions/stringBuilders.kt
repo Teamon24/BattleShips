@@ -1,6 +1,6 @@
 package org.home.utils.extensions
 
-import home.extensions.ifNotEmpty
+import home.extensions.StringsExtensions.ifNotEmpty
 import org.home.utils.threadLog
 
 object StringBuildersExtensions {

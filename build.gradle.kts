@@ -22,8 +22,6 @@ repositories {
 }
 
 application { mainClass.set("org.home.app.run.ApplicationKt") }
-val sl: String by extra(File.separator)
-apply(from = "$projectDir${sl}build-kts-extensions.gradle.kts")
 tasks.test { useJUnitPlatform() }
 
 val koinVersion = "3.3.3"
@@ -53,7 +51,7 @@ dependencies {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        jvmTarget = "16"
+        jvmTarget = "17"
     }
 }
 
@@ -63,119 +61,163 @@ javafx {
     configuration = "implementation"
 }
 
-
-val resourcesFolder by extra("${projectDir.path}${sl}src${sl}main${sl}resources${sl}")
-val playerPropPrefix by extra("player")
-val run by extra("run")
-
-val appPropName by extra("application")
-val appPropNameDev by extra("application-dev")
-val appPropNameDebug by extra("application-debug")
-val regex = Regex("$playerPropPrefix-[\\d]+.properties")
-
-val java = "${System.getProperty("java.home")}${sl}bin${sl}java"
-val javaCp = listOf(java, "-classpath", sourceSets["main"].runtimeClasspath.asPath)
-
-val playersNumber = 4
-val propsList = createProperties(playersNumber)
-
-"createProperties".task {
-    deleteProperties()
-    createProperties(playersNumber)
+fun path(vararg paths: String): String {
+    return paths.joinToString(separator = File.separator) { it }
 }
 
-val main = application.mainClass.get()
+val resourcesFolder                  by extra(path(projectDir.path, "src", "main", "resources"))
+val playerPropPrefix                 by extra("player")
+val currentPlayerPropertiesName      by extra("current-player")
+val currentPlayerPropertiesNameDev   by extra("current-player-dev")
+val currentPlayerPropertiesNameDebug by extra("current-player-debug")
+val currentPlayerPropertyName        by extra("currentPlayer")
+val playerPropertyName               by extra("player")
+val playersPropertyName              by extra("players")
+val playerPropertyRegex              by extra(Regex("$playerPropPrefix-[\\d]+.properties"))
+val playersNumber                    by extra(4)
+val propsList                        by extra(createPlayersProperties(playersNumber))
+val pidsFile                         by extra(path(projectDir.path, "pids.txt").createFile())
+val java                             by extra(path(System.getProperty("java.home"), "bin", "java"))
+val javaCp                           by extra(listOf(java, "-classpath", sourceSets["main"].runtimeClasspath.asPath))
 
-0.until(playersNumber) { i ->
-    "player-$i" {
-        javaCp(main, "app", playerPropName(i))
-        when (i) {
-            0 -> dependsOn("build" and "createProperties")
+`tasks defenitions` {
+    val main = application.mainClass.get()
+
+    val player           = { i: Int -> "player-$i"}
+    val battleOnRun      = { i: Int -> "battle-on-run-$i"}
+    val createProperties = "createProperties"
+    val multiscreenCheck = "multiscreenCheck"
+    val runPlayers       = "runPlayers"
+    val killPlayers      = "killPlayers"
+    val animationCheck   = "animationCheck"
+
+
+    createProperties.task {
+        deletePlayersProperties()
+        createPlayersProperties(playersNumber)
+    }
+
+    0.until(playersNumber) { i ->
+        player(i).apply {
+            javaCp(main, "app", playerPropertiesName(i))
+            when (i) {
+                0 -> dependsOn("build" and createProperties)
+            }
+        }
+
+        battleOnRun(i).apply {
+            javaCp(main, "app:battle-on-run", playerPropertiesName(i))
+            when (i) {
+                0 -> dependsOn("build" and createProperties)
+            }
         }
     }
 
-    "battle-on-run-$i" {
-        javaCp(main, "app:battle-on-run", playerPropName(i))
-        when (i) {
-            0 -> dependsOn("build" and "createProperties")
+    multiscreenCheck {
+        javaCp(main, "check:multiscreen")
+        dependsOn("build")
+    }
+
+    animationCheck {
+        javaCp(main, "check:animation")
+        dependsOn("build")
+    }
+
+    runPlayers {
+        last {
+            pidsFile.printWriter().use { writer ->
+                propsList.indices.forEach { player ->
+                    val command = javaCp + main + "app" + propsList[player]
+                    writer.println(command.pid())
+                }
+            }
+        }
+        dependsOn("build")
+    }
+
+    killPlayers last {
+        pidsFile.lines {
+            ProcessHandle.of(it.toLong()).ifPresent(ProcessHandle::destroy)
+        }
+    }
+    "fatJar".type<Jar> {
+        doLast {
+            // We need this for Gradle optimization to work
+            dependsOn.addAll(listOf("compileJava", "compileKotlin", "processResources"))
+            // Naming the jar
+            archiveClassifier.set("standalone")
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            // Provided we set it up in the application plugin configuration
+            manifest { attributes(mapOf("Main-Class" to application.mainClass)) }
+
+            val contents =
+                configurations
+                    .runtimeClasspath
+                    .get()
+                    .map { if (it.isDirectory) it else zipTree(it) } + sourceSets.main.get().output
+
+            from(contents)
         }
     }
 }
 
-"multiscreenCheck".javaCp(main, "check:multiscreen")
-"multiscreenCheck" dependsOn "build"
-
-
-infix fun String.dependsOn(task: String) {
-    tasks.named(this) { dependsOn(task) }
-}
-
-infix fun String.dependsOn(tasksList: List<String>) {
-    tasksList.forEach { dependsOn(it) }
-}
-
-infix fun List<String>.dependOn(tasks: List<String>) {
-    forEach { it dependsOn tasks }
-}
+inline fun `tasks defenitions`(block: () -> Unit) { block() }
 
 typealias TaskName = String
-infix operator fun TaskName.invoke(block: String.() -> Unit): Unit = this.block()
-infix fun TaskName.task(action: Action<in Task>): TaskContainer = tasks { register(this@task, action) }
-infix fun TaskName.doLast(action: Action<in Task>): TaskContainer = tasks { register(this@doLast) { doLast(action) } }
-fun TaskName.javaCp(vararg args: String) { doLast { exec { commandLine(javaCp + args) } } }
+typealias ProcessCommand = String
+typealias Filepath = String
+typealias PropertiesName = String
 
-val pidsFile = "$projectDir${sl}pids.txt".createFile()
+fun List<ProcessCommand>.pid() = ProcessBuilder(this).start().pid()
+fun Filepath.createFile() = File(this).apply { createNewFile() }
 
-"runPlayers".doLast {
-    pidsFile.printWriter().use { writer ->
-        propsList.indices.forEach { player ->
-            val command = javaCp + main + "app" + propsList[player]
-            writer.println(command.pid())
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TaskName extensions
+inline infix fun <reified T: Task> TaskName.type(noinline action: T.() -> Unit) = tasks { register(this@type, action) }
+             fun TaskName                  .task(action: Action<in Task>) = tasks { register(this@task, action) }
+operator     fun TaskName                  .invoke(block: TaskName.() -> Unit): Unit = this.block()
+inline infix fun TaskName                  .last(action: Action<in Task>) = tasks { register(this@last) { doLast(action) } }
+             fun TaskName                  .javaCp(vararg args: String) { last { exec { commandLine(javaCp + args) } } }
+infix        fun TaskName                  .dependsOn(task: TaskName) { tasks.named(this) { dependsOn(task) } }
+infix        fun TaskName                  .dependsOn(tasksList: List<TaskName>) { tasksList.forEach { dependsOn(it) } }
+infix        fun List<TaskName>            .dependOn(tasks: List<TaskName>) { forEach { it dependsOn tasks } }
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Players properties
+fun deletePlayersProperties() = resourcesFolder.subfiles().doIfMatches(playerPropertyRegex, File::delete) { it.name }
+fun createPlayersProperties(playersNumber: Int) =
+    ArrayList<PropertiesName>(playersNumber).apply {
+        val lines = currentPlayerPropertiesName.propertiesFile().lines()
+        val debugLines = currentPlayerPropertiesNameDebug.propertiesFile().lines()
+
+        0.until(playersNumber) {
+            add(createPlayerProperties(it, playersNumber, lines, debugLines))
         }
-    }
 }
 
-"runPlayers" dependsOn "build"
-
-"killPlayers".doLast {
-    pidsFile.lines {
-        ProcessHandle.of(it.toLong()).ifPresent(ProcessHandle::destroy)
-    }
-}
-
-fun List<String>.pid() = ProcessBuilder(this).start().pid()
-fun String.createFile() = File(this).apply { createNewFile() }
-
-fun deleteProperties() = resourcesFolder.subfiles().doIfMatches(regex, File::delete) { it.name }
-fun createProperties(playersNumber: Int) = ArrayList<String>(playersNumber).apply {
-    val lines = "appPropName".propFile().lines()
-    val debugLines = "appPropNameDebug".propFile().lines()
-
-    0.until(playersNumber) {
-        add(createProp(it, playersNumber, lines, debugLines))
-    }
-}
-
-fun createProp(playerNumber: Int, playersNumber: Int, appLines: List<String>, debugLines: List<String>): String {
+fun createPlayerProperties(
+    playerNumber: Int,
+    playersNumber: Int,
+    appLines: List<String>,
+    debugLines: List<String>
+): PropertiesName {
     val devLines = mutableListOf<String>()
-    val playerPropName = playerPropName(playerNumber)
-
-    val current = "currentPlayer"
+    val playerPropName = playerPropertiesName(playerNumber)
 
     val currentPlayerLine = when (playerNumber) {
-        0 -> appLines.first { it.contains(current) }
-        else -> "$current=$playerPropName"
+        0 -> appLines.first { it.contains(currentPlayerPropertyName) }
+        else -> "$currentPlayerPropertyName=$playerPropName"
     }
 
     devLines.apply {
         add(currentPlayerLine)
-        add("player=$playerNumber")
-        add("players=$playersNumber")
+        add("$playerPropertyName=$playerNumber")
+        add("$playersPropertyName=$playersNumber")
         addAll(debugLines)
         addIfAbsent(appLines)
 
         playerPropName
-            .propFilepath()
+            .propertiesFilepath()
             .createFile()
             .write(this)
     }
@@ -183,34 +225,33 @@ fun createProp(playerNumber: Int, playersNumber: Int, appLines: List<String>, de
     return playerPropName
 }
 
+inline fun notIn(strings: List<String>, predicate: (String) -> Boolean) = !strings.any { s -> predicate(s) }
+
 fun MutableList<String>.addIfAbsent(source: List<String>) {
-    val strings = source.filter { s -> notIn(this) { t -> propNameEqual(t, s) } }
+    val strings = source.filter { s -> notIn(this) { t -> propertiesNamesEqual(t, s) } }
     addAll(strings)
 }
 
-inline fun notIn(strings: List<String>, predicate: (String) -> Boolean) = !strings.any { s -> predicate(s) }
+fun propertiesNamesEqual(line: String, another: String) = extractPropertyName(line) == extractPropertyName(another)
+fun extractPropertyName(line: String) = line.substring(0, line.indexOf("="))
 
-fun propNameEqual(line: String, another: String) = extractPropName(line) == extractPropName(another)
-
-fun extractPropName(line: String) = line.substring(0, line.indexOf("="))
-
-fun playerPropName(i: Int) = when (i) {
-    0 -> appPropNameDev
+fun playerPropertiesName(i: Int): PropertiesName = when (i) {
+    0 -> currentPlayerPropertiesNameDev
     else -> "${playerPropPrefix}-${i}"
 }
 
-fun String.propFilepath() = "$resourcesFolder${this}.properties"
+fun PropertiesName.propertiesFile() = File(propertiesFilepath())
+fun PropertiesName.propertiesFilepath() = path(resourcesFolder, "${this}.properties")
 
-fun String.propFile() = File((extra[this] as String).propFilepath())
-fun File.lines() = Files.readAllLines(toPath())
-inline fun File.lines(onLine: (String) -> Unit) = lines().forEach(onLine)
-fun File.write(lines: Collection<String>) = Files.write(this.toPath(), lines)
-fun String.subfiles() = File(this).listFiles().toList()
-fun <T> Collection<T>.doIf(action: (T) -> Unit, predicate: (T) -> Boolean) =
+fun        File.lines()                          = Files.readAllLines(toPath())
+inline fun File.lines(onLine: (String) -> Unit)  = lines().forEach(onLine)
+fun        File.write(lines: Collection<String>) = Files.write(this.toPath(), lines)
+fun        Filepath.subfiles()                   = File(this).listFiles().toList()
+
+inline fun <T> Collection<T>.doIf(action: (T) -> Unit, predicate: (T) -> Boolean) =
     forEach { predicate(it).ifTrue { action(it) } }
 
-
-fun <T> Collection<T>.doIfMatches(regex: Regex, action: (T) -> Unit, get: (T) -> String) =
+inline fun <T> Collection<T>.doIfMatches(regex: Regex, action: (T) -> Unit, get: (T) -> String) =
     doIf(action) { get(it).matches(regex) }
 
 inline fun Int.until(number: Int, onEach: (Int) -> Unit) {
@@ -220,3 +261,5 @@ inline fun Int.until(number: Int, onEach: (Int) -> Unit) {
 }
 
 infix fun <T> T.and(that: T) = listOf(this, that)
+
+inline fun <reified T> projectProperty(it: String) = extra[it] as T

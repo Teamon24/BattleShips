@@ -7,5 +7,5 @@ import tornadofx.View
 class AnimationCheck: AbstractApp<AnimationCheckView>(AnimationCheckView::class)
 
 class AnimationCheckView: View() {
-    override val root = appViewAnimationGrid(50, 50)
+    override val root = appViewAnimationGrid(20, 10, 40.0, 30000.0)
 }

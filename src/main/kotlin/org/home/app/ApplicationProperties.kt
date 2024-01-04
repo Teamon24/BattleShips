@@ -14,7 +14,7 @@ import org.home.utils.logEach
 import org.home.utils.logging
 import java.util.*
 
-class ApplicationProperties(private val appPropsFileName: String = "application") {
+class ApplicationProperties(private val appPropsFileName: String = "current-player") {
 
     private val Any?.asString get() = this as String?
     private val Any?.asInt get() = asString?.toInt()
@@ -134,8 +134,8 @@ class ApplicationProperties(private val appPropsFileName: String = "application"
 
 
         //app view animation
-        const val appViewAnimationGridWidth = 20
-        const val appViewAnimationGridHeight = 10
+        const val appViewAnimationGridColumns = 20
+        const val appViewAnimationGridRows = 10
         const val appViewAnimationCellSize = 40.0
         const val appViewAnimationTime = 30000.0
     }

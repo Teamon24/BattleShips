@@ -3,7 +3,7 @@ package org.home.mvc.contoller.serverTransfer
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.then
-import home.extensions.delete
+import home.extensions.StringsExtensions.delete
 import javafx.scene.Parent
 import javafx.scene.control.Label
 import org.home.mvc.contoller.events.NewServerConnectionReceived

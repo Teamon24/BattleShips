@@ -58,9 +58,6 @@ class AppStyles : Stylesheet() {
         val hoveredSelectedCellColor = "7300E1FF".color
 
         val incorrectCellColor: Color = RED
-        val shipBorderColor = RED
-        val shipBorderCellColor = shipBorderColor.opacity(0.3)
-        val shipBorderCellBorderColor = shipBorderColor.opacity(0.15)
         val initialAppColor = "E8E3E4FF".color
         val defeatedColor = "A93638F4".color
         val defeatedEmptyCellColor = defeatedColor.opacity(0.7)

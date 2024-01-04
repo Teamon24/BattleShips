@@ -21,7 +21,6 @@ import org.home.style.AppStyles.Companion.initialAppColor
 import org.home.style.AppStyles.Companion.readyColor
 import org.home.style.AppStyles.Companion.readyTitleColor
 import org.home.style.AppStyles.Companion.selectedColor
-import org.home.style.AppStyles.Companion.shipBorderCellColor
 import org.home.style.AppStyles.Companion.titleCellColor
 import org.home.utils.ColorUtils.opacity
 import tornadofx.style
