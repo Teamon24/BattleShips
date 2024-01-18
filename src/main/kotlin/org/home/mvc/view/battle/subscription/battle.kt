@@ -1,6 +1,6 @@
 package org.home.mvc.view.battle.subscription
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import home.extensions.BooleansExtensions.or
 import home.extensions.BooleansExtensions.so
@@ -101,7 +101,7 @@ class NewServerInfo: Serializable {
     lateinit var turnList: List<String>
     lateinit var readyPlayers: Set<String>
     override fun toString(): String {
-        return "${this.className}([$player][$ip:$port] /turn=$turnList /ready=$readyPlayers)"
+        return "${this.simpleName}([$player][$ip:$port] /turn=$turnList /ready=$readyPlayers)"
     }
 }
 

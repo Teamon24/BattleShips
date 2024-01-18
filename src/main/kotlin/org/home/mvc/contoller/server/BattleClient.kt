@@ -1,7 +1,7 @@
 package org.home.mvc.contoller.server
 
 import home.ExceptionUtils.throwsOn
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.plus
 import home.extensions.AtomicBooleansExtensions.atomic
@@ -157,7 +157,7 @@ class BattleClient : GameController(), BattleController<Action> {
                     +BattleIsContinued
                 }
 
-                else -> throw ActionTypeAbsentException(action.className, this.className, "process")
+                else -> throw ActionTypeAbsentException(action.simpleName, this.simpleName, "process")
             }
         }
     }

@@ -1,6 +1,6 @@
 package org.home.mvc.contoller.server
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.otherwise
@@ -285,7 +285,7 @@ class BattleServer : MultiServer<Action, PlayerSocket>(), BattleController<Actio
                     }
                 }
             }
-            log { "<${action.className}> turn = ${playerTurnComponent.turnList}" }
+            log { "<${action.simpleName}> turn = ${playerTurnComponent.turnList}" }
         }
     }
 

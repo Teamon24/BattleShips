@@ -1,6 +1,6 @@
 package org.home.mvc.contoller
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.scene.control.Label
@@ -99,7 +99,7 @@ class ShipsTypesPaneComponent: GameComponent() {
         when {
             value == 0 -> addClass(fullShipNumberLabel)
             0 < value && value <= modelView.getShipsNumber(shipType) -> toggle(fullShipNumberLabel, fleetCell)
-            else -> throw RuntimeException("${this.className} text can't accept value \"$text\"")
+            else -> throw RuntimeException("${this.simpleName} text can't accept value \"$text\"")
         }
     }
 

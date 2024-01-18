@@ -4,7 +4,6 @@ import org.apache.commons.lang3.SerializationUtils
 import org.home.net.server.Message
 import org.home.net.server.MessagesDSL.Messages
 import org.home.net.server.MessagesInfo
-import home.extensions.AnysExtensions.repeat
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStream
@@ -25,7 +24,7 @@ object IOUtils {
         val messages = mutableListOf<Message>()
         val messagesInfo = readOne() as MessagesInfo
         messages.add(messagesInfo)
-        messagesInfo.number.repeat {
+        repeat(messagesInfo.number) {
             messages.add(readOne())
         }
         return messages

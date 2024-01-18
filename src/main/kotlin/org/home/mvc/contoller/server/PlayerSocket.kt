@@ -1,6 +1,6 @@
 package org.home.mvc.contoller.server
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetAddress
@@ -27,7 +27,7 @@ class PlayerSocket(private val socket: Socket) : Socket() {
             }
         } catch (_: SocketException) {
         }
-        return "${this.className}[unconnected]"
+        return "${this.simpleName}[unconnected]"
     }
     override fun close() = socket.close()
 
@@ -86,7 +86,8 @@ class PlayerSocket(private val socket: Socket) : Socket() {
     override fun isInputShutdown() = socket.isInputShutdown
     override fun isOutputShutdown() = socket.isOutputShutdown
 
-    override fun setPerformancePreferences(connectionTime: Int, latency: Int, bandwidth: Int) = socket.setPerformancePreferences(connectionTime, latency, bandwidth)
+    override fun setPerformancePreferences(connectionTime: Int, latency: Int, bandwidth: Int) =
+        socket.setPerformancePreferences(connectionTime, latency, bandwidth)
 
     override fun <T : Any?> setOption(name: SocketOption<T>?, value: T): Socket
     = socket.setOption(name, value)

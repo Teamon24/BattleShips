@@ -1,8 +1,8 @@
 package org.home.utils
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
-import home.extensions.AnysExtensions.isAny
+import home.extensions.AnysExtensions.anyOf
 import home.extensions.AnysExtensions.isNotUnit
 import home.extensions.AnysExtensions.name
 import home.extensions.AnysExtensions.refClass
@@ -94,7 +94,7 @@ val Any.componentName get() = "$refClass-[$refNumber]"
 fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any = {}) {
     val dot = "."
     val dots = dot.repeat(5)
-    val ttl = listOf(dots, throwable.className, dots)
+    val ttl = listOf(dots, throwable.simpleName, dots)
 
     val title = ttl.joinToString(" ")
     threadErrorLn {
@@ -117,7 +117,7 @@ fun logError(throwable: Throwable, stackTrace: Boolean = false, body: () -> Any 
 inline fun BattleViewModel.log(disabled: Boolean = false, block: BattleViewModel.() -> Any) {
     if (!disabled) {
         val result = block()
-        result.isAny(Unit)
+        result.anyOf(Unit)
             .otherwise { threadPrintln("${modelTitleContent()} $result") }
     }
 }
@@ -126,7 +126,7 @@ fun BattleViewModel.modelTitleContent() = "::: MODEL[${refNumber}] :::"
 
 @JvmName("logEvent")
 fun View.logEvent(fxEvent: FXEvent, modelView: BattleViewModel, body: () -> Any = {}) {
-    val title = "${this::class.simpleName}[${modelView.getCurrentPlayer()}] <- $fxEvent"
+    val title = "${this.simpleName}[${modelView.getCurrentPlayer()}] <- $fxEvent"
     threadPrintln {
         ln()
         ln(line(title.length))

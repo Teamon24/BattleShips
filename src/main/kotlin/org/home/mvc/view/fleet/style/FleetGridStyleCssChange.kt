@@ -1,6 +1,6 @@
 package org.home.mvc.view.fleet.style
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.notIn
 import home.extensions.BooleansExtensions.otherwise
@@ -62,7 +62,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
 
         shipsPane
             .forEachTypeLabel { it.background(readyTitleColor) }
-            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
+            .forEachNumberLabel { _ -> TODO("${this.simpleName}#forEachNumberLabel") }
     }
 
     override fun BattleView.notReady(player: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
@@ -81,7 +81,7 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
 
         shipsPane
             .forEachTypeLabel { it.background(selectedColor) }
-            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
+            .forEachNumberLabel { _ -> TODO("${this.simpleName}#forEachNumberLabel") }
     }
 
     override fun BattleView.defeated(defeated: String, fleetGrid: FleetGrid, shipsPane: ShipsPane) {
@@ -96,6 +96,6 @@ object FleetGridStyleCssChange: FleetGridStyleComponent() {
 
         shipsPane
             .forEachTypeLabel { it.background(defeatedColor) }
-            .forEachNumberLabel { _ -> TODO("${this.className}#forEachNumberLabel") }
+            .forEachNumberLabel { _ -> TODO("${this.simpleName}#forEachNumberLabel") }
     }
 }

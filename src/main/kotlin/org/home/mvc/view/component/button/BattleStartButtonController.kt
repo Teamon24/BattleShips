@@ -1,6 +1,6 @@
 package org.home.mvc.view.component.button
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.AnysExtensions.invoke
 import home.extensions.AnysExtensions.name
 import home.extensions.BooleansExtensions.otherwise
@@ -48,7 +48,7 @@ class BattleStartButtonController : GameController() {
             }
 
             action {
-                log {"${bean.name}#${this.className} - is starting battle"}
+                log {"${bean.name}#${this.simpleName} - is starting battle"}
                 battleController.startBattle()
             }
 

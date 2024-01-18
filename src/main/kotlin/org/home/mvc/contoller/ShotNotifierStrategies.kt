@@ -1,6 +1,6 @@
 package org.home.mvc.contoller
 
-import home.extensions.AnysExtensions.className
+import home.extensions.AnysExtensions.simpleName
 import home.extensions.CollectionsExtensions.exclude
 import javafx.beans.property.SimpleListProperty
 import org.home.mvc.GameComponent
@@ -48,7 +48,7 @@ abstract class ShotNotifierStrategy(private val enemies: SimpleListProperty<Stri
         val toNotifyShooter = map[hasAShot::class]
 
         toNotifyShooter ?: throw RuntimeException(
-            "There is no boolean flag for ${HasAShot::class.className}'s descendant: ${hasAShot.className}"
+            "There is no boolean flag for ${HasAShot::class.simpleName}'s descendant: ${hasAShot.simpleName}"
         )
 
         val enemiesAndMessages = hashMapOf<String, MutableList<Action>>()

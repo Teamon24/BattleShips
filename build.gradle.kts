@@ -27,10 +27,12 @@ tasks.test { useJUnitPlatform() }
 val koinVersion = "3.3.3"
 
 dependencies {
-    implementation("home:utils") {
+    implementation("home:utils:1.1") {
         version {
+            isChanging = true
             branch = "main"
         }
+        isChanging = true
     }
 
     implementation("io.insert-koin:koin-core:$koinVersion")
@@ -184,7 +186,7 @@ infix        fun List<TaskName>            .dependOn(tasks: List<TaskName>) { fo
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Players properties
-fun deletePlayersProperties() = resourcesFolder.subfiles().doIfMatches(playerPropertyRegex, File::delete) { it.name }
+fun deletePlayersProperties() = resourcesFolder.subfiles().doIf(File::delete) { it.name.matches(playerPropertyRegex) }
 fun createPlayersProperties(playersNumber: Int) =
     ArrayList<PropertiesName>(playersNumber).apply {
         val lines = currentPlayerPropertiesName.propertiesFile().lines()
@@ -250,9 +252,6 @@ fun        Filepath.subfiles()                   = File(this).listFiles().toList
 
 inline fun <T> Collection<T>.doIf(action: (T) -> Unit, predicate: (T) -> Boolean) =
     forEach { predicate(it).ifTrue { action(it) } }
-
-inline fun <T> Collection<T>.doIfMatches(regex: Regex, action: (T) -> Unit, get: (T) -> String) =
-    doIf(action) { get(it).matches(regex) }
 
 inline fun Int.until(number: Int, onEach: (Int) -> Unit) {
     for (i in this until number) {
